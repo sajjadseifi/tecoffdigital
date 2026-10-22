@@ -1,0 +1,48 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- فیلتر سایه سه‌بعدی نرم -->
+    <filter id="softDepth" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feOffset dx="0" dy="3" result="off"/>
+      <feBlend in="SourceGraphic" in2="blur" mode="normal"/>
+    </filter>
+
+    <!-- گرادیان‌های گوشه‌ها برای تابش رنگ هر مربع -->
+    <radialGradient id="cornerRed" cx="0" cy="0" r="1">
+      <stop offset="0%" stop-color="#E63946" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#E63946" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cornerOrange" cx="1" cy="0" r="1">
+      <stop offset="0%" stop-color="#FF7A21" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FF7A21" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cornerBlue" cx="0" cy="1" r="1">
+      <stop offset="0%" stop-color="#2D9CDB" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#2D9CDB" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cornerPurple" cx="1" cy="1" r="1">
+      <stop offset="0%" stop-color="#9B5DE5" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#9B5DE5" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- گرادیان مرکزی نارنجی برای شکل براق -->
+    <radialGradient id="centerGlow" cx="0.5" cy="0.4" r="0.8">
+      <stop offset="0%" stop-color="#FFB366"/>
+      <stop offset="60%" stop-color="#FF7A21"/>
+      <stop offset="100%" stop-color="#D65C00"/>
+    </radialGradient>
+  </defs>
+
+  <!-- تابش‌ها از گوشه‌ها -->
+  <rect x="0" y="0" width="120" height="120" fill="url(#cornerRed)" />
+  <rect x="120" y="0" width="120" height="120" fill="url(#cornerOrange)" />
+  <rect x="0" y="120" width="120" height="120" fill="url(#cornerBlue)" />
+  <rect x="120" y="120" width="120" height="120" fill="url(#cornerPurple)" />
+
+  <!-- شکل مرکزی نارنجی سه‌بعدی -->
+  <polygon points="120,40 170,80 140,140 100,140 70,80"
+           fill="url(#centerGlow)" filter="url(#softDepth)" />
+
+  <!-- درخشش مرکزی -->
+  <circle cx="120" cy="85" r="15" fill="white" opacity="0.4" filter="url(#softDepth)" />
+</svg>

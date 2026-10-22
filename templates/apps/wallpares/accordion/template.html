@@ -1,0 +1,328 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8fafc" />
+    <title>{% block title %}{{ catalog.title|default:"منوی دیجیتال" }}{% endblock %}</title>
+    
+    <link rel="icon" type="image/svg+xml" href="{% if catalog and catalog.favicon %}{{ catalog.favicon.url }}{% else %}{% static 'icons/tecof_logo.png' %}{% endif %}" />
+
+    <!-- Fonts / Alpine / Tailwind -->
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <!-- استفاده از پلاگین collapse برای انیمیشن نرم آکاردئون (اختیاری اما توصیه شده) -->
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Vazirmatn', 'YekanBakh', system-ui, sans-serif;
+        }
+        @layer base {
+            body { 
+                margin: 0; padding: 0; font-family: var(--font-sans); 
+                -webkit-font-smoothing: antialiased; background-color: #e2e8f0;
+            }
+        }
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen py-0 sm:py-8">
+
+    <!-- موبایل رَپِر -->
+    <div x-data="tecMenuApp" class="w-full max-w-md mx-auto h-[100dvh] sm:h-[90vh] relative bg-slate-50 sm:rounded-[2.5rem] sm:border-[8px] sm:border-slate-900 shadow-2xl overflow-hidden flex flex-col">
+
+        <!-- ================= HEADER (TOP) ================= -->
+        <header class="flex-none bg-white/90 backdrop-blur-xl z-30 border-b border-gray-200/60 relative shadow-sm shadow-slate-200/50">
+            <div class="py-4 px-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    {% if catalog and catalog.logo %}
+                        <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-sm">
+                            <img src="{{ catalog.logo.url }}" class="w-full h-full object-cover" alt="Logo">
+                        </div>
+                    {% else %}
+                        <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                            <span class="text-orange-200 text-xl font-bold">{{ catalog.title|first|upper|default:"T" }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="flex flex-col">
+                        <h1 class="font-black text-slate-800 text-base tracking-tight line-clamp-1">{{ catalog.title }}</h1>
+                        {% if catalog.description %}
+                        <span class="text-xs text-gray-500 font-medium line-clamp-1 mt-0.5">{{ catalog.description }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= MAIN CONTENT (SCROLLABLE) ================= -->
+        <!-- Padding bottom زیاد برای جلوگیری از رفتن محتوا زیر نوار جستجو -->
+        <div class="flex-1 overflow-y-auto relative px-4 pt-4 pb-28 scrollbar-hide">
+            
+            <!-- حالت جستجو (نمایش نتایج به صورت لیست یکپارچه) -->
+            <div x-show="isSearching" x-cloak>
+                <div class="mb-4 flex items-center gap-2 text-sm text-slate-600 font-bold">
+                    <span>نتایج جستجو برای:</span>
+                    <span class="text-orange-600" x-text="searchQuery"></span>
+                </div>
+
+                <!-- اسکلتون لودینگ جستجو -->
+                <div x-show="isSearchLoading" class="flex flex-col gap-3">
+                    <template x-for="i in 3">
+                        <div class="bg-white rounded-2xl p-3 flex gap-3 border border-slate-100 animate-pulse">
+                            <div class="w-20 h-20 bg-slate-200 rounded-xl shrink-0"></div>
+                            <div class="flex-1 py-1"><div class="h-4 bg-slate-200 w-2/3 mb-2"></div></div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- نتایج جستجو -->
+                <div x-show="!isSearchLoading" class="flex flex-col gap-3">
+                    <div x-show="searchResults.length === 0" class="text-center py-10 text-slate-500 text-sm">
+                        آیتمی یافت نشد.
+                    </div>
+                    
+                    <template x-for="item in searchResults" :key="'search-'+item.id">
+                        <!-- کارت محصول (کد مشترک) -->
+                        <div class="bg-white rounded-2xl p-3 flex gap-3 border border-slate-100 shadow-sm">
+                            <div class="w-20 h-20 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                                <template x-if="item.image"><img :src="item.image" class="w-full h-full object-cover"></template>
+                            </div>
+                            <div class="flex flex-col flex-1 py-0.5">
+                                <h3 class="text-sm font-bold text-slate-800 line-clamp-1" x-text="item.title"></h3>
+                                <p class="text-[11px] text-slate-500 mt-1 line-clamp-2" x-text="item.description"></p>
+                                <div class="mt-auto flex justify-end items-end gap-1 pt-2">
+                                    <span class="text-sm font-black text-slate-800" x-text="item.final_price"></span>
+                                    <span class="text-[10px] font-bold text-slate-500" x-text="item.currency || 'تومان'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- حالت آکاردئونی (نمایش عادی دسته‌بندی‌ها) -->
+            <div x-show="!isSearching" class="space-y-3" x-cloak>
+                <template x-for="(cat, index) in categories" :key="cat.slug">
+                    <div class="bg-white rounded-[1.25rem] shadow-sm overflow-hidden border transition-colors duration-300"
+                         :class="cat.isOpen ? 'border-orange-200 ring-1 ring-orange-50' : 'border-slate-200/60'">
+                        
+                        <!-- هدر آکاردئون -->
+                        <button @click="toggleCategory(index)" 
+                                class="w-full px-4 py-4 flex items-center justify-between outline-none -webkit-tap-highlight-color-transparent bg-white">
+                            
+                            <div class="flex items-center gap-3">
+                                <template x-if="cat.image">
+                                    <img :src="cat.image" class="w-8 h-8 rounded-full object-cover border border-slate-100">
+                                </template>
+                                <span class="font-bold text-[14px] transition-colors duration-300"
+                                      :class="cat.isOpen ? 'text-orange-600' : 'text-slate-700'"
+                                      x-text="cat.title"></span>
+                            </div>
+                            
+                            <!-- آیکون فلش با چرخش -->
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-300"
+                                 :class="cat.isOpen ? 'bg-orange-50 text-orange-500' : 'bg-slate-50 text-slate-400'">
+                                <svg class="w-4 h-4 transform transition-transform duration-300" 
+                                     :class="cat.isOpen ? 'rotate-180' : ''" 
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </button>
+
+                        <!-- بدنه آکاردئون -->
+                        <!-- نیازمند پلاگین x-collapse در هدر است که اضافه شده -->
+                        <div x-show="cat.isOpen" x-collapse>
+                            <div class="px-4 pb-4 pt-1 flex flex-col gap-2.5 bg-slate-50/50 border-t border-slate-50">
+                                
+                                <!-- اسکلتون لودینگ داخل دسته‌بندی -->
+                                <div x-show="cat.isLoading" class="flex flex-col gap-2.5 pt-2">
+                                    <template x-for="i in 2">
+                                        <div class="flex gap-3 animate-pulse">
+                                            <div class="w-16 h-16 bg-slate-200 rounded-xl shrink-0"></div>
+                                            <div class="flex-1 py-1"><div class="h-3 bg-slate-200 w-2/3 mb-2 rounded"></div></div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- نمایش آیتم‌ها -->
+                                <div x-show="!cat.isLoading && cat.isLoaded">
+                                    <div x-show="cat.items.length === 0" class="text-center py-4 text-xs text-slate-400">
+                                        آیتمی در این دسته وجود ندارد.
+                                    </div>
+                                    
+                                    <template x-for="item in cat.items" :key="'item-'+item.id">
+                                        <div class="group flex gap-3 py-2.5 border-b border-slate-100 last:border-0">
+                                            <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-white border border-slate-100 flex items-center justify-center">
+                                                <template x-if="item.image"><img :src="item.image" class="w-full h-full object-cover"></template>
+                                            </div>
+                                            <div class="flex flex-col flex-1 justify-center">
+                                                <h3 class="text-[13px] font-bold text-slate-800 line-clamp-1" x-text="item.title"></h3>
+                                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1" x-text="item.description"></p>
+                                                <div class="mt-1.5 flex justify-end items-end gap-1">
+                                                    <span class="text-[13px] font-black text-slate-800" x-text="item.final_price"></span>
+                                                    <span class="text-[9px] font-bold text-slate-500" x-text="item.currency || 'تومان'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- ================= BOTTOM SEARCH BAR ================= -->
+        <div class="absolute bottom-0 left-0 right-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200/80 p-4 pb-safe z-40">
+            <div class="relative w-full shadow-sm rounded-2xl">
+                <input type="search" 
+                       x-model="searchQuery" 
+                       @input.debounce.400ms="handleSearch()" 
+                       placeholder="جستجوی محصول..." 
+                       class="w-full bg-slate-100/80 text-slate-900 text-sm px-4 py-3.5 rounded-2xl pr-12 border border-slate-200/60 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all font-medium">
+                
+                <!-- آیکون جستجو -->
+                <svg x-show="!isSearchLoading" class="h-5 w-5 text-slate-400 absolute top-1/2 right-4 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+
+                <!-- آیکون لودینگ -->
+                <svg x-show="isSearchLoading" x-cloak class="animate-spin h-5 w-5 text-orange-500 absolute top-1/2 right-4 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                
+                <!-- دکمه پاک کردن جستجو -->
+                <button x-show="searchQuery.length > 0" @click="clearSearch()" class="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400 p-1 bg-white rounded-full shadow-sm" x-cloak>
+                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Configuration -->
+    <script>
+        window.MENU_CONFIG = {
+            categories: [
+                {% for cat in catalog.categories_first_level %}
+                { 
+                    slug: "{{ cat.slug }}", 
+                    title: "{{ cat.title }}",
+                    image: "{% if cat.image %}{{ cat.image.url }}{% endif %}"
+                },
+                {% endfor %}
+            ],
+            searchUrl: "{% url 'api_catalog_search' catalog_slug=catalog.slug %}",
+            itemsUrlTemplate: "{% url 'api_category_items' catalog_slug=catalog.slug category_slug='__CAT__' %}"
+        };
+    </script>
+
+    <!-- App Logic -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('tecMenuApp', () => ({
+                config: window.MENU_CONFIG || {},
+                categories: [],
+                
+                // وضعیت جستجو
+                searchQuery: '',
+                searchResults: [],
+                isSearching: false,
+                isSearchLoading: false,
+
+                init() {
+                    // ساختاردهی مجدد دسته‌بندی‌ها برای حالت آکاردئونی
+                    this.categories = (this.config.categories || []).map((c, index) => ({
+                        ...c,
+                        items: [],
+                        isLoading: false,
+                        isLoaded: false,
+                        isOpen: index === 0 // فقط دسته‌بندی اول به صورت پیش‌فرض باز باشد
+                    }));
+
+                    // دریافت دیتای اولین دسته‌بندی در زمان لود
+                    if (this.categories.length > 0) {
+                        this.fetchItems(0);
+                    }
+                },
+
+                async toggleCategory(index) {
+                    // بستن سایر آکاردئون‌ها (اختیاری - اگر می‌خواهید چندتا همزمان باز بماند، این خط را پاک کنید)
+                    this.categories.forEach((cat, i) => { if (i !== index) cat.isOpen = false; });
+                    
+                    const cat = this.categories[index];
+                    cat.isOpen = !cat.isOpen;
+
+                    // اگر باز شد و دیتا نداشت، درخواست می‌زنیم
+                    if (cat.isOpen && !cat.isLoaded) {
+                        await this.fetchItems(index);
+                    }
+                    
+                    // اسکرول نرم به سمت آکاردئون باز شده
+                    if(cat.isOpen) {
+                        setTimeout(() => {
+                            const btn = document.querySelectorAll('button')[index];
+                            if(btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }, 300);
+                    }
+                },
+
+                async fetchItems(index) {
+                    const cat = this.categories[index];
+                    if (cat.isLoaded) return;
+
+                    cat.isLoading = true;
+                    try {
+                        const url = this.config.itemsUrlTemplate.replace('__CAT__', cat.slug);
+                        const res = await fetch(url);
+                        cat.items = await res.json();
+                        cat.isLoaded = true;
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        cat.isLoading = false;
+                    }
+                },
+
+                async handleSearch() {
+                    const q = this.searchQuery.trim();
+                    if (!q) {
+                        this.clearSearch();
+                        return;
+                    }
+                    this.isSearching = true;
+                    this.isSearchLoading = true;
+                    try {
+                        const res = await fetch(`${this.config.searchUrl}?q=${encodeURIComponent(q)}`);
+                        this.searchResults = await res.json();
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        this.isSearchLoading = false;
+                    }
+                },
+                
+                clearSearch() {
+                    this.searchQuery = '';
+                    this.isSearching = false;
+                    this.searchResults = [];
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

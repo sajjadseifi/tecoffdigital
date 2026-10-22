@@ -1,0 +1,10 @@
+pip install --no-index --find-links C:\repositroy\packages -r requirements.txt
+pip install --no-index --find-links C:\repositroy\packages -r requirements.txt
+pip install django-cors-headers -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+pip install gunicorn -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+pip install waitress -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+pip install whitenoise -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+pip install openpyxl -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+ pip install wfastcgi -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+ pip install  httpx -i https://mirror-pypi.runflare.com/simple --trusted-host mirror-pypi.runflare.com
+ 

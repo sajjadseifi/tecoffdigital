@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>خطای سرور | 500</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- Fonts preload / Styles -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Vazirmatn', 'YekanBakh', system-ui, sans-serif;
+        }
+        @layer base {
+            body { 
+                margin: 0;
+                padding: 0;
+                font-family: var(--font-sans); 
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            .touch-pan-x { touch-action: pan-x; }
+        }
+        @layer utilities {
+            .pb-safe { padding-bottom:0; }
+            .h-screen-dvh { height: 100dvh; }
+        }
+        [x-cloak] { display: none !important; }
+        .touch-pan-y { touch-action: pan-y; }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <main class="flex-grow flex items-center justify-center px-6 py-16">
+
+        <div x-data="{show:false}" x-init="setTimeout(()=>show=true,150)"
+             class="text-center"
+             x-show="show"
+             x-transition.duration.600ms>
+
+            <div class="text-7xl sm:text-8xl font-black text-red-600 drop-shadow mb-6">500</div>
+
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+                خطای داخلی سرور
+            </h1>
+
+            <p class="text-gray-600 max-w-lg mx-auto mb-10 leading-relaxed">
+                مشکلی در پردازش درخواست شما رخ داده است.  
+                لطفاً کمی بعد دوباره تلاش کنید.
+            </p>
+
+            {% if error_message %}
+            <div class="bg-red-50 text-red-600 border border-red-200 rounded-xl p-4 mb-10 text-sm max-w-xl mx-auto">
+                <span class="font-bold">جزئیات فنی:</span><br>
+                {{ error_message }}
+            </div>
+            {% endif %}
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="/" class="px-6 py-3 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-700 transition">
+                    بازگشت به خانه
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center text-gray-400 text-sm pb-6">
+        © 2026 — تکوف
+    </footer>
+
+</body>
+</html>

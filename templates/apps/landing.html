@@ -1,0 +1,401 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ماموت | موتور جستجوی هوشمند</title>
+    <link rel="icon" href="{% static 'icons/mamut.space_faveicon.svg' %}" type="image/png" />
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}">
+    
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script src="{% static 'js/swiper-bundle.min.js' %}" defer></script>
+    
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'YekanBakh', tahoma, sans-serif;
+        }
+
+        body {
+            @apply font-sans text-white overflow-x-hidden;
+            background: linear-gradient(180deg, #020617 0%, #06122e 30%, #0b1f4d 70%, #020617 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(30, 58, 138, 0.1), rgba(15, 23, 42, 0.4));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        /* افکت بارش علم */
+        .stars {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 100px 100px;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .rain-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+            mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        }
+
+        .rain-drop {
+            position: absolute;
+            color: rgba(96, 165, 250, 0.4);
+            font-size: 12px;
+            font-family: monospace;
+            animation: rain 4s linear infinite;
+        }
+
+        @keyframes rain {
+            0% { transform: translateY(-20px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(400px); opacity: 0; }
+        }
+
+        /* اسکرول بار مخفی برای تکس اریا */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="relative antialiased selection:bg-indigo-500/30">
+
+    <div class="stars"></div>
+    <div class="rain-container" id="rain-container"></div>
+
+    <div x-data="{ query: '' }" class="relative z-10 min-h-screen flex flex-col pb-20">
+        
+        <!-- ================= HERO SECTION & SEARCH ================= -->
+        <section class="flex-1 flex flex-col items-center justify-center px-4 mt-12 mb-6 relative z-20">
+            <div class="relative w-full">
+                <div class="max-w-4xl mx-auto w-full text-center">
+                    
+                    <h2 class="text-3xl md:text-5xl font-black mb-4 leading-tight text-white">
+                        جهان را <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400 drop-shadow-sm">هوشمندانه</span> کاوش کنید
+                    </h2>
+                    
+                    <p class="text-slate-300/80 text-sm md:text-lg mb-8 max-w-2xl mx-auto font-light px-4">
+                        جستجوی معنایی ماموت؛ فایل آپلود کنید، صحبت کنید یا هر سوالی دارید بپرسید.
+                    </p>
+
+                    <!-- ================= TEC LANDS SECTION ================= -->
+                    <div class="max-w-5xl mx-auto w-full px-2 md:px-4 py-6 relative z-20">
+                        <header class="flex justify-between items-center mb-6 px-2">
+                            <h2 class="text-lg md:text-2xl font-bold text-white">سرزمین رویایی تک‌لند</h2>
+                            <a href="{% url 'tecland_dream' %}" class="text-xs md:text-sm font-medium text-sky-400 hover:text-sky-300 transition flex items-center gap-1">
+                                مشاهده همه
+                                <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>    
+                        </header>
+
+                        <ul class="flex md:grid md:grid-cols-4 lg:grid-cols-8 gap-3 overflow-x-auto md:overflow-visible pb-4 snap-x snap-mandatory scrollbar-hide" style="scrollbar-width: none;">
+                            {% for land in dream_lands %}
+                            <li class="snap-center shrink-0">
+                                <a href="{% url land.url_name %}" class="flex flex-col items-center gap-2 group w-[72px] md:w-[88px]">
+                                    <div class="w-[72px] h-[72px] md:w-[80px] md:h-[80px] rounded-2xl bg-white/5 backdrop-blur-md flex items-center justify-center p-3 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:bg-white/10 group-hover:shadow-[0_8px_20px_rgba(56,189,248,0.15)] border border-white/5 group-hover:border-white/20 relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <div class="relative z-10 w-full h-full text-slate-300 group-hover:text-sky-400 transition-colors duration-300 drop-shadow-lg flex items-center justify-center">
+                                            {{ land.icon|safe }}
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] md:text-xs font-medium text-slate-400 group-hover:text-white transition text-center leading-tight">{{ land.title }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- ========= TWO-LINE PREMIUM SEARCH BAR ========= -->
+                    <div class="relative w-full max-w-3xl mx-auto group z-50 px-4 md:px-0" x-data="{ query: '' }">
+                        <!-- Animated Glow Background -->
+                        <div class="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-indigo-500/40 via-sky-400/40 to-purple-500/40 blur-md opacity-60 group-hover:opacity-100 transition duration-500 animate-pulse"></div>
+
+                        <!-- Main Search Container (Two Lines) -->
+                        <form @submit.prevent="if(query.trim()) window.location.href = `/teapp?q=${encodeURIComponent(query)}`" class="relative flex flex-col bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-3 shadow-2xl transition-all duration-300 group-hover:bg-[#0f172a]/90 group-hover:border-white/20 text-right">
+                            
+                            <!-- Line 1: Textarea Input -->
+                            <textarea
+                                x-model="query"
+                                @keydown.enter.prevent="if(query.trim()) window.location.href = `/teapp?q=${encodeURIComponent(query)}`"
+                                placeholder="مفهوم مورد نظر را بنویسید یا فایلی ضمیمه کنید..."
+                                class="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-500 text-sm md:text-base px-3 py-2 outline-none resize-none h-16 custom-scrollbar"
+                            ></textarea>
+
+                            <!-- Line 2: Actions & Buttons -->
+                            <div class="flex items-center justify-between mt-1 pt-2 border-t border-white/5">
+                                
+                                <!-- Right Side: Attachment -->
+                                <label class="flex items-center justify-center w-10 h-10 rounded-full text-slate-400 hover:text-sky-400 hover:bg-white/5 cursor-pointer transition-colors duration-200" title="آپلود فایل">
+                                    <input type="file" class="hidden" multiple>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                    </svg>
+                                </label>
+
+                                <!-- Left Side: Voice & Submit -->
+                                <div class="flex items-center gap-2">
+                                    <button type="button" class="flex items-center justify-center w-10 h-10 rounded-full text-slate-400 hover:text-rose-400 hover:bg-white/5 transition-colors duration-200" title="جستجوی صوتی">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                                        </svg>
+                                    </button>
+
+                                    <button type="submit" class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:scale-105 active:scale-95 transition-transform duration-300">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 -rotate-90">
+                                            <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- End Search Bar -->
+
+                    <!-- ================= LOGIN BUTTON ================= -->
+                    <div class="mt-8 flex justify-center z-50 relative">
+                        <a href="{% url 'tecapp' %}" class="group relative inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-sky-400/50 hover:shadow-[0_0_20px_rgba(56,189,248,0.2)]">
+                            <!-- Shine effect -->
+                            <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-[shine_1.5s_ease-in-out_infinite]"></div>
+                            
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-sky-400 group-hover:text-sky-300 transition-colors">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                            </svg>
+                            <span class="text-sm md:text-base font-medium text-slate-200 group-hover:text-white transition-colors">ورود به تک‌پ</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= TECH & APPS HUB ================= -->
+        <section class="max-w-6xl mx-auto w-full px-6 py-12 md:py-20" x-data="{ filter: 'all' }">
+            <div class="text-center mb-8 md:mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold mb-4">اکوسیستم هوشمند ماموت</h3>
+                <p class="text-slate-400 mb-6 md:mb-8 text-sm md:text-base">ابزار مورد نیاز خود را پیدا کنید، تست کنید و از قدرت هوش مصنوعی لذت ببرید.</p>
+                
+                <div class="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 md:mb-12">
+                    <button @click="filter = 'all'" :class="filter === 'all' ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition-colors">همه ابزارها</button>
+                    <button @click="filter = 'text'" :class="filter === 'text' ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition-colors">پردازش متن</button>
+                    <button @click="filter = 'vision'" :class="filter === 'vision' ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition-colors">تصویر و بینایی</button>
+                    <button @click="filter = 'data'" :class="filter === 'data' ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'" class="px-4 md:px-5 py-2 rounded-full text-xs md:text-sm transition-colors">تحلیل داده</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- App 1 -->
+                <div x-show="filter === 'all' || filter === 'text'" class="glass-card rounded-3xl p-6 group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(56,189,248,0.1)] flex flex-col">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-sky-400 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base md:text-lg">موتور جستجوی معنایی</h4>
+                            <span class="text-[10px] md:text-xs text-sky-400 bg-sky-400/10 px-2 py-1 rounded-md mt-1 inline-block">NLP Models</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 text-xs md:text-sm leading-relaxed flex-grow mb-6">درک دقیق مفهوم عبارات شما و جستجو در میان میلیون‌ها سند فارسی با بالاترین سرعت.</p>
+                    <button class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-sky-500 hover:text-white transition-colors text-sm font-bold border border-white/5">تست و جستجو</button>
+                </div>
+
+                <!-- App 2 -->
+                <div x-show="filter === 'all' || filter === 'vision'" class="glass-card rounded-3xl p-6 group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(168,85,247,0.1)] flex flex-col">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center text-purple-400 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base md:text-lg">پردازشگر تصویر</h4>
+                            <span class="text-[10px] md:text-xs text-purple-400 bg-purple-400/10 px-2 py-1 rounded-md mt-1 inline-block">Computer Vision</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 text-xs md:text-sm leading-relaxed flex-grow mb-6">استخراج متن از عکس (OCR)، تشخیص اشیاء و تولید تصاویر خلاقانه با پرامپت فارسی.</p>
+                    <button class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-purple-500 hover:text-white transition-colors text-sm font-bold border border-white/5">اجرای محیط تست</button>
+                </div>
+
+                <!-- App 3 -->
+                <div x-show="filter === 'all' || filter === 'data'" class="glass-card rounded-3xl p-6 group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(20,184,166,0.1)] flex flex-col">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-teal-500/20 rounded-2xl flex items-center justify-center text-teal-400 shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-base md:text-lg">تحلیلگر اسناد</h4>
+                            <span class="text-[10px] md:text-xs text-teal-400 bg-teal-400/10 px-2 py-1 rounded-md mt-1 inline-block">Data Science</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 text-xs md:text-sm leading-relaxed flex-grow mb-6">آپلود فایل‌های PDF یا اکسل، دریافت خلاصه هوشمند و چت مستقیم با اسناد و داده‌های شما.</p>
+                    <button class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-teal-500 hover:text-white transition-colors text-sm font-bold border border-white/5">شروع تحلیل</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PRICING SECTION ================= -->
+        <section class="max-w-7xl mx-auto w-full px-6 py-12 md:py-24" x-data="{ planType: 'monthly' }">
+            <div class="text-center mb-8 md:mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold mb-4">تعرفه‌ها و اشتراک</h3>
+                <p class="text-slate-400 mb-6 md:mb-8 text-sm md:text-base">پلن مناسب خود را برای تجربه بهتر جستجوی هوشمند انتخاب کنید</p>
+
+                <div class="inline-flex bg-slate-800/80 rounded-full p-1 border border-white/10">
+                    <button @click="planType = 'trial'" :class="planType === 'trial' ? 'bg-sky-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'" class="px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300">تست ۳ روزه</button>
+                    <button @click="planType = 'monthly'" :class="planType === 'monthly' ? 'bg-sky-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'" class="px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300">ماهانه</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 items-stretch">
+                <!-- FREE -->
+                <div class="glass border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col">
+                    <h4 class="text-lg md:text-xl font-bold text-slate-300 mb-2">پایه</h4>
+                    <div class="text-3xl md:text-4xl font-black mb-6">رایگان</div>
+                    <ul class="space-y-3 md:space-y-4 mb-8 text-slate-400 text-xs md:text-sm flex-grow">
+                        <li class="flex gap-2">✅ جستجوی نامحدود متن</li>
+                        <li class="flex gap-2">✅ پاسخ سریع AI</li>
+                        <li class="flex gap-2 text-slate-500">✕ تحلیل فایل</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10 font-bold text-sm">شروع رایگان</button>
+                </div>
+
+                <!-- PLUS -->
+                <div class="glass border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col">
+                    <h4 class="text-lg md:text-xl font-bold text-indigo-300 mb-2">Plus</h4>
+                    <div class="text-3xl md:text-4xl font-black mb-6 flex items-end gap-1">
+                        <span x-text="planType === 'monthly' ? '79' : '15'">79</span>
+                        <span class="text-xs md:text-sm text-slate-400 pb-1" x-text="planType === 'monthly' ? 'هزار / ماه' : 'هزار / ۳ روز'">هزار / ماه</span>
+                    </div>
+                    <ul class="space-y-3 md:space-y-4 mb-8 text-slate-300 text-xs md:text-sm flex-grow">
+                        <li class="flex gap-2">✅ جستجوی نامحدود</li>
+                        <li class="flex gap-2">✅ پاسخ‌های دقیق‌تر AI</li>
+                        <li class="flex gap-2">✅ آپلود فایل تا ۵۰MB</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition font-bold text-sm" x-text="planType === 'monthly' ? 'انتخاب پلن' : 'تست ۳ روزه'">انتخاب پلن</button>
+                </div>
+
+                <!-- PRO -->
+                <div class="relative glass-card border-sky-500/50 rounded-3xl p-6 md:p-8 shadow-[0_0_30px_rgba(56,189,248,0.2)] flex flex-col transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-sky-400 to-indigo-500 rounded-t-3xl"></div>
+                    <div class="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 bg-sky-500 text-[10px] md:text-xs px-3 md:px-4 py-1 rounded-full whitespace-nowrap">پیشنهاد ویژه</div>
+                    <h4 class="text-lg md:text-xl font-bold text-sky-400 mb-2 mt-2 md:mt-0">Pro</h4>
+                    <div class="text-3xl md:text-4xl font-black mb-6 flex items-end gap-1">
+                        <span x-text="planType === 'monthly' ? '149' : '29'">149</span>
+                        <span class="text-xs md:text-sm text-slate-400 pb-1" x-text="planType === 'monthly' ? 'هزار / ماه' : 'هزار / ۳ روز'">هزار / ماه</span>
+                    </div>
+                    <ul class="space-y-3 md:space-y-4 mb-8 text-slate-200 text-xs md:text-sm flex-grow">
+                        <li class="flex gap-2">✅ تحلیل فایل‌ها</li>
+                        <li class="flex gap-2">✅ پاسخ‌های پیشرفته AI</li>
+                        <li class="flex gap-2">✅ سرعت پردازش بیشتر</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 transition font-bold shadow-lg text-sm" x-text="planType === 'monthly' ? 'خرید اشتراک' : 'تست ۳ روزه'">خرید اشتراک</button>
+                </div>
+
+                <!-- ENTERPRISE -->
+                <div class="glass border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col">
+                    <h4 class="text-lg md:text-xl font-bold text-slate-300 mb-2">سازمانی</h4>
+                    <div class="text-3xl md:text-4xl font-black mb-6">تماس</div>
+                    <ul class="space-y-3 md:space-y-4 mb-8 text-slate-400 text-xs md:text-sm flex-grow">
+                        <li class="flex gap-2">✅ API اختصاصی</li>
+                        <li class="flex gap-2">✅ مدل AI سفارشی</li>
+                        <li class="flex gap-2">✅ استقرار روی سرور</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10 font-bold text-sm">تماس با ما</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= FAQ SECTION ================= -->
+        <section class="max-w-4xl mx-auto w-full px-6 py-12 md:py-20">
+            <div class="text-center mb-8 md:mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold mb-4">سوالات متداول</h3>
+            </div>
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div x-data="{ open: false }" :class="open ? 'bg-slate-800/60 border-sky-500/40 shadow-[0_5px_20px_rgba(56,189,248,0.15)]' : 'glass border-white/5 hover:border-white/10'" class="rounded-2xl overflow-hidden transition-all duration-300">
+                    <button @click="open = !open" class="w-full px-4 md:px-6 py-4 md:py-5 text-right flex justify-between items-center focus:outline-none group">
+                        <span class="font-bold text-sm md:text-lg group-hover:text-sky-300 transition-colors">تفاوت ماموت با سایر موتورهای جستجو چیست؟</span>
+                        <svg :class="{'rotate-180 text-sky-400': open, 'text-slate-400': !open}" class="w-5 h-5 shrink-0 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="open" x-collapse class="px-4 md:px-6 pb-5 text-slate-300 text-xs md:text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        ماموت با تمرکز بر محتوای وب فارسی و با استفاده از مدل‌های زبانی بومی‌سازی شده، نتایجی دقیق‌تر و متناسب با نیاز کاربر ایرانی ارائه می‌دهد و مستقیماً به سوالات شما پاسخ می‌دهد.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div x-data="{ open: false }" :class="open ? 'bg-slate-800/60 border-sky-500/40 shadow-[0_5px_20px_rgba(56,189,248,0.15)]' : 'glass border-white/5 hover:border-white/10'" class="rounded-2xl overflow-hidden transition-all duration-300">
+                    <button @click="open = !open" class="w-full px-4 md:px-6 py-4 md:py-5 text-right flex justify-between items-center focus:outline-none group">
+                        <span class="font-bold text-sm md:text-lg group-hover:text-sky-300 transition-colors">آیا اطلاعات جستجوی من ذخیره می‌شود؟</span>
+                        <svg :class="{'rotate-180 text-sky-400': open, 'text-slate-400': !open}" class="w-5 h-5 shrink-0 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="open" x-collapse class="px-4 md:px-6 pb-5 text-slate-300 text-xs md:text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+                        خیر. در ماموت حریم خصوصی اولویت ماست. هیچ‌گونه دیتای شخصی یا تاریخچه جستجو برای اهداف تبلیغاتی ذخیره و فروخته نخواهد شد.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="text-center py-8 text-slate-500 border-t border-white/5 mt-auto relative z-20 text-sm">
+            © 2026 Mamut & Tecnit. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- اسکریپت افکت بارش علم -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById('rain-container');
+            const characters = 'تکنیت10دانشعلم10AI';
+            
+            function createDrop() {
+                const drop = document.createElement('div');
+                drop.classList.add('rain-drop');
+                drop.innerText = characters.charAt(Math.floor(Math.random() * characters.length));
+                
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.animationDuration = Math.random() * 2 + 2 + 's';
+                drop.style.opacity = Math.random();
+                
+                container.appendChild(drop);
+                
+                setTimeout(() => {
+                    drop.remove();
+                }, 4000);
+            }
+
+            setInterval(createDrop, 50);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<div class="w-full flex flex-col items-center pb-12">
+    <!-- هدر بخش مدیریت -->
+    <div class="text-center mb-12 w-full max-w-4xl relative z-10">
+        <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-medium tracking-[0.2em] shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            DRONE COMMAND CENTER
+        </div>
+        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-white tracking-tight">
+            تغییر مسیر <span class="text-red-500">تاکتیکی</span>
+        </h2>
+        <p class="text-gray-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+            بدون نیاز به چاپ مجدد کیوآر کد، مختصات فرود کاربران را در لحظه و از راه دور تغییر دهید.
+        </p>
+    </div>
+
+    <!-- فرم تغییر مسیر (۳ مرحله ای) -->
+    <div x-data="{ step: 1, qrId: '', newUrl: '' }" class="w-full max-w-3xl relative z-10 mb-20">
+        <div class="absolute -inset-1 bg-gradient-to-r from-red-500/20 via-orange-500/10 to-red-500/20 rounded-[34px] blur-xl opacity-50"></div>
+        
+        <div class="relative bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 md:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden">
+            <!-- نوار پیشرفت (HUD style) -->
+            <div class="flex items-center justify-between mb-10 relative">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-gray-800 z-0"></div>
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-red-500 z-0 transition-all duration-500" :style="'width: ' + ((step - 1) * 50) + '%'"></div>
+                
+                <!-- Steps -->
+                <template x-for="i in 3">
+                    <div class="relative z-10 flex flex-col items-center gap-2">
+                        <div :class="step >= i ? 'bg-red-500 border-red-400 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-gray-900 border-gray-700 text-gray-500'" class="w-10 h-10 rounded-xl border-2 flex items-center justify-center font-mono font-bold transition-all duration-300">
+                            <span x-text="'0' + i"></span>
+                        </div>
+                        <span :class="step >= i ? 'text-red-400' : 'text-gray-600'" class="text-[10px] font-bold uppercase tracking-wider absolute -bottom-6 whitespace-nowrap" x-text="i === 1 ? 'Target ID' : (i === 2 ? 'New Trajectory' : 'Auth')"></span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- محتوای مراحل -->
+            <div class="min-h-[180px] flex flex-col justify-center">
+                
+                <!-- مرحله 1: شناسه -->
+                <div x-show="step === 1" x-transition.opacity class="space-y-6">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2 font-mono">CURRENT NODE ID <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="qrId" placeholder="ex: tx-849-alpha" class="w-full bg-black/50 border border-gray-700 rounded-xl px-5 py-4 text-white font-mono focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all outline-none" dir="ltr">
+                    </div>
+                    <button @click="if(qrId) step = 2" :disabled="!qrId" :class="qrId ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-gray-800 text-gray-500 cursor-not-allowed'" class="w-full py-4 rounded-xl font-bold transition-all flex justify-center items-center gap-2">
+                        قفل روی هدف
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+
+                <!-- مرحله 2: لینک جدید -->
+                <div x-show="step === 2" x-cloak x-transition.opacity class="space-y-6">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2 font-mono">NEW TRAJECTORY URL <span class="text-red-500">*</span></label>
+                        <input type="url" x-model="newUrl" placeholder="https://..." class="w-full bg-black/50 border border-gray-700 rounded-xl px-5 py-4 text-white font-mono focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all outline-none" dir="ltr">
+                    </div>
+                    <div class="flex gap-4">
+                        <button @click="step = 1" class="w-1/3 py-4 rounded-xl font-bold text-gray-400 bg-gray-800 hover:bg-gray-700 transition-all">بازگشت</button>
+                        <button @click="if(newUrl) step = 3" :disabled="!newUrl" :class="newUrl ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-gray-800 text-gray-500 cursor-not-allowed'" class="w-2/3 py-4 rounded-xl font-bold transition-all">تنظیم مختصات جدید</button>
+                    </div>
+                </div>
+
+                <!-- مرحله 3: هشدار احراز هویت -->
+                <div x-show="step === 3" x-cloak x-transition.opacity class="text-center space-y-6">
+                    <div class="w-20 h-20 mx-auto bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-500 animate-pulse mb-4">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">نیازمند تایید فرماندهی</h3>
+                    <p class="text-gray-400 text-sm">برای اعمال این تغییر در دیتابیس مرکزی، باید وارد حساب کاربری خود شوید.</p>
+                    <div class="flex gap-4 mt-6">
+                        <button @click="step = 2" class="w-1/3 py-4 rounded-xl font-bold text-gray-400 bg-transparent border border-gray-700 hover:bg-gray-800 transition-all">لغو عملیات</button>
+                        <a href="https://auth.tecoff.digital" class="w-2/3 py-4 rounded-xl font-bold bg-white text-black hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
+                            ورود به سیستم
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بخش پلن ها (Doctrine) -->
+    <div class="w-full max-w-6xl mt-10">
+        <div class="text-center mb-10">
+            <h3 class="text-2xl font-bold text-white mb-2">سطوح دسترسی استراتژیک</h3>
+            <p class="text-gray-500 text-sm">بر اساس دکترین عملیاتی خود، سطح رادار را انتخاب کنید</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4">
+            <!-- 1. CAP (Combat Air Patrol) -->
+            <div class="bg-black/40 border border-gray-800 rounded-2xl p-6 hover:border-blue-500/50 hover:bg-blue-900/10 transition-all group flex flex-col">
+                <div class="text-blue-400 mb-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">
+                    <!-- آیکون رادار کشیده شده -->
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 22a10 10 0 110-20 10 10 0 010 20zm0-4a6 6 0 110-12 6 6 0 010 12zm0-4a2 2 0 110-4 2 2 0 010 4z"></path></svg>
+                </div>
+                <h4 class="text-lg font-bold text-white tracking-widest uppercase mb-1">CAP</h4>
+                <p class="text-xs text-gray-500 mb-6 h-8">گشت هوایی رزمی (رایگان)</p>
+                <ul class="text-sm text-gray-400 space-y-3 mb-8 flex-grow">
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-blue-500 rounded-full"></div> ۳ لینک دینامیک</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-blue-500 rounded-full"></div> آمار اسکن ساده</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-blue-500 rounded-full"></div> پشتیبانی انجمن</li>
+                </ul>
+            </div>
+
+            <!-- 2. CAS (Close Air Support) -->
+            <div class="bg-black/40 border border-cyan-500/30 rounded-2xl p-6 hover:border-cyan-400 hover:bg-cyan-900/10 transition-all group flex flex-col relative shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+                <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+                <div class="text-cyan-400 mb-4 opacity-80 group-hover:opacity-100 group-hover:translate-y-[-5px] transition-all duration-500">
+                    <!-- آیکون هلیکوپتر -->
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M12 4v16M8 8l8 8M16 8l-8 8"></path></svg>
+                </div>
+                <h4 class="text-lg font-bold text-white tracking-widest uppercase mb-1">CAS</h4>
+                <p class="text-xs text-cyan-500/70 mb-6 h-8">پشتیبانی نزدیک هوایی (محبوب)</p>
+                <ul class="text-sm text-gray-300 space-y-3 mb-8 flex-grow">
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-cyan-400 rounded-full"></div> ۵۰ لینک دینامیک</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-cyan-400 rounded-full"></div> رادار تحلیلی پیشرفته</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-cyan-400 rounded-full"></div> آدرس‌های شخصی‌سازی شده</li>
+                </ul>
+            </div>
+
+            <!-- 3. Air Supremacy -->
+            <div class="bg-black/40 border border-gray-800 rounded-2xl p-6 hover:border-indigo-500/50 hover:bg-indigo-900/10 transition-all group flex flex-col">
+                <div class="text-indigo-400 mb-4 opacity-70 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-500">
+                    <!-- آیکون جنگنده -->
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </div>
+                <h4 class="text-lg font-bold text-white tracking-widest uppercase mb-1">Air Supremacy</h4>
+                <p class="text-xs text-gray-500 mb-6 h-8">برتری هوایی مطلق</p>
+                <ul class="text-sm text-gray-400 space-y-3 mb-8 flex-grow">
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-indigo-500 rounded-full"></div> ۵۰۰ لینک دینامیک</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-indigo-500 rounded-full"></div> اتصال دامنه اختصاصی</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-indigo-500 rounded-full"></div> مدیریت تیم و دسترسی</li>
+                </ul>
+            </div>
+
+            <!-- 4. Deterrence -->
+            <div class="bg-black/40 border border-gray-800 rounded-2xl p-6 hover:border-orange-500/50 hover:bg-orange-900/10 transition-all group flex flex-col">
+                <div class="text-orange-400 mb-4 opacity-70 group-hover:opacity-100 group-hover:rotate-12 transition-all duration-500">
+                    <!-- آیکون ماهواره -->
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.73 21a2 2 0 01-3.46 0l-8-14a2 2 0 011.73-3h16a2 2 0 011.73 3l-8 14z"></path></svg>
+                </div>
+                <h4 class="text-lg font-bold text-white tracking-widest uppercase mb-1">Deterrence</h4>
+                <p class="text-xs text-gray-500 mb-6 h-8">بازدارندگی (سازمانی)</p>
+                <ul class="text-sm text-gray-400 space-y-3 mb-8 flex-grow">
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-orange-500 rounded-full"></div> لینک‌های نامحدود</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-orange-500 rounded-full"></div> API اختصاصی سیستم</li>
+                    <li class="flex items-center gap-2"><div class="w-1 h-1 bg-orange-500 rounded-full"></div> SLA ۹۹.۹۹٪ و سرور مستقل</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

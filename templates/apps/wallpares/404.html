@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحه پیدا نشد | 404</title>
+    <meta name="description" content="صفحه مورد نظر یافت نشد. ممکن است لینک تغییر کرده باشد یا حذف شده باشد.">
+    <!-- Fonts preload / Styles -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Vazirmatn', 'YekanBakh', system-ui, sans-serif;
+        }
+        @layer base {
+            body { 
+                margin: 0;
+                padding: 0;
+                font-family: var(--font-sans); 
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            .touch-pan-x { touch-action: pan-x; }
+        }
+        @layer utilities {
+            .pb-safe { padding-bottom:0; }
+            .h-screen-dvh { height: 100dvh; }
+        }
+        [x-cloak] { display: none !important; }
+        .touch-pan-y { touch-action: pan-y; }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+    <main class="flex-grow flex items-center justify-center py-20 px-6">
+
+        <div x-data="{show:false}" x-init="setTimeout(()=>show=true,120)"
+             class="text-center max-w-2xl mx-auto"
+             x-show="show"
+             x-transition.duration.700ms>
+
+            <div class="text-8xl sm:text-9xl font-black text-transparent bg-clip-text 
+                        bg-gradient-to-br from-teal-500 to-blue-600 drop-shadow-xl mb-8">
+                404
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+                صفحه‌ای که به دنبال آن هستید یافت نشد
+            </h1>
+
+            <p class="text-gray-600 leading-relaxed max-w-lg mx-auto mb-10">
+                آدرس <span class="font-bold text-gray-800">{{ requested_slug }}</span> وجود ندارد.
+                اما چند کسب‌وکار مشابه پیدا کردیم:
+            </p>
+
+            {% if similar_catalogs %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+
+                {% for cat in similar_catalogs %}
+                <a href="/{{ cat.slug }}/"
+                   class="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-xl 
+                          transition-all hover:-translate-y-1 p-4">
+
+                    {% if cat.cover %}
+                        <img src="{{ cat.cover.url }}" class="w-full h-40 rounded-xl object-cover mb-3">
+                    {% endif %}
+
+                    <div class="text-lg font-semibold text-gray-800 line-clamp-2">{{ cat.title }}</div>
+
+                    {% if cat.tagline %}
+                    <div class="text-sm text-gray-500 mt-1 line-clamp-1">{{ cat.tagline }}</div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+
+            </div>
+            {% endif %}
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="/" class="px-8 py-3 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-700 transition">
+                    بازگشت به خانه
+                </a>
+
+                <a href="/catalogs/"
+                   class="px-8 py-3 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold transition">
+                    مشاهده تمام کاتالوگ‌ها
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center text-gray-400 text-sm pb-6">
+        © 2026 — تکوف
+    </footer>
+
+</body>
+</html>

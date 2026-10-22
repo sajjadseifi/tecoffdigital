@@ -1,0 +1,25 @@
+/* body {
+    background: #f9fafb;
+}
+html body  > *{
+    font-family: 'YekanBakh', sans-serif;
+} */
+.yekanBakh {
+    font-family: 'YekanBakh', sans-serif;
+} 
+
+.delay-200{
+animation-delay:0.2s;
+}
+
+.delay-500{
+animation-delay:0.5s;
+}
+
+.delay-700{
+animation-delay:0.7s;
+}
+
+.delay-1000{
+animation-delay:1s;
+}

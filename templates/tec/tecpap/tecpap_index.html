@@ -1,0 +1,218 @@
+{% extends "_layout/base.html" %}
+{% load static %}
+
+{% block title %}تک پیپر | فرم‌ساز آنلاین{% endblock %}
+{% block description %}بهترین سیستم فرم‌ساز برای تولید سریع فرم چاپی{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'tec/tecpap/css/app.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'tec/tecpap/js/app.js' %}" defer></script>
+{% endblock %}
+
+
+{% block content %}
+<div 
+id="tecpap-app"
+x-data="tecPapApp"
+x-init="init()"
+class="min-h-[80vh] max-w-5xl mx-auto px-6 py-10"
+>
+
+<!-- HEADER -->
+<div class="flex items-center justify-between mb-10">
+  <div class="flex items-center gap-3 text-accent-600">
+    <h1 class="text-4xl font-bold">TEC PAPER</h1>
+    {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="menu_panel" %}
+  </div>
+
+  <button
+    x-show="currentView !== 'landing'"
+    @click="returnHome()"
+    class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+  >
+    {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="home" %}
+    بازگشت
+  </button>
+</div>
+
+<!-- LANDING -->
+<template x-if="currentView === 'landing'">
+  <div>
+
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">انتخاب فرم</h2>
+      <p class="text-gray-500">فرم مورد نظر را انتخاب کنید</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+
+      <!-- FORM CARD 1 -->
+      <div
+        class="border rounded-xl p-6 hover:shadow-md transition cursor-pointer"
+        @click="openForm('form1')"
+      >
+        <div class="flex items-center gap-3 mb-4 text-accent-600">
+          {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="users" %}
+          <h3 class="font-semibold text-lg">اطلاعات مشتری</h3>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-4">
+          ثبت مشخصات مشتری برای صدور فرم چاپی
+        </p>
+
+        <button class="flex items-center gap-2 text-sm text-accent-600">
+          {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="edit" %}
+          شروع فرم
+        </button>
+      </div>
+
+      <!-- FORM CARD 2 -->
+      <div
+        class="border rounded-xl p-6 hover:shadow-md transition cursor-pointer"
+        @click="openForm('form2')"
+      >
+        <div class="flex items-center gap-3 mb-4 text-accent-600">
+          {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="orders" %}
+          <h3 class="font-semibold text-lg">گزارش سفارش</h3>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-4">
+          ثبت اطلاعات سفارش مشتری
+        </p>
+
+        <button class="flex items-center gap-2 text-sm text-accent-600">
+          {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="edit" %}
+          شروع فرم
+        </button>
+      </div>
+
+    </div>
+  </div>
+</template>
+
+<!-- FORM -->
+<template x-if="currentView === 'form'">
+  <div class="bg-white rounded-xl shadow p-8">
+    <div class="flex items-center gap-3 mb-6">
+      {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="edit" %}
+      <h2 class="text-xl font-semibold" x-text="`فرم: ${currentForm}`"></h2>
+    </div>
+
+    <form @submit.prevent="submitForm()" class="space-y-5">
+
+      <div>
+        <label class="block text-sm font-medium mb-1">نام</label>
+        <input
+          type="text"
+          x-model="formData.name"
+          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent-400"
+          required
+        >
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">ایمیل</label>
+        <input
+          type="email"
+          x-model="formData.email"
+          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent-400"
+          required
+        >
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">توضیحات</label>
+        <textarea
+          rows="4"
+          x-model="formData.description"
+          class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent-400"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-between pt-4">
+        <button
+          type="button"
+          @click="goBack()"
+          class="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+        >
+          {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="home" %}
+          بازگشت
+        </button>
+
+        <button
+          type="submit"
+          class="flex items-center gap-2 px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600"
+        >
+          {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="analytics" %}
+          پیش‌نمایش
+        </button>
+      </div>
+
+    </form>
+  </div>
+</template>
+
+<!-- PREVIEW -->
+<template x-if="currentView === 'preview'">
+  <div class="bg-white rounded-xl shadow p-8">
+    <div class="flex items-center gap-3 mb-6">
+      {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="search" %}
+      <h2 class="text-xl font-semibold">پیش‌نمایش فرم</h2>
+    </div>
+
+    <div class="space-y-4 text-sm">
+      <div class="flex gap-2"><strong>نام:</strong><span x-text="formData.name"></span></div>
+      <div class="flex gap-2"><strong>ایمیل:</strong><span x-text="formData.email"></span></div>
+      <div class="flex gap-2"><strong>توضیحات:</strong><span x-text="formData.description"></span></div>
+    </div>
+
+    <div class="flex justify-between mt-8">
+      <button
+        @click="editForm()"
+        class="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+      >
+        {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="edit" %}
+        ویرایش
+      </button>
+
+      <button
+        @click="confirmSubmit()"
+        class="flex items-center gap-2 px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600"
+      >
+        {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="plus" %}
+        تأیید و ارسال
+      </button>
+    </div>
+  </div>
+</template>
+
+<!-- SUCCESS -->
+<template x-if="currentView === 'success'">
+  <div class="text-center py-16">
+    <div class="flex justify-center text-green-600 mb-4">
+      {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="analytics" %}
+    </div>
+
+    <h2 class="text-2xl font-bold text-green-600 mb-3">
+      ارسال با موفقیت انجام شد
+    </h2>
+
+    <p class="text-gray-500 mb-6">
+      از همکاری شما متشکریم
+    </p>
+
+    <button
+      @click="returnHome()"
+      class="inline-flex items-center gap-2 px-6 py-3 bg-accent-500 text-white rounded-lg hover:bg-accent-600"
+    >
+      {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="home" %}
+      بازگشت به صفحه اصلی
+    </button>
+  </div>
+</template>
+
+</div>
+{% endblock %}

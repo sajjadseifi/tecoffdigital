@@ -1,0 +1,113 @@
+<div class="relative w-full max-w-4xl mx-auto space-y-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl md:rounded-xl p-1.5 shadow-lg">
+    <div class="flex overflow-x-auto hide-scrollbar gap-2">
+        <button @click="mainTab='dashboard'"
+        :class="mainTab==='dashboard' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h7v7H3V3zm11 0h7v4h-7V3zM3 14h7v7H3v-7zm11-3h7v10h-7V11z"/>
+            </svg>
+            داشبورد
+        </button>
+
+        <!-- QR Repair -->
+        <button @click="mainTab='qr-repair'"
+        :class="mainTab==='qr-repair' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M7 7h3v3H7V7zm7 0h3v3h-3V7zM7 14h3v3H7v-3z"/>
+            </svg>
+
+            ترمیم QR
+        </button>
+
+        <!-- Statistics -->
+        <button @click="mainTab='stats'"
+        :class="mainTab==='stats' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M9 17V9m4 8V5m4 12v-4"/>
+            </svg>
+
+            آمار
+        </button>
+
+        <!-- Reports -->
+        <button @click="mainTab='reports'"
+        :class="mainTab==='reports' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M9 8h6M5 4h14v16H5z"/>
+            </svg>
+
+            گزارش سیستم
+        </button>
+
+    </div>
+    <!-- Row 2 -->
+    <div class="flex overflow-x-auto hide-scrollbar gap-2 ">
+
+        <!-- Design -->
+        <button @click="mainTab='design'"
+        :class="mainTab==='design' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4z"/>
+            </svg>
+
+            طراحی و چاپ
+        </button>
+
+        <!-- Users -->
+        <button @click="mainTab='users'"
+        :class="mainTab==='users' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5V18a4 4 0 00-3-3.87M9 20H4V18a4 4 0 013-3.87m10-2.13a4 4 0 10-8 0 4 4 0 008 0z"/>
+            </svg>
+
+            کاربران
+        </button>
+
+        <!-- Projects -->
+        <button @click="mainTab='projects'"
+        :class="mainTab==='projects' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+            </svg>
+
+            پروژه‌ها
+        </button>
+
+        <!-- Notifications -->
+        <button @click="mainTab='notifications'"
+        :class="mainTab==='notifications' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159L4 17h5"/>
+            </svg>
+
+            اعلان‌ها
+        </button>
+
+        <!-- Settings -->
+        <button @click="mainTab='settings'"
+        :class="mainTab==='settings' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'"
+        class="flex-shrink-0 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl md:rounded-full border text-xs md:text-sm font-semibold transition">
+
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317a1 1 0 011.35-.936l1.757.703a1 1 0 00.95-.172l1.414-1.414a1 1 0 011.414 0l1.414 1.414a1 1 0 00.95.172l1.757-.703a1 1 0 011.35.936l.272 1.91a1 1 0 00.588.76l1.708.854a1 1 0 01.447 1.341l-.894 1.549a1 1 0 000 .978l.894 1.549a1 1 0 01-.447 1.341l-1.708.854a1 1 0 00-.588.76l-.272 1.91a1 1 0 01-1.35.936l-1.757-.703a1 1 0 00-.95.172l-1.414 1.414a1 1 0 01-1.414 0l-1.414-1.414a1 1 0 00-.95-.172l-1.757.703a1 1 0 01-1.35-.936l-.272-1.91a1 1 0 00-.588-.76l-1.708-.854a1 1 0 01-.447-1.341l.894-1.549a1 1 0 000-.978l-.894-1.549a1 1 0 01.447-1.341l1.708-.854a1 1 0 00.588-.76l.272-1.91z"></path>
+            </svg>
+
+            تنظیمات سیتسم
+        </button>
+    </div>
+</div>

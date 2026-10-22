@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#030712" />
+    <title>در حال انتقال... | TECQR SOUL ENGINE</title>
+    
+    <!-- فونت‌ها -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+        
+    <!-- ================= Performance & Preloads ================= -->
+    <!-- Preload Fonts to prevent FOUT (Flash of Unstyled Text) -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    
+    <!-- ================= Core Scripts (Dev Speed) ================= -->
+    <!-- Tailwind CSS v4 Browser Script -->
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script src="{% static 'js/swiper-bundle.min.js' %}"></script>
+    <!-- اسکریپت‌ها -->
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: 'YekanBakh', system-ui, sans-serif;
+        --color-bg-deep: #030712;
+        --color-brand-cyan: #22d3ee;
+        --color-brand-blue: #3b82f6;
+        --color-error: #ef4444;
+      }
+
+      @layer base {
+        body {
+          font-family: var(--font-sans);
+          background-color: var(--color-bg-deep);
+          color: #f8fafc;
+          margin: 0;
+          overflow: hidden;
+        }
+      }
+
+      /* انیمیشن خط اسکنر روی QR Code */
+      @keyframes scan-line {
+        0% { transform: translateY(-10%); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(110%); opacity: 0; }
+      }
+      .animate-scan {
+        animation: scan-line 2s ease-in-out infinite;
+      }
+    </style>
+  </head>
+
+  <body class="min-h-screen flex flex-col items-center justify-center relative px-4"
+        x-data="transferProtocol()"
+        x-init="initProtocol()">
+
+    <!-- پس‌زمینه -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#030712] to-[#030712] -z-10"></div>
+
+    <!-- باکس اصلی -->
+    <div class="w-full max-w-sm flex flex-col items-center text-center transition-all duration-500"
+         :class="status === 'error' ? 'scale-100' : 'scale-105'">
+        
+        <!-- آیکون وضعیت -->
+        <div class="relative w-32 h-32 mb-8 flex items-center justify-center">
+            
+            <!-- حالت لودینگ: آیکون QR Code با خط اسکن -->
+            <template x-if="status === 'loading' || status === 'success'">
+                <div class="relative w-full h-full">
+                    <!-- هاله نور پشت آیکون -->
+                    <div class="absolute inset-0 bg-[#22d3ee] blur-3xl opacity-20 rounded-full animate-pulse"></div>
+                    
+                    <!-- آیکون QR Code -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full text-[#22d3ee] drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                        <path d="M3 11h18"></path>
+                        <path d="M11 3v18"></path>
+                    </svg>
+
+                    <!-- خط اسکنر متحرک -->
+                    <div class="absolute top-0 left-0 w-full h-0.5 bg-white shadow-[0_0_10px_#fff,0_0_20px_#22d3ee] animate-scan z-10"></div>
+                </div>
+            </template>
+
+            <!-- حالت خطا: آیکون هشدار -->
+            <template x-if="status === 'error'">
+                <div class="relative w-full h-full text-[#ef4444] animate-bounce">
+                    <div class="absolute inset-0 bg-[#ef4444] blur-3xl opacity-20 rounded-full"></div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+            </template>
+        </div>
+
+        <!-- متن پیام -->
+        <h2 class="text-xl md:text-2xl font-bold mb-2 transition-colors duration-300"
+            :class="status === 'error' ? 'text-[#ef4444]' : 'text-white'"
+            x-text="currentMessage">
+        </h2>
+        
+        <p class="text-gray-400 text-sm mb-8 px-4" x-show="status === 'error'">
+            لطفاً از صحت کد اسکن شده اطمینان حاصل کنید یا دوباره تلاش نمایید.
+        </p>
+
+        <!-- نوار پیشرفت (فقط در حالت لودینگ) -->
+        <div class="w-full max-w-xs bg-gray-800/50 rounded-full h-1.5 mb-4 overflow-hidden relative" x-show="status !== 'error'">
+            <div class="h-full bg-gradient-to-r from-[#3b82f6] to-[#22d3ee] rounded-full transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+                 :style="`width: ${progress}%`"></div>
+        </div>
+
+        <!-- دکمه بازگشت (فقط در حالت خطا) -->
+        <button x-show="status === 'error'" 
+                @click="window.history.back()"
+                class="mt-4 px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors border border-gray-700 hover:border-gray-600">
+            بازگشت
+        </button>
+
+        <!-- برندینگ در پایین -->
+        <div class="absolute bottom-8 flex flex-col items-center opacity-50">
+            <span class="text-[10px] tracking-widest text-gray-500 uppercase mb-1 dir-ltr">Powered by</span>
+            <span class="text-xs font-bold tracking-widest text-[#22d3ee] dir-ltr">TECQR SOUL ENGINE</span>
+        </div>
+    </div>
+
+    <!-- منطق اجرای صفحه -->
+    <script>
+        function transferProtocol() {
+            return {
+                // دریافت متغیرها از جنگو (با default برای جلوگیری از خطا)
+                destUrl: '{{ destination_url|default:""|escapejs }}',
+                errorMsg: '{{ error_message|default:""|escapejs }}',
+                
+                status: 'loading', // 'loading', 'success', 'error'
+                progress: 0,
+                currentMessage: 'در حال برقراری ارتباط...',
+                
+                // لیست پیام‌های نمایشی برای کاربر
+                loadingMessages: [
+                    'در حال خواندن اطلاعات بارکد...',
+                    'جستجو در سیستم...',
+                    'در حال آماده‌سازی محتوا...',
+                    'انتقال به صفحه مقصد...'
+                ],
+
+                initProtocol() {
+                    // بررسی اینکه آیا خطایی از سمت سرور ارسال شده است یا خیر
+                    if (this.errorMsg) {
+                        this.status = 'error';
+                        this.currentMessage = this.errorMsg;
+                        return;
+                    }
+
+                    // بررسی اینکه آیا آدرس مقصد وجود دارد
+                    if (!this.destUrl || this.destUrl === '') {
+                        this.status = 'error';
+                        this.currentMessage = 'مسیر مقصد یافت نشد.';
+                        return;
+                    }
+
+                    this.startLoading();
+                },
+
+                startLoading() {
+                    let messageIndex = 0;
+                    
+                    // شبیه‌سازی پر شدن نوار پیشرفت
+                    const interval = setInterval(() => {
+                        // افزایش تصادفی پیشرفت بین 5 تا 15 درصد
+                        this.progress += Math.floor(Math.random() * 15) + 5;
+                        
+                        // تغییر متن بر اساس میزان پیشرفت
+                        if (this.progress > 25 && messageIndex === 0) { messageIndex = 1; this.currentMessage = this.loadingMessages[messageIndex]; }
+                        if (this.progress > 60 && messageIndex === 1) { messageIndex = 2; this.currentMessage = this.loadingMessages[messageIndex]; }
+                        if (this.progress > 85 && messageIndex === 2) { messageIndex = 3; this.currentMessage = this.loadingMessages[messageIndex]; }
+
+                        // پایان لودینگ
+                        if (this.progress >= 100) {
+                            this.progress = 100;
+                            clearInterval(interval);
+                            this.status = 'success';
+                            
+                            // ریدایرکت پس از مکث کوتاه
+                            setTimeout(() => {
+                                window.location.href = this.destUrl;
+                            }, 400);
+                        }
+                    }, 350); // سرعت پر شدن (هر 350 میلی‌ثانیه)
+                }
+            }
+        }
+    </script>
+  </body>
+</html>

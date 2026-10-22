@@ -1,0 +1,132 @@
+<div x-cloak x-show="sidebarOpen" class="relative z-50">
+
+  <!-- پس‌زمینه (Backdrop) -->
+  <div x-show="sidebarOpen" 
+       x-transition.opacity
+       @click="sidebarOpen=false"
+       class="fixed inset-0 bg-brand-900/40 backdrop-blur-sm"></div>
+
+  <!-- نوار کناری (Sidebar) -->
+  <div x-show="sidebarOpen"
+       x-transition:enter="transition ease-out duration-300"
+       x-transition:enter-start="translate-x-full"
+       x-transition:enter-end="translate-x-0"
+       x-transition:leave="transition ease-in duration-200"
+       x-transition:leave-start="translate-x-0"
+       x-transition:leave-end="translate-x-full"
+       class="fixed inset-y-0 right-0 w-72 bg-white shadow-2xl flex flex-col pt-safe pb-safe">
+
+    <!-- هدر -->
+    <div class="flex items-center justify-between p-4 border-b border-surface-100">
+      <h2 class="text-lg font-bold text-brand-900">منو</h2>
+      <button @click="sidebarOpen=false"
+              class="p-2 bg-surface-100 rounded-full text-brand-600 active:scale-90 transition">
+        <svg class="w-5 h-5" stroke="currentColor" fill="none" stroke-width="2">
+          <path d="M6 6l12 12M6 18L18 6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- پروفایل (ثابت) -->
+    <div class="p-4 border-b border-surface-100 flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center text-white font-bold shadow">
+        U
+      </div>
+      {% if request.user.is_staff %}
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-brand-900">ورود به حساب</p>
+          <p class="text-xs text-brand-500">برپایه تکنولوژی TQRS</p>
+        </div>
+      {% else %}
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-brand-900">{{ request.user.display_name }}</p>
+          <p class="text-xs text-brand-500">{{ request.user.phone }}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- منطقه اسکرول برای آیتم‌ها -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-6">
+
+      <!-- بخش اصلی -->
+      <div class="space-y-2">
+        <p class="text-[11px] text-brand-400 px-2">اصلی</p>
+
+        <!-- آیتم‌ها -->
+        <a href="/dashboard" class="group flex items-center gap-3 p-3 rounded-xl  transition">
+          <!-- آیکون -->
+          <div class="w-10 h-10 rounded-lg  flex items-center justify-center">
+            {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="dashboard" %}
+          </div>
+          <!-- متن آیتم -->
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-brand-900">داشبورد</span>
+            <span class="text-xs text-brand-400">نمای کلی فعالیت‌ها</span>
+          </div>
+        </a>
+
+        <a href="/projects" class="group flex items-center gap-3 p-3 rounded-xl  transition">
+          <div class="w-10 h-10 rounded-lg  flex items-center justify-center ">
+            {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="items" %}
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-brand-900">پروژه‌ها</p>
+            <p class="text-xs text-brand-400">مدیریت پروژه‌ها</p>
+          </div>
+        </a>
+
+        <a href="/tasks" class="group flex items-center gap-3 p-3 rounded-xl  transition">
+          <div class="w-10 h-10 rounded-lg  flex items-center justify-center ">
+            {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="analytics" %}
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-brand-900">تسک‌ها</p>
+            <p class="text-xs text-brand-400">مدیریت وظایف</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- بخش حساب کاربری -->
+      <div class="space-y-2">
+        <p class="text-[11px] text-brand-400 px-2">حساب کاربری</p>
+
+        <a href="/profile" class="group flex items-center gap-3 p-3 rounded-xl  transition">
+          <div class="w-10 h-10 rounded-lg  flex items-center justify-center ">
+            {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="users" %}
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-brand-900">پروفایل</p>
+            <p class="text-xs text-brand-400">اطلاعات شخصی</p>
+          </div>
+        </a>
+
+        <a href="/settings" class="group flex items-center gap-3 p-3 rounded-xl transition">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center ">
+            {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="settings" %}
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-brand-900">تنظیمات</p>
+            <p class="text-xs text-brand-400">شخصی‌سازی برنامه</p>
+          </div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- فوتر (ثابت در پایین) -->
+    <div class="border-t border-surface-100 p-4 space-y-3">
+
+      <a href="/logout" class="flex items-center justify-center gap-2 p-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">
+        {% include "tec/teclib/palate/depthless_neo_svg.html" with icon="logout" %}
+        خروج از حساب
+      </a>
+
+      <!-- برندینگ -->
+      <a href="/" class="text-center text-xs text-brand-400 pt-1">
+        <p class="font-semibold text-brand-600">TEC APP</p>
+        <p>DIGITAL MARKET</p>
+      </a>
+
+    </div>
+  </div>
+</div>

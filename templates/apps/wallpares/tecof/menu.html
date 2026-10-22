@@ -1,0 +1,717 @@
+{% extends 'apps/wallpares/tecof/layout.html' %}
+{% load static %}
+{% block title %}{{ catalog.title|default:"کاتالوگ" }} | تکوف دیجیتالی {% endblock %}
+
+{% block page_x_data %}menuApp(){% endblock %}
+
+{% block extra_head %}
+<script>
+    const CATALOG_SLUG = "{{ catalog.slug }}";
+    const SEARCH_API_URL = "{% url 'api_catalog_search' catalog_slug=catalog.slug %}";
+    const ITEMS_API_URL_TEMPLATE = "{% url 'api_category_items' catalog_slug=catalog.slug category_slug='__CAT_SLUG__' %}";
+    const INITIAL_CATEGORIES = [
+        {% for cat in catalog.categories_first_level %}
+            { 
+                slug: "{{ cat.slug }}", 
+                title: "{{ cat.title }}",
+                is_featured: "{{ cat.is_featured|yesno:'true,' }}",
+                is_featured: "{{ cat.is_featured|yesno:'true,' }}",
+                image: "{% if cat.image %}{{ cat.image.url }}{% endif %}" 
+            }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+</script>
+<style>
+    /* انیمیشن موج برای دسته بندی ها */
+    @keyframes cat-ripple {
+        0% {
+            transform: scale(0.5);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(15);
+            opacity: 0;
+        }
+    }
+
+    .animate-cat-ripple {
+        animation: cat-ripple 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* ترانزیشن نرم (همان افکتی که درخواست کرده بودید) */
+    .cubic-bezier {
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes smooth-ripple {
+        0% {
+            transform: scale(0.2);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(4); /* دایره به اندازه کافی بزرگ می‌شود تا کل دکمه را پوشش دهد */
+            opacity: 0; /* در پایان انیمیشن کاملاً محو و ناپدید می‌شود */
+        }
+    }
+
+</style>
+{% endblock %}
+
+{% block header %}
+    {% include './_app_bar.html' with categories_enable=True search_enable=True %}
+{% endblock %}
+
+
+{% block content %}
+<!-- کانتینر اصلی -->
+<div class="font-sans pt-8 py-4 w-full overflow-hidden" dir="rtl">
+
+    <!-- ========================================== -->
+    <!-- بخش جستجو -->
+    <!-- ========================================== -->
+    <div x-show="isSearching && !isLoading" 
+         x-transition:enter="transition transform ease-out duration-500" 
+         x-transition:enter-start="opacity-0 translate-y-4" 
+         x-transition:enter-end="opacity-100 translate-y-0" 
+         class="flex flex-col gap-4 px-5 pb-8" x-cloak>
+        
+        <!-- حالت خالی (بدون نتیجه جستجو) -->
+        <div x-show="!hasSearchResults()" class="flex flex-col items-center justify-center py-20 text-slate-400 gap-4">
+            <svg class="w-16 h-16 text-slate-300" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path opacity="0.4" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                <path d="M12.2 6.8L9.5 9.5 6.8 6.8 5.4 8.2l2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4-2.7-2.7 2.7-2.7-1.4-1.4z"/>
+            </svg>
+            <span class="text-[13px] font-medium text-slate-500">نتیجه‌ای برای جستجوی شما یافت نشد!</span>
+        </div>
+
+        <!-- نتایج جستجو -->
+        <template x-for="category in searchResults" :key="category.slug || category.title">
+            <div x-show="category.items && category.items.length > 0" class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                    <!-- عنوان دسته‌بندی -->
+                    <h2 class="text-[11px] font-black text-blue-700 bg-blue-50/80 px-3 py-1.5 rounded-full tracking-wide" x-text="category.title"></h2>
+                    
+                    <!-- خط جداکننده -->
+                    <div class="flex-1 h-px bg-slate-100"></div>
+                    
+                    <template x-if="categories.find(c => c.slug === category.slug)?.image">
+                        <div class="rounded-full tracking-wide flex items-center justify-center overflow-hidden shrink-0">
+                            <img :src="categories.find(c => c.slug === category.slug)?.image" :alt="category.title" class="w-8 h-8 object-cover">
+                        </div>
+                    </template>
+
+                </div>
+
+                
+                <div class="bg-white rounded-[1.25rem] border border-slate-100/60 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col">
+                    <template x-for="(item, index) in category.items" :key="item.id">
+                       <div @click="$store.sheet.open('item', item)" 
+                            class="group flex items-center justify-between p-4 cursor-pointer active:bg-slate-50 md:hover:bg-slate-50 transition-colors duration-200"
+                            :class="index !== category.items.length - 1 ? 'border-b border-slate-50' : ''">
+                            <div class="flex flex-col flex-1 pl-4">
+                                <span class="font-bold text-[13px] text-slate-800" x-text="item.title"></span>
+                                <template x-if="item.description">
+                                    <span class="text-[11px] text-slate-400 mt-1 line-clamp-1 font-medium" x-text="item.description"></span>
+                                </template>
+                            </div>
+                            <div x-show="item.final_price && Number(item.final_price) > 0" class="flex justify-between items-center text-xs">
+                                <span x-text="item.final_price + ' تومان'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- گرید محصولات با قابلیت Swipe -->
+    <!-- ========================================== -->
+    <div class="relative w-full touch-pan-y" 
+         x-ref="sliderContainer"
+         x-show="!isSearching"
+         @touchstart="onTouchStart" 
+         @touchmove="onTouchMove" 
+         @touchend="onTouchEnd">
+
+        <!-- Swipe Helper -->
+        <div class="fixed inset-x-0 bottom-28 z-50 flex flex-col items-center gap-2 pointer-events-none">
+
+            <!-- Swipe Hint -->
+            <div 
+                x-show="showSwipeHint"
+                x-transition:enter="transition ease-out duration-500"
+                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-300"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-full
+                    bg-slate-900/80 backdrop-blur-md text-white shadow-xl"
+                x-cloak
+            >
+
+                <span class="text-[11px] font-medium tracking-wide">
+                    برای دیدن دسته‌ها بکشید
+                </span>
+
+                <svg class="w-6 h-6 text-orange-400 animate-swipe-gesture"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path opacity="0.4"
+                        d="M12 10.5V5.5C12 4.12 10.88 3 9.5 3S7 4.12 7 5.5v7.67l-2.07-1.12a2.33 2.33 0 00-2.88.46l-1.01 1.15 4.67 4.67c.65.65 1.55 1.02 2.47 1.02H15c1.65 0 3-1.35 3-3v-3.5c0-1.38-1.12-2.5-2.5-2.5h-3.5z"/>
+                    <path
+                        d="M19.5 12H18v-1.5c0-1.38-1.12-2.5-2.5-2.5h-1v-2c0-1.38-1.12-2.5-2.5-2.5S9.5 4.62 9.5 6v6.33L8.83 12h8.17c.83 0 1.5.67 1.5 1.5V16h2v-2.5c0-1.38-1.12-2.5-2.5-2.5z"/>
+                </svg>
+
+            </div>
+        </div>
+
+
+        <style>
+        @keyframes swipeGesture {
+            0% { transform: translateX(0); }
+            40% { transform: translateX(-6px); }
+            60% { transform: translateX(6px); }
+            100% { transform: translateX(0); }
+        }
+
+        .animate-swipe-gesture{
+            animation: swipeGesture 1.6s ease-in-out infinite;
+        }
+        </style>
+
+
+
+        <div class="flex w-full will-change-transform"
+             :class="(isDragging || snapWithoutTransition) ? '' : 'transition-transform duration-300 ease-out'"
+             :style="`transform: translate3d(${translateX}px, 0, 0)`">
+
+            <!-- 1️⃣ صفحه چپ (دسته بعدی) - اسکلتون -->
+            <div class="absolute w-full top-0 left-0 px-5" style="transform: translateX(-100%);" x-show="hasNext && translateX > 0">
+                <div class="flex flex-col gap-1.5 opacity-40">
+                    <template x-for="i in 5" :key="'next-'+i">
+                        <div class="bg-white rounded-[1.25rem] p-2.5 flex gap-3 border border-slate-100 shadow-sm">
+                            <div class="w-[5.5rem] h-[5.5rem] bg-slate-100 rounded-xl shrink-0"></div>
+                            <div class="flex-1 flex flex-col py-1">
+                                <div class="h-3.5 bg-slate-100 rounded-md w-2/3 mb-2.5"></div>
+                                <div class="h-2 bg-slate-50 rounded w-full mb-1.5"></div>
+                                <div class="mt-auto flex justify-end">
+                                    <div class="h-3 bg-slate-100 rounded-md w-1/3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 2️⃣ صفحه مرکزی (محتوای فعال) -->
+            <div class="w-full shrink-0 relative px-5 min-h-[80vh]">
+                
+                <!-- اسکلتون لودینگ -->
+                <div x-show="isLoading" class="flex flex-col gap-1.5 absolute w-full top-0 left-0 z-10 px-5" x-cloak>
+                    <template x-for="i in 5" :key="'curr-'+i">
+                        <div class="bg-white rounded-[1.25rem] p-2.5 flex gap-3 border border-slate-100/60 shadow-sm animate-pulse">
+                            <div class="w-[5.5rem] h-[5.5rem] bg-slate-100 rounded-xl shrink-0"></div>
+                            <div class="flex-1 flex flex-col py-1">
+                                <div class="h-3.5 bg-slate-200/60 rounded-md w-2/3 mb-2.5"></div>
+                                <div class="h-2 bg-slate-100/60 rounded w-full mb-1.5"></div>
+                                <div class="mt-auto flex justify-end">
+                                    <div class="h-3 bg-slate-200/60 rounded-md w-1/3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- محصولات واقعی -->
+                <div x-show="!isLoading" 
+                     x-transition:enter="transition transform ease-out duration-300" 
+                     x-transition:enter-start="opacity-0 translate-y-3" 
+                     x-transition:enter-end="opacity-100 translate-y-0" 
+                     class="flex flex-col gap-1.5" x-cloak>
+                     
+                        <!-- حالت خالی (دسته بدون محصول) حرفه‌ای -->
+                        <!-- با استفاده از x-data یک متغیر currentCat می‌سازیم که همیشه دسته‌بندی فعال را در خود دارد -->
+                        <div x-show="items.length === 0" 
+                            x-data="{ get currentCat() { return categories.find(c => c.slug === activeCategory) } }"
+                            class="flex flex-col items-center justify-center py-24 px-6 text-center" x-cloak>
+                            
+                            <!-- کانتینر آیکون با عمق و گرادیانت -->
+                            {% comment %} <div class="relative w-24 h-24 mb-5 flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100/40 rounded-full border border-slate-100/80 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.04)]"> {% endcomment %}
+                            <div class="relative w-24 h-24 mb-5 flex items-center justify-center bg-transparent">
+                                <!-- اگر دسته‌بندی عکس/آیکون اختصاصی داشت -->
+                                <template x-if="currentCat && currentCat.image">
+                                    <img :src="currentCat.image" :alt="currentCat.title" class="w-20 h-20 rounded-md object-contain drop-shadow-sm">
+                                </template>
+
+                                <!-- آیکون جعبه خالی (Duotone) - در صورت نداشتن عکس -->
+                                <template x-if="!currentCat || !currentCat.image">
+                                    <svg class="w-12 h-12 text-slate-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <!-- قسمت‌های سایه‌دار / پشت جعبه -->
+                                        <path opacity="0.3" d="M12 11V21C7.5 19 4 16.5 4 16.5V6.5L12 11Z" fill="currentColor"/>
+                                        <path opacity="0.15" d="M12 11V21C16.5 19 20 16.5 20 16.5V6.5L12 11Z" fill="currentColor"/>
+                                        <!-- خطوط اصلی -->
+                                        <path d="M12 21V11M12 11L20 6.5M12 11L4 6.5M20 6.5L12 2L4 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M7 4.5L17 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+                                    </svg>
+                                </template>
+
+                                <!-- المان‌های تزئینی (نقاط معلق) -->
+                                <div class="absolute -top-1 -right-1 w-3 h-3 bg-slate-200/60 rounded-full"></div>
+                                <div class="absolute bottom-3 -left-2 w-2 h-2 bg-slate-200/60 rounded-full"></div>
+                            </div>
+
+                            <!-- متون پویا -->
+                            <h4 class="text-[15px] font-black text-slate-700 mb-2 tracking-tight">
+                                به زودی در گروه «<span x-text="currentCat ? currentCat.title : 'این دسته'" class="text-indigo-500/80"></span>» اضافه خواهد شد
+                            </h4>
+                            
+                            <!-- توضیحات دسته‌بندی در صورت وجود -->
+                            <template x-if="currentCat && currentCat.description">
+                                <p class="text-[12px] font-medium text-slate-400 leading-relaxed max-w-[220px]" x-text="currentCat.description"></p>
+                            </template>
+                            
+                            <!-- متن پیش‌فرض در صورت نبود توضیحات -->
+                            <template x-if="!currentCat || !currentCat.description">
+                                <p class="text-[12px] font-medium text-slate-400 leading-relaxed max-w-[220px]">
+                                    منتظر باشید...
+                                </p>
+                            </template>
+
+                            <!-- دکمه افزودن آیتم -->
+                            {% if request.user.is_authenticated and request.user == catalog.owner %}
+                            <div class="mt-7">
+                                <button @click="openAddItemModal(currentCat ? currentCat.slug : '')" 
+                                        class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl text-[12px] font-bold transition-all shadow-md shadow-slate-800/10 active:scale-95">
+                                    <svg class="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    افزودن محصول جدید
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    <!-- کارت محصولات -->
+                    <template x-for="(item, index) in items" :key="item.id">
+                        <div @click="$store.sheet.open('item', item)" 
+                             class="group bg-white rounded-[1.25rem] p-2.5 flex gap-3 border border-slate-100/60 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-all duration-200 cursor-pointer">
+                            <!-- تصویر محصول -->
+                            <div 
+                            class="rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center"
+                            :class="!item.image && !categories.find(c => c.slug === activeCategory)?.image ? 'border border-slate-100/50 bg-orange-50/50 w-[5.5rem] h-[5.5rem]':'w-[3rem] h-[3rem]'"
+                            >
+                                
+                                <!-- آیکون زمانی که نه آیتم و نه دسته‌بندی عکس ندارند -->
+                                <div x-show="!item.image && !categories.find(c => c.slug === activeCategory)?.image" class="absolute inset-0 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-orange-400" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path opacity="0.3" d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z" />
+                                        <path d="M14.5 9C14.5 10.1046 13.6046 11 12.5 11C11.3954 11 10.5 10.1046 10.5 9C10.5 7.89543 11.3954 7 12.5 7C13.6046 7 14.5 7.89543 14.5 9Z" />
+                                        <path d="M20.6598 15.6599L17.7898 12.3399C17.0698 11.5099 15.8298 11.4599 15.0298 12.2199L12.5598 14.5499C12.1598 14.9299 11.4898 14.9599 11.0598 14.6099L10.3898 14.0599C9.6298 13.4399 8.4698 13.4899 7.7698 14.1699L3.4398 18.3399C3.6998 19.8699 4.8898 21.0599 6.4198 21.3199L20.6598 15.6599Z" />
+                                    </svg>
+                                </div>
+
+                                <!-- تگ img زمانی ساخته می‌شود که حداقل یکی از عکس‌ها موجود باشد -->
+                                <template x-if="item.image || categories.find(c => c.slug === activeCategory)?.image">
+                                    <img :src="item.image || categories.find(c => c.slug === activeCategory)?.image" :alt="item.title" loading="lazy" class="w-full h-full object-cover z-10 relative">
+                                </template>
+                            </div>
+                            <!-- اطلاعات محصول -->
+                            <div class="flex-1 flex flex-col py-0.5 overflow-hidden">
+                                <!-- عنوان و توضیحات -->
+                                <div class="w-full">
+                                    <h3 class="font-bold text-[14px] text-slate-800 line-clamp-1" x-text="item.title"></h3>
+                                    <template x-if="item.description">
+                                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 line-clamp-2 leading-relaxed" x-text="item.description"></p>
+                                    </template>
+                                </div>
+                                <template x-if="item.final_price > 0">
+                                    <div class="mt-auto w-full">
+                                        <div class="flex justify-end items-center gap-2">
+                                            <!-- قیمت نهایی (final_price) -->
+                                            <span class="font-extrabold text-[16px] text-orange-600"x-text="item.final_price"></span>
+                                            <span class="font-extrabold text-[12px] text-orange-600">ریال</span>
+
+                                            <!-- قیمت اصلی (خط‌خورده) -->
+                                            <template x-if="item.discount_price > 0">
+                                                <span class="text-[11px] text-slate-400 line-through" 
+                                                    x-text="item.price"></span>
+                                            </template>
+                                            <template x-if="item.discount_price > 0">
+                                                <span class="text-[10px] text-slate-400 font-bold">ریال</span>
+                                            </template>
+
+                                        </div>
+                                    </div>
+                                </template>
+
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 3️⃣ صفحه راست (دسته قبلی) - اسکلتون -->
+            <div class="absolute w-full top-0 right-0 px-5" style="transform: translateX(100%);" x-show="hasPrev && translateX < 0">
+                <div class="flex flex-col gap-1.5 opacity-40">
+                    <template x-for="i in 5" :key="'prev-'+i">
+                        <div class="bg-white rounded-[1.25rem] p-2.5 flex gap-3 border border-slate-100 shadow-sm">
+                            <div class="w-[5.5rem] h-[5.5rem] bg-slate-100 rounded-xl shrink-0"></div>
+                            <div class="flex-1 flex flex-col py-1">
+                                <div class="h-3.5 bg-slate-100 rounded-md w-2/3 mb-2.5"></div>
+                                <div class="h-2 bg-slate-50 rounded w-full mb-1.5"></div>
+                                <div class="mt-auto flex justify-end">
+                                    <div class="h-3 bg-slate-100 rounded-md w-1/3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+    {% include './_bottom_sheet.html' with template='./@item.html' sheet_id='item' %}
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('menuApp', () => ({
+        categories: INITIAL_CATEGORIES,
+        activeCategory: null,
+        items: [],
+        searchResults: [],
+        searchQuery: '',
+        isSearching: false,
+        isLoading: true, // از ابتدا روی حالت لودینگ قرار می‌گیرد
+        filteredCategoriesCount: 0,
+        filteredItemsCount: 0,
+
+        // ==========================================
+        // 1. متغیرهای انیمیشن دسته‌بندی‌ها (منوی بالا)
+        // ==========================================
+        indicatorLeft: 0,
+        indicatorWidth: 0,
+        readyToAnimate: false, // جلوگیری از پرش انیمیشن در لحظه لود
+        
+        // ==========================================
+        // 2. متغیرهای افکت لمس (Ripple)
+        // ==========================================
+        isRippling: false,
+        rippleX: 0,
+        rippleY: 0,
+        rippleCatId: null,
+
+        // ==========================================
+        // 3. متغیرهای Swipe (کشیدن محصولات)
+        // ==========================================
+        touchStartX: 0,
+        touchStartY: 0,
+        translateX: 0,
+        isDragging: false,
+        isSwipingX: null,
+        snapWithoutTransition: false, // جلوگیری از انیمیشن هنگام ریست کردن صفحه
+        showSwipeHint: false,
+        hasSwiped: false,
+        hintInterval: null,
+
+        get currentCategoryIndex() {
+            return this.categories.findIndex(c => c.slug === this.activeCategory);
+        },
+        get hasNext() {
+            return this.currentCategoryIndex >= 0 && this.currentCategoryIndex < this.categories.length - 1;
+        },
+        get hasPrev() {
+            return this.currentCategoryIndex > 0;
+        },
+
+        init(){
+            if(this.categories.length){
+                this.activeCategory = this.categories[0].slug;
+                this.fetchItems(this.activeCategory);
+
+                this.$nextTick(() => {
+                    this.updateIndicator(this.activeCategory);
+                    setTimeout(() => { this.readyToAnimate = true; }, 100);
+                });
+            }
+
+            // ===> جدید: تکرار راهنما هر ۲۰ ثانیه اگر کاربر سوایپ نکرده باشد <===
+            this.hintInterval = setInterval(() => { 
+                if(!this.hasSwiped && !this.isLoading && this.items.length > 0) { 
+                    this.showSwipeHint = true; 
+                    setTimeout(() => this.showSwipeHint = false, 4000); 
+                } 
+            }, 20000);
+        },
+
+        // ==========================================
+        // توابع مربوط به انیمیشن تب‌ها
+        // ==========================================
+        updateIndicator(slug) {
+            this.$nextTick(() => {
+                const btn = document.getElementById('cat-btn-' + slug);
+                if (btn) {
+                    this.indicatorLeft = btn.offsetLeft;
+                    this.indicatorWidth = btn.offsetWidth;
+                    
+                    // اسکرول نرم کانتینر دسته‌بندی‌ها تا دکمه فعال همیشه در مرکز دید باشد
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        },
+
+        handleCatPress(e, slug) {
+            const btn = document.getElementById('cat-btn-' + slug);
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            // محاسبه دقیق محل لمس روی دکمه
+            this.rippleX = clientX ? clientX - rect.left : rect.width / 2;
+            this.rippleY = clientY ? clientY - rect.top : rect.height / 2;
+            this.rippleCatId = slug;
+            
+            // ریست کردن و اجرای مجدد انیمیشن Ripple
+            this.isRippling = false;
+            this.$nextTick(() => {
+                this.isRippling = true;
+            });
+        },
+
+        selectCategory(slug){
+            if(this.activeCategory === slug && !this.isSearching) return;
+            
+            this.activeCategory = slug;
+            
+            this.updateIndicator(slug);
+            
+            // ---> اسکرول به بالا هنگام کلیک روی تب جدید <---
+            this.scrollToTop(); 
+            
+            this.isLoading = true;
+            this.items = [];
+            this.fetchItems(slug);
+        },
+
+
+        // ==========================================
+        // توابع مربوط به Swipe (لمس و کشیدن)
+        // ==========================================
+        onTouchStart(e) {
+            if (this.isLoading || this.categories.length <= 1) return; 
+            
+            // ===> اضافه شده: با اولین لمس اسلایدر، راهنما برای همیشه خاموش می‌شود <===
+            this.hasSwiped = true;
+            this.showSwipeHint = false;
+            if (this.hintInterval) clearInterval(this.hintInterval);
+
+            this.touchStartX = e.touches[0].clientX;
+            this.touchStartY = e.touches[0].clientY;
+            this.isDragging = true;
+            this.isSwipingX = null;
+            this.translateX = 0;
+            this.snapWithoutTransition = false;
+        },
+
+
+        onTouchMove(e) {
+            if (!this.isDragging) return;
+
+            const deltaX = e.touches[0].clientX - this.touchStartX;
+            const deltaY = e.touches[0].clientY - this.touchStartY;
+
+            if (this.isSwipingX === null) {
+                this.isSwipingX = Math.abs(deltaX) > Math.abs(deltaY);
+            }
+
+            if (!this.isSwipingX) return; 
+            e.preventDefault(); 
+
+            let moveX = deltaX;
+            if ((moveX > 0 && !this.hasNext) || (moveX < 0 && !this.hasPrev)) {
+                moveX = moveX * 0.25; 
+            }
+            this.translateX = moveX;
+        },
+
+        onTouchEnd(e) {
+            if (!this.isDragging || !this.isSwipingX) {
+                this.isDragging = false;
+                return;
+            }
+            this.isDragging = false;
+
+            const threshold = window.innerWidth * 0.20; 
+            if (this.translateX > threshold && this.hasNext) {
+                this.goToCategoryFromSwipe(this.currentCategoryIndex + 1);
+            } else if (this.translateX < -threshold && this.hasPrev) {
+                this.goToCategoryFromSwipe(this.currentCategoryIndex - 1);
+            } else {
+                this.translateX = 0;
+            }
+        },
+
+        goToCategoryFromSwipe(newIndex) {
+            const direction = this.translateX > 0 ? 1 : -1;
+            const containerWidth = this.$refs.sliderContainer.offsetWidth; 
+            this.translateX = direction * containerWidth;
+
+            setTimeout(() => {
+                const newSlug = this.categories[newIndex].slug;
+                
+                this.snapWithoutTransition = true;
+                this.isLoading = true;
+                this.items = [];
+                this.activeCategory = newSlug;
+                
+                this.updateIndicator(newSlug);
+                
+                // ---> اسکرول به بالا هنگام سوایپ به دسته جدید <---
+                this.scrollToTop(); 
+
+                this.translateX = 0;
+
+                this.fetchItems(newSlug);
+
+                setTimeout(() => {
+                    this.snapWithoutTransition = false;
+                }, 50);
+
+            }, 300);
+        },
+        // ==========================================
+        // توابع داده‌ها و جستجو
+        // ==========================================
+        extractItemsFromResponse(data) {
+            if (Array.isArray(data) && data.length > 0 && data[0].items) {
+                return data.flatMap(cat => cat.items);
+            }
+            return data;
+        },
+
+        async fetchItems(categorySlug){
+            if(!categorySlug) return;
+            
+            this.isSearching = false;
+            this.searchQuery = '';
+            
+            this.isLoading = true;
+            this.items = []; 
+            const url = ITEMS_API_URL_TEMPLATE.replace('__CAT_SLUG__', categorySlug);
+            
+            try{
+                const [res] = await Promise.all([
+                    fetch(url),
+                    new Promise(resolve => setTimeout(resolve, 400))
+                ]);
+                
+                if(!res.ok) throw new Error('Network response was not ok');
+                const data = await res.json();
+                this.items = this.extractItemsFromResponse(data);
+
+            }catch(e){
+                console.error("Error fetching items:", e);
+            }finally{
+                this.isLoading = false;
+                
+                // ===> اضافه شده: نمایش تضمینی راهنما ۸۰۰ میلی‌ثانیه پس از لود کامل <===
+                // فقط در صورتی نمایش داده میشه که کاربر تا حالا سوایپ نکرده باشه و بیشتر از ۱ دسته داشته باشیم
+                if (!this.hasSwiped && this.categories.length > 1) {
+                    setTimeout(() => {
+                        if (!this.hasSwiped) {
+                            this.showSwipeHint = true;
+                            // بعد از ۳.۵ ثانیه خودش مخفی میشه
+                            setTimeout(() => { this.showSwipeHint = false; }, 3500);
+                        }
+                    }, 800); 
+                }
+            }
+        },
+
+
+
+        hasSearchResults() {
+            return this.searchResults && this.searchResults.some(cat => cat.items && cat.items.length > 0);
+        },
+
+        async handleSearch(){
+            const query = this.searchQuery.trim();
+            if(query.length === 0){
+                this.isSearching = false;
+                this.filteredCategoriesCount = 0;
+                this.filteredItemsCount = 0;
+                if(this.activeCategory){
+                    this.fetchItems(this.activeCategory);
+                }
+                return;
+            }
+            
+            this.isSearching = true;
+            this.isLoading = true;
+            this.searchResults = [];
+            this.filteredCategoriesCount = 0;
+            this.filteredItemsCount = 0;
+            
+            const url = `${SEARCH_API_URL}?q=${encodeURIComponent(query)}`;
+            
+            try{
+                const [res] = await Promise.all([
+                    fetch(url),
+                    new Promise(resolve => setTimeout(resolve, 300))
+                ]);
+
+                if(!res.ok) throw new Error('Network response was not ok');
+                const data = await res.json();
+                
+                this.searchResults = data; 
+                
+                if (Array.isArray(data)) {
+                    this.filteredCategoriesCount = data.filter(cat => cat.items && cat.items.length > 0).length;
+                    this.filteredItemsCount = data.reduce((total, cat) => total + (cat.items ? cat.items.length : 0), 0);
+                }
+                
+            }catch(e){
+                console.error("Error during search:", e);
+            }finally{
+                this.isLoading = false;
+            }
+        },
+
+        clearSearch(){
+            this.searchQuery = '';
+            this.handleSearch();
+        },
+
+        openModal(item){
+            this.selectedItem = item;
+            this.$dispatch('open-bottom-sheet-item');
+        },
+
+        closeModal(){
+            this.$dispatch('close-bottom-sheet-item');
+            setTimeout(()=>{
+                this.selectedItem = null;
+            }, 300);
+        },
+        scrollToTop() {
+            // پیدا کردن تگ main که اسکرول روی آن اتفاق می‌افتد
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) {
+                mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+    }));
+});
+</script>
+{% endblock %}

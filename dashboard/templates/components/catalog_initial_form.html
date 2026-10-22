@@ -1,0 +1,176 @@
+{% if user.is_authenticated and show_catalog_modal %}
+  <template x-teleport="body">
+    <div 
+      x-data="{ open: true }" 
+      x-show="open"
+      x-trap.noscroll="open"
+      class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden"
+      x-cloak
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="catalogModalTitle"
+      aria-describedby="catalogModalDesc"
+    >
+      <!-- Overlay (پس‌زمینه تاریک بلور) -->
+      <div 
+        x-show="open"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @click="open = false"
+        class="absolute inset-0 bg-brand-950/40 backdrop-blur-sm"
+      ></div>
+
+      <!-- محتویات مودال -->
+      <div 
+        x-show="open"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+        class="relative bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-surface-100"
+      >
+        <form id="catalogForm" class="space-y-6" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <h2 id="catalogModalTitle" class="text-2xl font-black text-brand-950 mb-1">ساخت کاتالوگ جدید</h2>
+          <p id="catalogModalDesc" class="text-surface-500 text-sm mb-6 leading-relaxed">لطفاً عنوان و توضیحات کاتالوگ را وارد کنید.</p>
+
+          <div>
+            <label for="id_title" class="block font-medium text-gray-700">عنوان <span class="text-red-600">*</span></label>
+            <input 
+              type="text" 
+              name="title" 
+              id="id_title" 
+              required 
+              class="mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 placeholder-gray-400 focus:outline-none focus:ring-accent-500 focus:border-accent-500"
+              placeholder="مثلاً کاتالوگ فروشگاه من"
+              aria-describedby="titleError"
+            >
+            <p id="titleError" class="mt-1 text-sm text-red-600 hidden">عنوان الزامی است.</p>
+          </div>
+
+          <div>
+            <label for="id_description" class="block font-medium text-gray-700">توضیحات</label>
+            <textarea 
+              name="description" 
+              id="id_description" 
+              rows="4"
+              class="mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 placeholder-gray-400 focus:outline-none focus:ring-accent-500 focus:border-accent-500"
+              placeholder="توضیح کوتاهی درباره کاتالوگ"
+            ></textarea>
+          </div>
+
+          <div id="formErrors" class="text-red-600 text-sm min-h-[1.5rem]"></div>
+
+          <div class="flex justify-end space-x-4">
+            <button 
+              type="button" 
+              @click="open = false" 
+              class="px-6 py-3 rounded-2xl border border-surface-200 text-surface-700 font-bold hover:bg-surface-100 transition-all active:scale-95"
+            >
+              انصراف
+            </button>
+            <button 
+              type="submit" 
+              class="px-6 py-3 rounded-2xl bg-accent-500 hover:bg-accent-600 text-white font-black transition-all active:scale-95"
+            >
+              ذخیره
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // تابع دریافت CSRF از کوکی (Django استاندارد)
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('catalogModal', () => ({
+        open: true,
+        init() {
+          // اضافه کردن listener برای Escape برای بستن مودال با کیبرد
+          const escListener = (e) => {
+            if(e.key === "Escape") this.open = false;
+          };
+          window.addEventListener('keydown', escListener);
+          this.$watch('open', (value) => {
+            if(!value) window.removeEventListener('keydown', escListener);
+          });
+        },
+      }));
+    });
+
+    // ارسال فرم با Fetch API
+    document.addEventListener("DOMContentLoaded", function() {
+      const form = document.getElementById("catalogForm");
+      const formErrors = document.getElementById("formErrors");
+      const titleInput = document.getElementById("id_title");
+      const titleError = document.getElementById("titleError");
+
+      form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        formErrors.textContent = "";
+        titleError.classList.add("hidden");
+
+        const title = titleInput.value.trim();
+        const description = document.getElementById("id_description").value.trim();
+
+        if(!title){
+          titleError.classList.remove("hidden");
+          titleInput.focus();
+          return;
+        }
+
+        fetch("{% url 'catalog:create' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrftoken,
+          },
+          body: new URLSearchParams({
+            title,
+            description,
+          }),
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success){
+            alert(data.created ? "کاتالوگ ساخته شد." : "کاتالوگ به روز شد.");
+            // بستن مودال
+            const alpineComponent = Alpine.$data(document.querySelector("[x-data]"));
+            if(alpineComponent) alpineComponent.open = false;
+            window.location.reload();
+          } else if(data.error){
+            formErrors.textContent = data.error;
+          } else {
+            formErrors.textContent = "خطای ناشناخته رخ داد.";
+          }
+        })
+        .catch(() => {
+          formErrors.textContent = "خطا در ارسال درخواست.";
+        });
+      });
+    });
+  </script>
+{% endif %}

@@ -1,0 +1,21 @@
+/* TecPap Styles */
+#tecpap-app {
+  transition: all 0.3s ease;
+}
+
+button {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.text-accent-600 {
+  color: #ea580c;
+}
+
+.bg-accent-500 {
+  background-color: #f97316;
+}
+
+:hover.bg-accent-500 {
+  background-color: #ea580c;
+}

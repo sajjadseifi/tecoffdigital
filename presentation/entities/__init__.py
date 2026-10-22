@@ -1,0 +1,1 @@
+from .tqrs_entitiy import *

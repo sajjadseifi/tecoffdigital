@@ -1,0 +1,508 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>{{ catalog.title|default:"رزومه کاری" }} | {{ catalog.business_type }}</title>
+    
+    <!-- Tailwind CSS (CDN for demonstration, replace with your local file) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+
+    <script>
+        const CATALOG_SLUG = "{{ catalog.slug }}";
+        const SEARCH_API_URL = "{% url 'api_catalog_search' catalog_slug=catalog.slug|default:'slug' %}";
+        const ITEMS_API_URL_TEMPLATE = "{% url 'api_category_items' catalog_slug=catalog.slug|default:'slug' category_slug='__CAT_SLUG__' %}";
+        const INITIAL_CATEGORIES = [
+            {% for cat in catalog.categories_first_level %}
+                { 
+                    slug: "{{ cat.slug }}", 
+                    title: "{{ cat.title }}",
+                    is_featured: {{ cat.is_featured|yesno:"true,false" }},
+                    image: "{% if cat.image %}{{ cat.image.url }}{% endif %}" 
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    </script>
+
+    <style>
+        body { 
+            background-color: #f1f5f9; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        [x-cloak] { display: none !important; }
+        
+        /* Glassmorphism */
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.4); 
+        }
+
+        /* Hide Scrollbar */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Ripple Animations */
+        @keyframes smooth-ripple {
+            0% { transform: scale(0); opacity: 0.5; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+        .ripple-container {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple-span {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(0);
+            animation: smooth-ripple 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            pointer-events: none;
+        }
+
+        /* Pull to refresh spinner */
+        .ptr-spinner {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased pb-20 selection:bg-blue-200">
+
+    <!-- App Shell & Pull to Refresh Container -->
+    <div x-data="appShell" class="min-h-screen relative">
+        <div x-data="pullToRefresh" 
+             @touchstart="start" 
+             @touchmove="move" 
+             @touchend="end"
+             class="h-screen overflow-y-auto overflow-x-hidden">
+            
+            <!-- Pull To Refresh Indicator -->
+            <div class="flex justify-center items-center w-full fixed top-0 left-0 z-50 pointer-events-none"
+                 :style="`transform: translateY(${pullDistance - 50}px); opacity: ${pullDistance / threshold}`">
+                <div class="bg-white rounded-full shadow-md p-2 flex items-center justify-center ptr-spinner"
+                     :class="{ 'animate-spin': isRefreshing }">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+            </div>
+
+            <!-- Header / Cover Section -->
+            <div class="relative bg-white shadow-sm rounded-b-3xl overflow-hidden pb-6">
+                <!-- Cover -->
+                <div class="h-40 sm:h-56 bg-slate-200 w-full relative">
+                    {% if catalog.cover %}
+                        <img src="{{ catalog.cover.url }}" class="w-full h-full object-cover" alt="Cover">
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+
+                <!-- Profile Info -->
+                <div class="max-w-3xl mx-auto px-4 relative -mt-12 flex flex-col items-center sm:items-start sm:flex-row gap-4">
+                    <!-- Avatar -->
+                    <div class="w-24 h-24 rounded-full border-4 border-white bg-white shadow-lg shrink-0 overflow-hidden relative">
+                        {% if catalog.logo %}
+                            <img src="{{ catalog.logo.url }}" class="w-full h-full object-cover" alt="{{ catalog.title }}">
+                        {% else %}
+                            <div class="w-full h-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl font-black">
+                                {{ catalog.title|make_list|first }}
+                            </div>
+                        {% endif %}
+                        {% if catalog.is_verified %}
+                            <div class="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center border-2 border-white text-xs">✓</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Texts -->
+                    <div class="text-center sm:text-right mt-2 sm:mt-14 flex-1">
+                        <h1 class="text-2xl font-black text-slate-900">{{ catalog.title }}</h1>
+                        <p class="text-slate-500 font-medium text-sm mt-1">{{ catalog.business_type|default:"متخصص و فریلنسر" }}</p>
+                    </div>
+
+                    <!-- Quick Contact / CTA -->
+                    {% if catalog.has_cta %}
+                        <div class="mt-4 sm:mt-14">
+                            <a href="{{ catalog.cta_link }}" x-ripple class="ripple-container bg-blue-600 text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-md hover:bg-blue-700 transition-colors inline-block">
+                                {{ catalog.cta_text }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Stats -->
+                <div class="max-w-3xl mx-auto px-4 mt-6 grid grid-cols-3 gap-4 border-t border-slate-100 pt-6">
+                    <div class="text-center">
+                        <span class="block text-2xl font-black text-slate-800">{{ catalog.years_of_experience|default:"-" }}</span>
+                        <span class="text-xs text-slate-500 font-medium">سال تجربه</span>
+                    </div>
+                    <div class="text-center border-x border-slate-100">
+                        <span class="block text-2xl font-black text-slate-800">{{ catalog.projects_count|default:"-" }}</span>
+                        <span class="text-xs text-slate-500 font-medium">پروژه موفق</span>
+                    </div>
+                    <div class="text-center">
+                        <span class="block text-2xl font-black text-slate-800">{{ catalog.clients_count|default:"-" }}</span>
+                        <span class="text-xs text-slate-500 font-medium">مشتری</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Container -->
+            <main class="max-w-3xl mx-auto mt-6 px-4">
+                
+                <!-- Main Tabs Navigation -->
+                <div class="flex p-1 bg-white/50 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/50 mb-6">
+                    <button @click="goTo('about')" x-ripple
+                            class="ripple-container flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+                            :class="activeTab === 'about' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                        درباره من
+                    </button>
+                    <button @click="goTo('portfolio')" x-ripple
+                            class="ripple-container flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+                            :class="activeTab === 'portfolio' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                        رزومه و پروژه‌ها
+                    </button>
+                </div>
+
+                <!-- Tab 1: About Profile -->
+                <div x-show="activeTab === 'about'" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="space-y-4">
+                    
+                    {% if catalog.about or catalog.description %}
+                    <div class="glass-card p-5 rounded-3xl">
+                        <h2 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> معرفی
+                        </h2>
+                        <p class="text-sm text-slate-600 leading-loose text-justify">
+                            {{ catalog.about|default:catalog.description|linebreaksbr }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if catalog.services %}
+                    <div class="glass-card p-5 rounded-3xl">
+                        <h2 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> تخصص و خدمات
+                        </h2>
+                        <div class="flex flex-wrap gap-2">
+                            {% for service in catalog.services.splitlines %}
+                                {% if service.strip %}
+                                    <span class="bg-white px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 shadow-sm border border-slate-100">{{ service }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Contact Info -->
+                    <div class="glass-card p-5 rounded-3xl">
+                        <h2 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span> راه‌های ارتباطی
+                        </h2>
+                        <div class="space-y-3">
+                            {% if catalog.phone %}
+                            <a href="tel:{{ catalog.phone }}" class="flex items-center justify-between p-3 bg-white/60 rounded-xl hover:bg-white transition-colors">
+                                <span class="text-sm font-bold text-slate-700 dir-ltr">{{ catalog.phone }}</span>
+                                <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">📞</div>
+                            </a>
+                            {% endif %}
+                            {% if catalog.email %}
+                            <a href="mailto:{{ catalog.email }}" class="flex items-center justify-between p-3 bg-white/60 rounded-xl hover:bg-white transition-colors">
+                                <span class="text-sm font-bold text-slate-700">{{ catalog.email }}</span>
+                                <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">✉️</div>
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <!-- Social Media -->
+                        {% if catalog.has_social %}
+                        <div class="flex justify-center gap-4 mt-6 pt-4 border-t border-slate-200/50">
+                            {% for social in catalog.social_links %}
+                                <a href="{{ social.url }}" target="_blank" x-ripple class="ripple-container w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-600 hover:text-blue-600 hover:-translate-y-1 transition-all border border-slate-100">
+                                    {{ social.name|title }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tab 2: Portfolio / Items (Dynamic App-like logic) -->
+                <div x-show="activeTab === 'portfolio'"
+                     x-data="portfolioManager"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="space-y-4" x-cloak>
+                    
+                    <!-- Search Bar -->
+                    <div class="relative">
+                        <input type="text" x-model="searchQuery" @input.debounce.500ms="performSearch" placeholder="جستجو در پروژه‌ها و مهارت‌ها..." 
+                               class="w-full glass-card py-3 px-5 pr-12 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder:text-slate-400 shadow-sm">
+                        <span class="absolute right-4 top-3.5 text-slate-400">🔍</span>
+                    </div>
+
+                    <!-- Category Swipe Menu -->
+                    <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 sm:mx-0 sm:px-0" x-ref="catScroll">
+                        <template x-for="cat in categories" :key="cat.slug">
+                            <button @click="selectCategory(cat.slug)" x-ripple
+                                    class="ripple-container whitespace-nowrap px-5 py-2 rounded-xl text-sm font-bold transition-all border"
+                                    :class="activeCat === cat.slug ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'glass-card text-slate-600 border-white hover:bg-white'">
+                                <span x-text="cat.title"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <!-- Items Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 min-h-[200px] relative">
+                        <!-- Loading State -->
+                        <div x-show="isLoading" class="absolute inset-0 flex items-center justify-center bg-slate-100/50 backdrop-blur-sm z-10 rounded-2xl">
+                            <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+
+                        <!-- Fallback/Empty State -->
+                        <div x-show="!isLoading && items.length === 0" class="col-span-full text-center py-12">
+                            <span class="text-4xl">🗂️</span>
+                            <p class="text-slate-500 text-sm mt-3 font-medium">موردی برای نمایش یافت نشد.</p>
+                        </div>
+
+                        <!-- Item Cards -->
+                        <template x-for="item in items" :key="item.id">
+                            <div @click="$store.sheet.open('itemDetails', item)" x-ripple
+                                 class="ripple-container glass-card rounded-2xl p-2 cursor-pointer hover:-translate-y-1 transition-all flex flex-col">
+                                <!-- Image Proxy (assuming API returns item.image) -->
+                                <div class="w-full aspect-square rounded-xl bg-slate-200 mb-2 overflow-hidden">
+                                    <template x-if="item.image">
+                                        <img :src="item.image" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!item.image">
+                                        <div class="w-full h-full flex items-center justify-center text-slate-400 text-3xl">📄</div>
+                                    </template>
+                                </div>
+                                <h3 class="text-xs font-bold text-slate-800 line-clamp-2 px-1 pb-1" x-text="item.title"></h3>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </main>
+            
+            <!-- Spacer for bottom padding -->
+            <div class="h-10"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Sheet (Item Details) -->
+    <div x-data="{ open: false, item: null }"
+         x-init="$watch('$store.sheet.active', value => { open = value === 'itemDetails'; item = $store.sheet.data; })"
+         x-show="open" class="relative z-[100]" x-cloak>
+        
+        <!-- Backdrop -->
+        <div x-show="open" 
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             @click="$store.sheet.close()"
+             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+        <!-- Sheet Panel -->
+        <div class="fixed inset-0 z-40 flex justify-center items-end sm:items-center p-0 sm:p-4 pointer-events-none">
+            <div x-show="open" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="translate-y-full sm:translate-y-8 sm:scale-95 sm:opacity-0"
+                 x-transition:enter-end="translate-y-0 sm:scale-100 sm:opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="translate-y-0 sm:scale-100 sm:opacity-100"
+                 x-transition:leave-end="translate-y-full sm:translate-y-8 sm:scale-95 sm:opacity-0"
+                 @click.stop
+                 class="w-full sm:w-[450px] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto flex flex-col max-h-[90vh]">
+                
+                <!-- Pull Indicator (Mobile) -->
+                <div class="w-full flex justify-center py-3 sm:hidden" @click="$store.sheet.close()">
+                    <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+                </div>
+
+                <!-- Sheet Content -->
+                <div class="overflow-y-auto p-5 scrollbar-hide" x-if="item">
+                    <template x-if="item?.image">
+                        <img :src="item.image" class="w-full h-48 sm:h-64 object-cover rounded-2xl mb-4 shadow-sm">
+                    </template>
+                    
+                    <h2 class="text-xl font-black text-slate-900 mb-2" x-text="item?.title"></h2>
+                    
+                    <template x-if="item?.description">
+                        <p class="text-sm text-slate-600 leading-loose text-justify bg-slate-50 p-4 rounded-2xl" x-text="item.description"></p>
+                    </template>
+
+                    <!-- Mock data for extra info like link or date -->
+                    <div class="mt-6 flex gap-2">
+                        <button @click="$store.sheet.close()" class="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">بستن</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Definitions -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            
+            // 1. Alpine Ripple Directive
+            Alpine.directive('ripple', (el) => {
+                el.addEventListener('mousedown', function(e) {
+                    const rect = el.getBoundingClientRect();
+                    const circle = document.createElement('span');
+                    const diameter = Math.max(rect.width, rect.height);
+                    const radius = diameter / 2;
+                    
+                    circle.style.width = circle.style.height = `${diameter}px`;
+                    circle.style.left = `${e.clientX - rect.left - radius}px`;
+                    circle.style.top = `${e.clientY - rect.top - radius}px`;
+                    circle.classList.add('ripple-span');
+                    
+                    const ripple = el.getElementsByClassName('ripple-span')[0];
+                    if (ripple) ripple.remove();
+                    el.appendChild(circle);
+                });
+            });
+
+            // 2. App Shell (Tabs)
+            Alpine.data('appShell', () => ({
+                activeTab: 'about',
+                goTo(tabName) {
+                    this.activeTab = tabName;
+                    // Optional: Scroll to top on tab change
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }));
+
+            // 3. Portfolio & Items Logic (Mocked API Fetching)
+            Alpine.data('portfolioManager', () => ({
+                categories: INITIAL_CATEGORIES,
+                activeCat: INITIAL_CATEGORIES.length > 0 ? INITIAL_CATEGORIES[0].slug : null,
+                items: [],
+                searchQuery: '',
+                isLoading: false,
+
+                init() {
+                    if (this.activeCat) {
+                        this.fetchItems();
+                    }
+                },
+                selectCategory(slug) {
+                    this.activeCat = slug;
+                    this.searchQuery = '';
+                    this.fetchItems();
+                },
+                async fetchItems() {
+                    this.isLoading = true;
+                    try {
+                        // در اینجا باید API واقعی خود را فراخوانی کنید.
+                        // url = ITEMS_API_URL_TEMPLATE.replace('__CAT_SLUG__', this.activeCat)
+                        // const response = await fetch(url);
+                        // this.items = await response.json();
+                        
+                        // برای تست ظاهری (چون API ندارم)، داده‌های فرضی (Mock) تولید می‌کنیم:
+                        setTimeout(() => {
+                            this.items = [
+                                { id: 1, title: 'پروژه نمونه ۱ در ' + this.activeCat, description: 'توضیحات کامل این پروژه...', image: null },
+                                { id: 2, title: 'طراحی رابط کاربری', description: 'انجام شده در سال گذشته', image: null },
+                                { id: 3, title: 'توسعه بک‌اند پایتون', description: 'توسعه سیستم با جنگو', image: null },
+                            ];
+                            this.isLoading = false;
+                        }, 600);
+                        
+                    } catch (error) {
+                        console.error("Error fetching items:", error);
+                        this.isLoading = false;
+                    }
+                },
+                async performSearch() {
+                    if (this.searchQuery.length < 2) {
+                        if (this.searchQuery.length === 0) this.fetchItems();
+                        return;
+                    }
+                    this.isLoading = true;
+                    // شبیه‌سازی جستجو با API (SEARCH_API_URL)
+                    setTimeout(() => {
+                        this.items = [
+                            { id: 99, title: 'نتیجه جستجو برای: ' + this.searchQuery, description: '...', image: null }
+                        ];
+                        this.isLoading = false;
+                    }, 500);
+                }
+            }));
+
+            // 4. Bottom Sheet Store
+            Alpine.store('sheet', {
+                active: null,
+                data: null, 
+                open(id, payload = null) {
+                    this.active = id;
+                    this.data = payload; 
+                    document.body.style.overflow = 'hidden';
+                },
+                close() {
+                    this.active = null;
+                    document.body.style.overflow = '';
+                    setTimeout(() => { this.data = null; }, 300); // Wait for transition
+                }
+            });
+
+            // 5. Pull To Refresh (Your provided code)
+            Alpine.data('pullToRefresh', () => ({
+                startX: 0, startY: 0, pullDistance: 0, threshold: 75, 
+                isRefreshing: false, isDragging: false,
+                isDirectionLocked: false, isHorizontal: false,
+
+                start(ev) {
+                    if (this.$el.scrollTop > 0 || this.isRefreshing) return;
+                    this.startX = ev.touches[0].clientX;
+                    this.startY = ev.touches[0].clientY;
+                    this.isDragging = true;
+                    this.isDirectionLocked = false;
+                    this.isHorizontal = false;
+                },
+                move(ev) {
+                    if (this.startY === 0 || this.$el.scrollTop > 0 || this.isRefreshing) return;
+                    let currentX = ev.touches[0].clientX;
+                    let currentY = ev.touches[0].clientY;
+                    let deltaX = currentX - this.startX;
+                    let deltaY = currentY - this.startY;
+
+                    if (!this.isDirectionLocked) {
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) { this.isHorizontal = true; }
+                        this.isDirectionLocked = true;
+                    }
+                    if (this.isHorizontal) return;
+                    if (deltaY > 0) {
+                        if (ev.cancelable) ev.preventDefault(); 
+                        this.pullDistance = Math.min(deltaY * 0.45, 120);
+                    }
+                },
+                end() {
+                    if (this.startY === 0) return;
+                    this.startY = 0; this.startX = 0; this.isDragging = false;
+                    if (!this.isHorizontal && this.pullDistance >= this.threshold) {
+                        this.triggerRefresh();
+                    } else {
+                        this.pullDistance = 0;
+                    }
+                    this.isDirectionLocked = false; this.isHorizontal = false;
+                },
+                triggerRefresh() {
+                    this.isRefreshing = true;
+                    this.pullDistance = 65; 
+                    setTimeout(() => { window.location.reload(); }, 600);
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

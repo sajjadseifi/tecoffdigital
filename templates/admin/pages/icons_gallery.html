@@ -1,0 +1,933 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        /* ایزوله کردن استایل‌ها از محیط ادمین جنگو */
+        .gallery-wrapper .bg-checkerboard {
+            background-color: #f8f9fa;
+            background-image: 
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb),
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        .gallery-wrapper .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .gallery-wrapper .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .gallery-wrapper .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        /* استایل‌های اجباری (Strict) برای جلوگیری از خرابکاری جنگو روی فرم‌ها */
+        .gallery-wrapper input[type="text"], 
+        .gallery-wrapper input[type="file"], 
+        .gallery-wrapper textarea, 
+        .gallery-wrapper select {
+            background-color: #ffffff !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 0.5rem !important;
+            padding: 0.75rem !important;
+            color: #1e293b !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            outline: none !important;
+            transition: all 0.2s !important;
+        }
+        .gallery-wrapper input[type="text"]:focus, 
+        .gallery-wrapper textarea:focus, 
+        .gallery-wrapper select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+        .gallery-wrapper input[type="checkbox"] {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+            border-radius: 0.25rem !important;
+            accent-color: #3b82f6 !important;
+            cursor: pointer !important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<!-- توکن CSRF برای درخواست‌های Ajax -->
+{% csrf_token %}
+
+<div id="content-main" x-data="iconGallery()" x-init="initGallery()" class="gallery-wrapper font-sans text-gray-800 max-w-7xl mx-auto pb-10">
+    
+    <!-- سیستم Toast (پیام‌های پاپ‌آپ) -->
+    <div class="fixed top-5 left-5 z-[200] flex flex-col gap-2">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.show" 
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="-translate-y-5 opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 :class="toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'"
+                 class="px-5 py-3 rounded-xl shadow-lg text-sm text-white flex items-center gap-3">
+                <span x-text="toast.message"></span>
+                <button @click="toast.show = false" class="opacity-70 hover:opacity-100">✕</button>
+            </div>
+        </template>
+    </div>
+
+    <!-- بخش اول: هدر -->
+    <div class="bg-gradient-to-l from-slate-800 to-slate-900 rounded-3xl p-6 md:p-8 mb-6 shadow-2xl relative overflow-hidden border border-slate-700">
+        <svg class="absolute left-0 top-0 h-full w-auto text-slate-700 opacity-20 transform -translate-x-1/4" fill="currentColor" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"></circle></svg>
+
+        <div class="relative z-10 text-white mb-6 flex justify-between items-center flex-wrap gap-4">
+            <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-3 tracking-tight">
+                <div class="p-2 bg-blue-500/20 rounded-xl border border-blue-500/30">
+                    <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                گالری آیکون‌ها
+            </h1>
+            
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- دکمه‌های خروجی گروهی صفحه جاری -->
+                <div x-show="icons.length > 0" class="flex items-center bg-slate-800 rounded-xl border border-slate-700 p-1 shadow-inner gap-1" dir="ltr">
+                    <span class="text-xs text-slate-400 px-2 font-medium">Export View:</span>
+                    <button @click="bulkExportCurrentView('svg')" class="px-3 py-1.5 bg-transparent hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition-colors">SVG</button>
+                    <button @click="bulkExportCurrentView('png')" class="px-3 py-1.5 bg-transparent hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition-colors">PNG</button>
+                    <button @click="bulkExportCurrentView('jpeg')" class="px-3 py-1.5 bg-transparent hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition-colors">JPG</button>
+                    <!-- انتخاب سایز برای خروجی رستر -->
+                    <select x-model="bulkExportSize" class="!bg-slate-900 !border-none !text-slate-300 !text-xs !py-1.5 !pr-8 !pl-2 rounded-lg cursor-pointer h-full ml-1 w-20">
+                        <option value="64">64px</option>
+                        <option value="128">128px</option>
+                        <option value="256">256px</option>
+                        <option value="512">512px</option>
+                    </select>
+                </div>
+
+                <div class="w-px h-8 bg-slate-700 mx-1 hidden md:block"></div>
+
+                <button x-show="selectedIcons.length > 0" x-transition @click="bulkDelete()" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    حذف (<span x-text="selectedIcons.length"></span>)
+                </button>
+
+                <button @click="openFormModal()" class="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 font-medium text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    آیکون جدید
+                </button>
+                <!-- دکمه باز کردن مودال -->
+                <button @click="isExcelModalOpen = true; excelPreviewData = []" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition-all shadow">
+                    ایمپورت گروهی (Excel)
+                </button>
+
+
+
+            </div>
+        </div>
+
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4">
+            <form @submit.prevent="fetchIcons(1)" class="w-full md:w-1/2">
+                <div class="relative w-full group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" x-model.debounce.500ms="searchQuery" @input="fetchIcons(1)" placeholder="جستجوی آیکون..." dir="rtl" class="!w-full !pl-12 !pr-4 !py-3.5 !bg-slate-900/50 !border !border-slate-700 !text-white !rounded-2xl focus:!outline-none focus:!ring-2 focus:!ring-blue-500/50 focus:!border-blue-400 transition-all placeholder:!text-slate-500 !text-sm shadow-inner" />
+                    
+                    <div x-show="searchQuery" class="absolute inset-y-0 right-1.5 flex items-center">
+                        <button type="button" @click="searchQuery = ''; fetchIcons(1)" class="p-2 text-slate-500 hover:text-red-400 transition-all"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
+                </div>
+            </form>
+            <div class="text-sm text-slate-400 font-medium">
+                تعداد کل: <span class="text-white bg-slate-800 px-2 py-1 rounded-md ml-1 border border-slate-700" x-text="pagination.total_items"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- بخش دوم: گالری اصلی (کارت‌های جدید) -->
+    <div class="bg-transparent relative min-h-[400px]">
+        
+        <div x-show="isLoading" class="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center">
+            <svg class="animate-spin w-10 h-10 text-blue-600 mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </div>
+
+        <!-- گرید آیکون‌ها -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+            <template x-for="icon in icons" :key="icon.id">
+                <div class="group relative bg-white rounded-3xl p-4 flex flex-col items-center justify-between shadow-sm border border-slate-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-1.5 overflow-hidden"
+                     :class="!icon.is_active ? 'opacity-50' : ''">
+                    
+                    <!-- چک‌باکس انتخاب -->
+                    <div class="absolute top-3 left-3 z-20">
+                        <input type="checkbox" :value="icon.id" x-model="selectedIcons" class="opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity w-5 h-5 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 shadow-sm cursor-pointer">
+                    </div>
+
+                    <!-- دکمه‌های اکشن (ظاهر جدید) -->
+                    <div class="absolute top-3 right-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 z-20">
+                        <button @click.stop="openFormModal(icon)" class="p-2 rounded-full text-slate-500 hover:text-white hover:bg-blue-500 bg-white shadow-md border border-slate-100 transition-colors" title="ویرایش">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button @click.stop="deleteSingleIcon(icon.id)" class="p-2 rounded-full text-slate-500 hover:text-white hover:bg-red-500 bg-white shadow-md border border-slate-100 transition-colors" title="حذف">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- بخش نمایش آیکون -->
+                    <div @click="openPreviewModal(icon)" class="w-full aspect-square bg-slate-50 rounded-2xl mb-4 flex items-center justify-center cursor-pointer group-hover:bg-blue-50/50 transition-colors relative overflow-hidden">
+                        <div class="w-16 h-16 text-slate-700 group-hover:text-blue-600 transition-colors duration-300 drop-shadow-sm group-hover:scale-110 transform">
+                            <template x-if="icon.is_svg">
+                                <div x-html="icon.content" class="w-full h-full [&>svg]:w-full [&>svg]:h-full"></div>
+                            </template>
+                            <template x-if="!icon.is_svg">
+                                <img :src="icon.url" class="max-w-full max-h-full object-contain">
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- بخش نام -->
+                    <div class="w-full text-center flex flex-col gap-1 items-center px-1">
+                        <span class="text-sm font-bold text-slate-800 truncate w-full" x-text="icon.display_name"></span>
+                        <div class="flex items-center gap-1 text-[11px] text-slate-400 font-mono w-full justify-center group cursor-pointer" @click.stop="copyToClipboard(icon.name)" title="کپی نام">
+                            <span class="truncate max-w-[80%]" dir="ltr" x-text="icon.name"></span>
+                            <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+    <!-- بخش دوم: گالری اصلی -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 relative min-h-[400px]">
+        
+        <!-- انیمیشن لودینگ -->
+        <div x-show="isLoading" class="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center">
+            <svg class="animate-spin w-10 h-10 text-blue-600 mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span class="text-slate-500 font-medium animate-pulse">در حال دریافت اطلاعات...</span>
+        </div>
+
+        <!-- گرید آیکون‌ها -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+            <template x-for="icon in icons" :key="icon.id">
+                <div class="group relative bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-3 flex flex-col items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
+                     :class="!icon.is_active ? 'opacity-60 grayscale' : ''">
+                    
+                    <!-- چک‌باکس انتخاب (حالت Select) -->
+                    <div class="absolute top-2 left-2 z-20">
+                        <input type="checkbox" :value="icon.id" x-model="selectedIcons" class="opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity">
+                    </div>
+
+                    <!-- دکمه‌های شناور اکشن‌ها -->
+                    <div class="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
+                        <!-- کپی -->
+                        <button @click.stop="copyToClipboard(icon.name)" class="p-1.5 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-100 bg-white shadow-sm border border-slate-100" title="کپی نام">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                        <!-- ویرایش -->
+                        <button @click.stop="openFormModal(icon)" class="p-1.5 rounded-md text-slate-400 hover:text-orange-600 hover:bg-orange-100 bg-white shadow-sm border border-slate-100" title="ویرایش">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <!-- حذف تکی -->
+                        <button @click.stop="deleteSingleIcon(icon.id)" class="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-100 bg-white shadow-sm border border-slate-100" title="حذف">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- کلیک برای پیش‌نمایش -->
+                    <div @click="openPreviewModal(icon)" class="w-full flex flex-col items-center cursor-pointer mt-2">
+                        <div class="w-14 h-14 mb-4 text-slate-600 group-hover:text-blue-600 transition-colors flex items-center justify-center">
+                            <template x-if="icon.is_svg">
+                                <div x-html="icon.content" class="w-full h-full [&>svg]:w-full [&>svg]:h-full"></div>
+                            </template>
+                            <template x-if="!icon.is_svg">
+                                <img :src="icon.url" :alt="icon.display_name" class="max-w-full max-h-full object-contain">
+                            </template>
+                        </div>
+                        <div class="w-full px-2 text-[11px] text-slate-500 text-center truncate font-mono bg-slate-50 py-1.5 rounded-lg group-hover:bg-blue-50 transition-colors" dir="ltr" x-text="icon.display_name"></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- حالت خالی -->
+        <div x-show="!isLoading && icons.length === 0" class="col-span-full py-20 bg-slate-50 text-center rounded-2xl border-2 border-dashed border-slate-200 mt-4">
+            <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p class="text-slate-500 font-medium">هیچ آیکونی یافت نشد.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div x-show="pagination.total_pages > 1" class="mt-8 flex justify-center">
+            <nav class="flex gap-2" dir="ltr">
+                <button @click="fetchIcons(currentPage - 1)" :disabled="!pagination.has_previous" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">قبلی</button>
+                
+                <template x-for="page in getPageRange()" :key="page">
+                    <button @click="fetchIcons(page)" 
+                            :class="page === currentPage ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-4 py-2 rounded-xl transition-colors font-medium"
+                            x-text="page"></button>
+                </template>
+                
+                <button @click="fetchIcons(currentPage + 1)" :disabled="!pagination.has_next" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">بعدی</button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- مودال ۱: پیش‌نمایش و دانلود -->
+    <!-- ========================================== -->
+    <div x-show="isPreviewOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div x-show="isPreviewOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closePreviewModal()"></div>
+        <div x-show="isPreviewOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="bg-white rounded-3xl w-full max-w-4xl relative shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 max-h-[90vh]">
+            
+            <button @click="closePreviewModal()" class="absolute top-4 left-4 bg-slate-100 hover:bg-red-100 hover:text-red-500 p-2 rounded-full z-20 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+
+            <!-- بخش راست: پیش‌نمایش بصری -->
+            <div class="w-full md:w-1/2 bg-checkerboard flex flex-col items-center justify-center p-10 border-l border-slate-200 relative min-h-[300px]">
+                <div class="w-48 h-48 md:w-64 md:h-64 text-slate-800 flex items-center justify-center transition-all hover:scale-110 duration-500">
+                    <template x-if="currentIcon.is_svg">
+                        <div x-html="currentIcon.content" class="w-full h-full [&>svg]:w-full [&>svg]:h-full drop-shadow-md"></div>
+                    </template>
+                    <template x-if="!currentIcon.is_svg">
+                        <img :src="currentIcon.url" class="max-w-full max-h-full object-contain drop-shadow-md">
+                    </template>
+                </div>
+            </div>
+
+            <!-- بخش چپ: تنظیمات -->
+            <div class="w-full md:w-1/2 p-6 md:p-10 bg-white flex flex-col overflow-y-auto">
+                <div class="mb-8 border-b pb-4">
+                    <h3 class="text-2xl font-bold font-mono text-slate-800" dir="ltr" x-text="currentIcon.name"></h3>
+                    <p class="text-sm text-slate-500 mt-2 flex items-center gap-2">
+                        <span x-text="currentIcon.display_name"></span>
+                        <span x-show="currentIcon.category" class="bg-slate-100 px-2 py-0.5 rounded text-[10px]" x-text="currentIcon.category"></span>
+                    </p>
+                </div>
+
+                <div x-show="currentIcon.is_svg" class="space-y-6">
+                    <!-- تب‌های فرمت خروجی -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-3 text-slate-700">فرمت خروجی</label>
+                        <div class="flex flex-wrap gap-2" dir="ltr">
+                            <button type="button" @click="exportFormat = 'svg'" 
+                                    :class="exportFormat === 'svg' ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                    class="flex-1 min-w-[80px] px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all text-center">
+                                SVG <span class="block text-[10px] opacity-80 mt-0.5 font-normal">برداری</span>
+                            </button>
+                            <button type="button" @click="exportFormat = 'png'" 
+                                    :class="exportFormat === 'png' ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                    class="flex-1 min-w-[80px] px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all text-center">
+                                PNG <span class="block text-[10px] opacity-80 mt-0.5 font-normal">بدون پس‌زمینه</span>
+                            </button>
+                            <button type="button" @click="exportFormat = 'jpeg'" 
+                                    :class="exportFormat === 'jpeg' ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                    class="flex-1 min-w-[80px] px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all text-center">
+                                JPG <span class="block text-[10px] opacity-80 mt-0.5 font-normal">پس‌زمینه سفید</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- تب‌های ابعاد (در حالت SVG غیرفعال می‌شوند) -->
+                    <div :class="exportFormat === 'svg' ? 'opacity-50 pointer-events-none grayscale' : 'transition-all duration-300'">
+                        <label class="block text-sm font-semibold mb-3 text-slate-700">ابعاد (پیکسل)</label>
+                        <div class="flex flex-wrap gap-2" dir="ltr">
+                            <template x-for="size in ['64', '128', '256', '512', '1024']" :key="size">
+                                <button type="button" 
+                                        @click="exportSize = size" 
+                                        :class="exportSize === size ? 'bg-slate-800 text-white shadow-md border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                        class="flex-1 min-w-[50px] px-2 py-2 rounded-xl border-2 text-sm font-mono font-medium transition-all text-center"
+                                        x-text="size">
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                
+                <div x-show="!currentIcon.is_svg" class="mb-8 p-4 bg-yellow-50 text-yellow-700 rounded-xl text-sm border border-yellow-200 leading-relaxed">
+                    این فایل وکتور (SVG) نیست. تغییر فرمت و سایز روی مرورگر پشتیبانی نمی‌شود. شما می‌توانید فایل اصلی را مستقیماً دانلود کنید.
+                </div>
+
+                <div class="mt-auto flex gap-3 pt-6">
+                    <button @click="processDownload()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span class="font-medium">دانلود فایل</span>
+                    </button>
+                    <button x-show="currentIcon.is_svg" @click="copySvgCode()" class="bg-white border-2 border-slate-200 text-slate-600 py-3.5 px-5 rounded-xl hover:bg-slate-50 hover:border-blue-400 transition-all font-medium" title="کپی کد">کپی کد</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- مودال ۲: فرم افزودن / ویرایش (ارسال با Ajax) -->
+    <!-- ========================================== -->
+    <div x-show="isFormModalOpen" style="display: none;" class="fixed inset-0 z-[150] flex items-center justify-center p-4">
+        <div x-show="isFormModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeFormModal()"></div>
+        <div x-show="isFormModalOpen" 
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 translate-y-8"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="bg-white rounded-3xl w-full max-w-3xl relative shadow-2xl flex flex-col z-10 p-6 md:p-8 max-h-[95vh] overflow-y-auto custom-scrollbar">
+            
+            <button type="button" @click="closeFormModal()" class="absolute top-6 left-6 text-slate-400 hover:text-red-500 bg-slate-100 p-1.5 rounded-full transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            
+            <h2 class="text-2xl font-bold mb-6 text-slate-800 border-b pb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <span x-text="formMode === 'create' ? 'افزودن آیکون جدید' : 'ویرایش آیکون'"></span>
+            </h2>
+
+            <form @submit.prevent="submitForm" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">نام سیستمی (انگلیسی)*</label>
+                        <input type="text" x-model="formData.name" required dir="ltr" class="font-mono text-sm" placeholder="e.g. arrow-right">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">نام نمایشی*</label>
+                        <input type="text" x-model="formData.display_name" required placeholder="فلش سمت راست">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">دسته‌بندی (اختیاری)</label>
+                    <input type="text" x-model="formData.category" dir="ltr" placeholder="UI, Social...">
+                </div>
+
+                <!-- تب‌های انتخاب روش آپلود -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 mt-4">
+                    <div class="flex flex-wrap gap-2 mb-4 border-b border-slate-200 pb-3">
+                        <button type="button" @click="uploadMethod = 'code'" :class="uploadMethod === 'code' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'" class="px-5 py-2 rounded-lg text-sm transition-all font-medium">کد SVG (پیشنهادی)</button>
+                        <button type="button" @click="uploadMethod = 'file'" :class="uploadMethod === 'file' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'" class="px-5 py-2 rounded-lg text-sm transition-all font-medium">آپلود فایل (تصویر)</button>
+                    </div>
+
+                    <!-- بخش درج کد با پیش‌نمایش -->
+                    <div x-show="uploadMethod === 'code'" class="flex flex-col md:flex-row gap-4">
+                        <div class="w-full md:w-2/3">
+                            <textarea x-model="pastedSvg" class="!h-32 !font-mono !text-xs !text-left !custom-scrollbar" dir="ltr" placeholder="<svg viewBox='0 0 24 24'>...</svg>"></textarea>
+                        </div>
+                        <div class="w-full md:w-1/3 bg-checkerboard rounded-xl border border-slate-200 flex flex-col items-center justify-center p-4 min-h-[128px]">
+                            <span class="text-[10px] text-slate-400 mb-2 font-mono bg-white px-2 py-1 rounded shadow-sm">پیش‌نمایش زنده</span>
+                            <div class="w-16 h-16 text-slate-800 transition-all flex items-center justify-center [&>svg]:w-full [&>svg]:h-full" x-html="pastedSvg ? pastedSvg : '<span class=\'text-xs text-slate-400\'>خالی</span>'">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- بخش آپلود فایل -->
+                    <div x-show="uploadMethod === 'file'">
+                        <input type="file" id="iconFileInput" accept=".svg,.png,.jpg,.jpeg,.webp" :required="formMode === 'create' && uploadMethod === 'file'" class="file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                        <p class="text-xs text-orange-500 mt-2 font-medium" x-show="formMode === 'edit'">نکته: در صورت عدم انتخاب فایل جدید، فایل قبلی روی سرور حفظ می‌شود.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <input type="checkbox" id="is_active" x-model="formData.is_active">
+                    <label for="is_active" class="text-sm font-semibold text-slate-700 cursor-pointer select-none">این آیکون در سیستم فعال و قابل نمایش باشد</label>
+                </div>
+
+                <div class="pt-6 mt-6 border-t flex justify-end gap-3">
+                    <button type="button" @click="closeFormModal()" class="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">انصراف</button>
+                    <button type="submit" :disabled="isSubmitting" class="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-wait">
+                        <svg x-show="isSubmitting" class="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span x-text="isSubmitting ? 'در حال ذخیره...' : 'ذخیره اطلاعات'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- مودال ایمپورت اکسل -->
+    <div x-show="isExcelModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style="display: none;">
+        <div @click.away="isExcelModalOpen = false" class="bg-white rounded-2xl w-full max-w-4xl shadow-xl flex flex-col max-h-[90vh]">
+            
+            <!-- هدر مودال -->
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">ایمپورت آیکون‌ها از اکسل</h3>
+                <button @click="isExcelModalOpen = false" class="text-slate-400 hover:text-red-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- محتوای مودال -->
+            <div class="p-5 overflow-y-auto flex-1">
+                <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-700">
+                    <strong>فرمت استاندارد فایل اکسل:</strong><br>
+                    ستون A: نام یکتا (Name) | ستون B: نام نمایشی | ستون C: دسته‌بندی | ستون D: کد خام SVG
+                </div>
+
+                <!-- انتخاب فایل -->
+                <div class="mb-6" x-show="excelPreviewData.length === 0">
+                    <input type="file" accept=".xlsx" @change="handleExcelPreview" :disabled="isProcessingExcel"
+                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg">
+                    <p x-show="isProcessingExcel" class="mt-2 text-sm text-orange-500">در حال خواندن فایل، لطفا صبر کنید...</p>
+                </div>
+
+                <!-- جدول پیش‌نمایش کلاینت -->
+                <div x-show="excelPreviewData.length > 0">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm font-semibold text-green-600">
+                            تعداد <span x-text="excelPreviewData.length"></span> آیکون با موفقیت شناسایی شد:
+                        </span>
+                        <button @click="excelPreviewData = []" class="text-xs text-red-500 underline">انتخاب فایل دیگر</button>
+                    </div>
+                    
+                    <div class="border border-slate-200 rounded-lg overflow-hidden h-64 overflow-y-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200 sticky top-0">
+                                <tr>
+                                    <th class="p-3">پیش‌نمایش</th>
+                                    <th class="p-3">نام (یکتا)</th>
+                                    <th class="p-3">نام نمایشی</th>
+                                    <th class="p-3">دسته‌بندی</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, index) in excelPreviewData" :key="index">
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                        <!-- رندر مستقیم کد SVG از اکسل -->
+                                        <td class="p-3 w-12 h-12" x-html="item.svg_content"></td>
+                                        <td class="p-3 text-slate-600" x-text="item.name"></td>
+                                        <td class="p-3 text-slate-600" x-text="item.display_name"></td>
+                                        <td class="p-3 text-slate-600" x-text="item.category"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فوتر مودال -->
+            <div class="p-5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl" x-show="excelPreviewData.length > 0">
+                <button @click="isExcelModalOpen = false" class="px-5 py-2 rounded-lg text-slate-600 hover:bg-slate-200 font-medium text-sm transition-all border border-slate-200">
+                    انصراف
+                </button>
+                <button @click="saveBulkExcel" :disabled="isProcessingExcel" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition-all shadow-md">
+                    <span x-show="!isProcessingExcel">تایید و ذخیره گروهی</span>
+                    <span x-show="isProcessingExcel">در حال ذخیره...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // تنظیمات URL ها (متصل به urls.py)
+    const API_URLS = {
+        list: "{% url 'api_list' %}", // مسیر نام‌گذاری شده خود را تنظیم کنید
+        save: "{% url 'api_save' %}",
+        deleteBase: "api_icon_delete", // آدرس پایه حذف تکی (با توجه به مسیر واقعی اپ خود جایگزین کنید، یا از URL resolver استفاده کنید)
+        bulkDelete: "{% url 'api_icons_bulk_delete' %}",
+        apiPreviewExcel: "{% url 'api_preview_excel' %}",
+        apiBulkSaveExcel: "{% url 'api_bulk_save_excel' %}"
+    };
+
+    // تابع کمکی برای گرفتن توکن CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('iconGallery', () => ({
+            icons: [],
+            isLoading: true,
+            isSubmitting: false,
+            searchQuery: '{{ search_query|default:"" }}',
+            currentPage: 1,
+            pagination: { total_pages: 1, has_next: false, has_previous: false, total_items: 0 },
+            selectedIcons: [],
+            toasts: [],
+            toastIdCounter: 0,
+            isPreviewOpen: false,
+            currentIcon: { name: '', display_name: '', content: '', url: '', is_svg: true },
+            exportFormat: 'svg',
+            exportSize: '256',
+            isFormModalOpen: false,
+            formMode: 'create', 
+            uploadMethod: 'code', 
+            pastedSvg: '',
+            formData: { id: '', name: '', display_name: '', category: '', is_active: true },
+            bulkExportSize: '256',
+            isExcelModalOpen: false,
+            excelPreviewData: [],  
+            isProcessingExcel: false,
+
+            async handleExcelPreview(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                this.isProcessingExcel = true;
+                const formData = new FormData();
+                formData.append('excel_file', file);
+
+                try {
+                    // آدرس ویوی api_preview_excel
+                    const response = await fetch(API_URLS.apiBulkSaveExcel, { 
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' }, // حتما توکن CSRF را ارسال کنید
+                        body: formData
+                    });
+                    
+                    const res = await response.json();
+                    if (res.status === 'success') {
+                        this.excelPreviewData = res.data; // پر کردن آرایه برای نمایش در جدول
+                    } else {
+                        alert(res.message);
+                    }
+                } catch (e) {
+                    alert('خطا در ارتباط با سرور');
+                } finally {
+                    this.isProcessingExcel = false;
+                    event.target.value = ''; // ریست کردن اینپوت فایل
+                }
+            },
+
+            async saveBulkExcel() {
+                if (this.excelPreviewData.length === 0) return;
+                this.isProcessingExcel = true;
+
+                try {
+                    // آدرس ویوی api_bulk_save_excel
+                    const response = await fetch(API_URLS.apiBulkSaveExcel, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ icons: this.excelPreviewData })
+                    });
+
+                    const res = await response.json();
+                    if (res.status === 'success') {
+                        alert(res.message);
+                        this.isExcelModalOpen = false;
+                        this.excelPreviewData = [];
+                        this.fetchIcons(); // رفرش کردن لیست اصلی آیکون‌ها
+                    } else {
+                        alert(res.message);
+                    }
+                } catch (e) {
+                    alert('خطا در ذخیره‌سازی اطلاعات');
+                } finally {
+                    this.isProcessingExcel = false;
+                }
+            },
+            downloadSingleIconDirectly(icon, format, size) {
+                if (!icon.is_svg) {
+                    // اگر وکتور نیست، فایل اصلی دانلود شود
+                    this.triggerDownload(icon.url, icon.url.split('/').pop());
+                    return;
+                }
+
+                const baseName = icon.name;
+                const svgContent = icon.content;
+
+                if (format === 'svg') {
+                    const blob = new Blob([svgContent], {type: 'image/svg+xml;charset=utf-8'});
+                    this.triggerDownload(URL.createObjectURL(blob), `${baseName}.svg`);
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                if (format === 'jpeg') {
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, size, size);
+                }
+
+                const img = new Image();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(svgContent, "image/svg+xml");
+                const svg = doc.querySelector('svg');
+                svg.setAttribute('width', size);
+                svg.setAttribute('height', size);
+                const optimizedSvg = new XMLSerializer().serializeToString(svg);
+
+                const svgBlob = new Blob([optimizedSvg], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, size, size);
+                    URL.revokeObjectURL(url);
+                    this.triggerDownload(canvas.toDataURL(`image/${format === 'jpeg' ? 'jpeg' : 'png'}`), `${baseName}.${format === 'jpeg' ? 'jpg' : 'png'}`);
+                };
+                img.src = url;
+            },
+            initGallery() {
+                this.fetchIcons(1);
+            },
+
+            addToast(message, type = 'success') {
+                const id = this.toastIdCounter++;
+                this.toasts.push({ id, message, type, show: true });
+                setTimeout(() => {
+                    const toast = this.toasts.find(t => t.id === id);
+                    if(toast) toast.show = false;
+                    // پاکسازی از آرایه بعد از انیمیشن
+                    setTimeout(() => {
+                        this.toasts = this.toasts.filter(t => t.id !== id);
+                    }, 300);
+                }, 4000);
+            },
+
+            // --- API Calls ---
+
+            async fetchIcons(page = 1) {
+                this.isLoading = true;
+                try {
+                    const url = `${API_URLS.list}?page=${page}&q=${encodeURIComponent(this.searchQuery)}`;
+                    const response = await fetch(url);
+                    const result = await response.json();
+                    
+                    if(result.status === 'success') {
+                        this.icons = result.data;
+                        this.pagination = result.pagination;
+                        this.currentPage = result.pagination.current_page;
+                        
+                        // با تغییر صفحه، انتخاب‌های قبلی را پاک می‌کنیم
+                        this.selectedIcons = []; 
+                    }
+                } catch (error) {
+                    this.addToast('خطا در دریافت اطلاعات از سرور', 'error');
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            async submitForm() {
+                this.isSubmitting = true;
+                try {
+                    const formData = new FormData();
+                    if(this.formMode === 'edit') formData.append('icon_id', this.formData.id);
+                    formData.append('name', this.formData.name);
+                    formData.append('display_name', this.formData.display_name);
+                    formData.append('category', this.formData.category);
+                    formData.append('is_active', this.formData.is_active ? 'True' : 'False');
+
+                    if (this.uploadMethod === 'code' && this.pastedSvg.trim() !== '') {
+                        formData.append('svg_content', this.pastedSvg);
+                    } else if (this.uploadMethod === 'file') {
+                        const fileInput = document.getElementById('iconFileInput');
+                        if (fileInput.files.length > 0) {
+                            formData.append('icon_file', fileInput.files[0]);
+                        }
+                    }
+
+                    const response = await fetch(API_URLS.save, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if(response.ok && result.status === 'success') {
+                        this.addToast(result.message, 'success');
+                        this.closeFormModal();
+                        this.fetchIcons(this.currentPage); // رفرش لیست
+                    } else {
+                        // نمایش ارورهای فرم
+                        let errorMsg = result.message || 'خطا در ذخیره اطلاعات.';
+                        if (result.errors) {
+                            errorMsg += ' ' + Object.values(result.errors).join(' | ');
+                        }
+                        this.addToast(errorMsg, 'error');
+                    }
+                } catch (error) {
+                    this.addToast('خطای ارتباط با سرور', 'error');
+                } finally {
+                    this.isSubmitting = false;
+                }
+            },
+
+            async deleteSingleIcon(id) {
+                if(!confirm('آیا از حذف این آیکون اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) return;
+                
+                try {
+                    const response = await fetch(`${API_URLS.deleteBase}${id}/`, {
+                        method: 'POST', // یا DELETE اگر در ویو پشتیبانی می‌شود
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                    });
+                    
+                    const result = await response.json();
+                    if(response.ok && result.status === 'success') {
+                        this.addToast(result.message, 'success');
+                        this.fetchIcons(this.currentPage);
+                    } else {
+                        this.addToast('خطا در حذف آیکون', 'error');
+                    }
+                } catch (error) {
+                    this.addToast('خطای ارتباط با سرور', 'error');
+                }
+            },
+
+            async bulkDelete() {
+                if(this.selectedIcons.length === 0) return;
+                if(!confirm(`آیا از حذف ${this.selectedIcons.length} آیکون انتخاب شده اطمینان دارید؟`)) return;
+
+                try {
+                    const response = await fetch(API_URLS.bulkDelete, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken') 
+                        },
+                        body: JSON.stringify({ ids: this.selectedIcons })
+                    });
+                    
+                    const result = await response.json();
+                    if(response.ok && result.status === 'success') {
+                        this.addToast(result.message, 'success');
+                        this.selectedIcons = []; // پاکسازی انتخاب‌ها
+                        this.fetchIcons(this.currentPage);
+                    } else {
+                        this.addToast(result.message || 'خطا در حذف گروهی', 'error');
+                    }
+                } catch (error) {
+                    this.addToast('خطای ارتباط با سرور', 'error');
+                }
+            },
+
+            // --- UI & Helper Methods ---
+
+            getPageRange() {
+                // تولید شماره صفحات برای نمایش (مثل 1, 2, 3)
+                let current = this.currentPage;
+                let last = this.pagination.total_pages;
+                let delta = 2;
+                let left = current - delta;
+                let right = current + delta + 1;
+                let range = [];
+                for (let i = 1; i <= last; i++) {
+                    if (i === 1 || i === last || (i >= left && i < right)) {
+                        range.push(i);
+                    }
+                }
+                return range;
+            },
+
+            openPreviewModal(iconObj) {
+                this.currentIcon = iconObj;
+                this.exportFormat = iconObj.is_svg ? 'svg' : 'none';
+                this.isPreviewOpen = true;
+                document.body.style.overflow = 'hidden'; 
+            },
+
+            closePreviewModal() {
+                this.isPreviewOpen = false;
+                document.body.style.overflow = 'auto';
+            },
+
+            openFormModal(iconObj = null) {
+                if (iconObj) {
+                    this.formMode = 'edit';
+                    this.formData = { 
+                        id: iconObj.id, 
+                        name: iconObj.name, 
+                        display_name: iconObj.display_name, 
+                        category: iconObj.category, 
+                        is_active: iconObj.is_active 
+                    };
+                    this.pastedSvg = iconObj.is_svg ? iconObj.content : '';
+                    this.uploadMethod = iconObj.is_svg && iconObj.content ? 'code' : 'file';
+                } else {
+                    this.formMode = 'create';
+                    this.formData = { id: '', name: '', display_name: '', category: '', is_active: true };
+                    this.pastedSvg = '';
+                    this.uploadMethod = 'code';
+                }
+                
+                // ریست کردن input فایل
+                const fileInput = document.getElementById('iconFileInput');
+                if(fileInput) fileInput.value = '';
+
+                this.isFormModalOpen = true;
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeFormModal() {
+                this.isFormModalOpen = false;
+                if (!this.isPreviewOpen) document.body.style.overflow = 'auto';
+            },
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text);
+                this.addToast('نام آیکون کپی شد!', 'success');
+            },
+
+            copySvgCode() {
+                if(this.currentIcon.is_svg) {
+                    navigator.clipboard.writeText(this.currentIcon.content);
+                    this.addToast('کد SVG کپی شد!', 'success');
+                }
+            },
+
+            // منطق دانلود کلاینت ساید (مانند قبل)
+            processDownload() {
+                if (!this.currentIcon.is_svg) {
+                    this.triggerDownload(this.currentIcon.url, this.currentIcon.url.split('/').pop());
+                    return;
+                }
+
+                const format = this.exportFormat;
+                const size = parseInt(this.exportSize);
+                const baseName = this.currentIcon.name;
+                const svgContent = this.currentIcon.content;
+
+                if (format === 'svg') {
+                    const blob = new Blob([svgContent], {type: 'image/svg+xml;charset=utf-8'});
+                    this.triggerDownload(URL.createObjectURL(blob), `${baseName}.svg`);
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                if (format === 'jpeg') {
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, size, size);
+                }
+
+                const img = new Image();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(svgContent, "image/svg+xml");
+                const svg = doc.querySelector('svg');
+                svg.setAttribute('width', size);
+                svg.setAttribute('height', size);
+                const optimizedSvg = new XMLSerializer().serializeToString(svg);
+
+                const svgBlob = new Blob([optimizedSvg], {type: 'image/svg+xml;charset=utf-8'});
+                const url = URL.createObjectURL(svgBlob);
+
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, size, size);
+                    URL.revokeObjectURL(url);
+                    this.triggerDownload(canvas.toDataURL(`image/${format === 'jpeg' ? 'jpeg' : 'png'}`), `${baseName}.${format === 'jpeg' ? 'jpg' : 'png'}`);
+                };
+                img.src = url;
+            },
+
+            triggerDownload(url, filename) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                this.addToast('دانلود فایل آغاز شد', 'success');
+            }
+        }));
+    });
+</script>
+{% endblock %}

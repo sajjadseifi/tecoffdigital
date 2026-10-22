@@ -1,0 +1,80 @@
+{
+  "companyName": "Tecof",
+  "currentYear": 2024,
+  "newsletter": {
+    "title": "از جدیدترین امکانات جا نمانید!",
+    "subtitle": "به جمع +۲۰۰۰ کسب‌وکاری بپیوندید که ترفندهای افزایش فروش را دریافت می‌کنند."
+  },
+  "brand": {
+    "description": "تکوف، پلتفرم جامع ساخت کاتالوگ آنلاین و منوی QR-Code برای تمامی کسب‌وکارهاست. ما با ترکیب هنر طراحی و قدرت تکنولوژی، به شرکت‌ها، فروشگاه‌ها و رستوران‌ها کمک می‌کنیم تا فروش خود را در دنیای دیجیتال افزایش دهند."
+  },
+  "contactInfo": {
+    "phone": "۰۲۱ - ۹۱۰۰ ۰۰۰۰",
+    "email": "info@tecof.ir",
+    "address": {
+      "city": "تهران",
+      "streetAddress": "پارک فناوری پردیس، ساختمان نوآوری، طبقه دوم، واحد ۲۴"
+    }
+  },
+  "linkColumns": [
+    {
+      "title": "محصول",
+      "links": [
+        { "text": "امکانات پلتفرم", "href": "#features" },
+        { "text": "تعرفه‌ها", "href": "#pricing" },
+        { "text": "قالب‌های آماده", "href": "/templates/" },
+        { "text": "اتصال به نرم‌افزارها", "href": "/integrations/" }
+      ]
+    },
+    {
+      "title": "منابع آموزشی",
+      "links": [
+        { "text": "وبلاگ تکوف", "href": "/blog/" },
+        { "text": "مرکز آموزش", "href": "/help/" },
+        { "text": "سوالات متداول", "href": "/faq/" },
+        { "text": "مستندات API", "href": "/api-docs/" }
+      ]
+    }
+  ],
+  "trust": {
+    "title": "اعتماد شما، افتخار ما",
+    "seals": [
+      {
+        "name": "اینماد",
+        "href": "#",
+        "imgSrc": "https://trustseal.enamad.ir/logo.aspx?id=your-id",
+        "alt": "نماد اعتماد الکترونیکی"
+      },
+      {
+        "name": "ساماندهی",
+        "href": "#",
+        "imgSrc": "https://logo.samandehi.ir/logo.aspx?id=your-id",
+        "alt": "نشان ملی ثبت رسانه‌های دیجیتال"
+      },
+      {
+        "name": "انجمن صنفی",
+        "href": "#",
+        "text": "عضو نظام<br/>صنفی"
+      }
+    ],
+    "paymentMethods": {
+      "title": "روش‌های پرداخت امن پشتیبانی شده:",
+      "methods": ["شتاب", "زرین‌پال"]
+    }
+  },
+  "legal": {
+    "copyright": "تمامی حقوق برای",
+    "links": [
+      { "text": "حریم خصوصی", "href": "/privacy/" },
+      { "text": "قوانین خدمات", "href": "/terms/" }
+    ]
+  },
+  "systemStatus": {
+    "href": "/status/",
+    "text": "وضعیت سیستم: در حال توسعه و تولید"
+  },
+  "socialLinks": [
+    { "name": "Instagram", "href": "#", "iconPath": "..." },
+    { "name": "LinkedIn", "href": "#", "iconPath": "..." }
+  ]
+}

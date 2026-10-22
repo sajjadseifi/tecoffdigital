@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+<h2>تنظیم گروهی قیمت تخفیفی</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <!-- مهم: نگهداری آیتم‌های انتخاب‌شده -->
+    {% for obj in items %}
+        <input type="hidden" name="_selected_action" value="{{ obj.pk }}">
+    {% endfor %}
+
+    <input type="hidden" name="action" value="set_discount">
+
+    <button type="submit" name="apply" class="button default">اعمال</button>
+</form>
+
+{% endblock %}

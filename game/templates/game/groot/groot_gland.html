@@ -1,0 +1,845 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth antialiased">
+<head>
+    <!-- ================= BASIC ================= -->
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <meta name="theme-color" content="#fafaf9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- ================= SEO ================= -->
+    <title>
+            TEC OFF | پلتفرم تکپ
+    </title>
+
+    <meta
+        name="description"
+        content="{% block description %}با Tecof در کمتر از ۲ دقیقه کاتالوگ آنلاین و منوی دیجیتال خود را بسازید.{% endblock %}"
+    />
+
+    <meta
+        name="keywords"
+        content="{% block keywords %}کاتالوگ آنلاین, منوی دیجیتال, Tecof{% endblock %}"
+    />
+
+    <meta name="robots" content="index, follow" />
+
+    <!-- ================= ICON ================= -->
+    <link
+        rel="icon"
+        href="{% static 'icons/tecof_faveicon.png' %}"
+        type="image/png"
+    />
+
+    <!-- ================= FONTS ================= -->
+    <link
+        rel="preload"
+        href="{% static 'fonts/YekanBakh-Regular.woff2' %}"
+        as="font"
+        type="font/woff2"
+        crossorigin
+    />
+
+    <link
+        rel="preload"
+        href="{% static 'fonts/YekanBakh-Bold.woff2' %}"
+        as="font"
+        type="font/woff2"
+        crossorigin
+    />
+
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+
+    <!-- ================= CSS ================= -->
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+    <!-- ================= JS ================= -->
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/swiper-bundle.min.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+
+    <!-- ================= TAILWIND ================= -->
+    <style type="text/tailwindcss">
+
+        @theme {
+
+            /* FONT */
+            --font-sans: 'YekanBakh', system-ui, sans-serif;
+
+            /* SURFACE */
+            --color-surface-50: #fafaf9;
+            --color-surface-100: #f5f5f4;
+            --color-surface-200: #e7e5e4;
+
+            /* BRAND */
+            --color-brand-400: #a8a29e;
+            --color-brand-500: #78716c;
+            --color-brand-700: #44403c;
+            --color-brand-900: #1c1917;
+
+            /* ACCENT */
+            --color-accent-500: #f97316;
+            --color-accent-600: #ea580c;
+
+            /* SHADOW */
+            --shadow-soft: 0 8px 30px rgba(0,0,0,.05);
+            --shadow-card: 0 10px 30px rgba(0,0,0,.06);
+        }
+
+        @layer base {
+
+            *{
+                box-sizing:border-box;
+            }
+
+            html{
+                scroll-behavior:smooth;
+                -webkit-text-size-adjust:100%;
+            }
+
+            body{
+                @apply bg-surface-50 text-brand-900 font-sans;
+                text-rendering:optimizeLegibility;
+                overscroll-behavior-y:none;
+                overflow-x:hidden;
+                min-height:100dvh;
+            }
+
+            img{
+                user-select:none;
+                -webkit-user-drag:none;
+            }
+
+            button,
+            input,
+            textarea,
+            select{
+                font:inherit;
+            }
+
+            a,
+            button{
+                -webkit-tap-highlight-color:transparent;
+            }
+
+        }
+
+        @layer utilities {
+
+            .safe-top{
+                padding-top:env(safe-area-inset-top);
+            }
+
+            .safe-bottom{
+                padding-bottom:env(safe-area-inset-bottom);
+            }
+
+            .scrollbar-hide::-webkit-scrollbar{
+                display:none;
+            }
+
+            .scrollbar-hide{
+                scrollbar-width:none;
+                -ms-overflow-style:none;
+            }
+
+            /* glass */
+            .glass{
+                background:rgba(250,250,249,.82);
+                backdrop-filter:blur(18px);
+                -webkit-backdrop-filter:blur(18px);
+            }
+
+            /* ultra smooth card */
+            .smooth-card{
+                transform:translateZ(0);
+                will-change:transform;
+                transition:
+                    transform .28s cubic-bezier(.2,.8,.2,1),
+                    box-shadow .28s ease,
+                    opacity .2s ease;
+            }
+
+            .smooth-card:active{
+                transform:scale(.96);
+            }
+
+            /* floating softness */
+            .floating-soft{
+                animation:floatSoft 5s ease-in-out infinite;
+            }
+
+            @keyframes floatSoft{
+                0%{ transform:translateY(0px); }
+                50%{ transform:translateY(-4px); }
+                100%{ transform:translateY(0px); }
+            }
+
+            /* fade */
+            .fade-in{
+                animation:fadeIn .35s ease;
+            }
+
+            @keyframes fadeIn{
+                from{
+                    opacity:0;
+                    transform:translateY(8px);
+                }
+                to{
+                    opacity:1;
+                    transform:translateY(0);
+                }
+            }
+
+        }
+
+        [x-cloak]{
+            display:none !important;
+        }
+
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth antialiased">
+<head>
+    <!-- ================= BASIC ================= -->
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <meta name="theme-color" content="#fafaf9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+
+    <meta name="robots" content="index, follow" />
+
+    <!-- ================= ICON ================= -->
+    <link
+        rel="icon"
+        href="{% static 'icons/tecof_faveicon.png' %}"
+        type="image/png"
+    />
+
+    <!-- ================= FONTS ================= -->
+    <link
+        rel="preload"
+        href="{% static 'fonts/YekanBakh-Regular.woff2' %}"
+        as="font"
+        type="font/woff2"
+        crossorigin
+    />
+
+    <link
+        rel="preload"
+        href="{% static 'fonts/YekanBakh-Bold.woff2' %}"
+        as="font"
+        type="font/woff2"
+        crossorigin
+    />
+
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+
+    <!-- ================= CSS ================= -->
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+    <!-- ================= JS ================= -->
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/swiper-bundle.min.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+
+    <!-- ================= TAILWIND ================= -->
+    <style type="text/tailwindcss">
+
+        @theme {
+
+            /* FONT */
+            --font-sans: 'YekanBakh', system-ui, sans-serif;
+
+            /* SURFACE */
+            --color-surface-50: #fafaf9;
+            --color-surface-100: #f5f5f4;
+            --color-surface-200: #e7e5e4;
+
+            /* BRAND */
+            --color-brand-400: #a8a29e;
+            --color-brand-500: #78716c;
+            --color-brand-700: #44403c;
+            --color-brand-900: #1c1917;
+
+            /* ACCENT */
+            --color-accent-500: #f97316;
+            --color-accent-600: #ea580c;
+
+            /* SHADOW */
+            --shadow-soft: 0 8px 30px rgba(0,0,0,.05);
+            --shadow-card: 0 10px 30px rgba(0,0,0,.06);
+        }
+
+        @layer base {
+
+            *{
+                box-sizing:border-box;
+            }
+
+            html{
+                scroll-behavior:smooth;
+                -webkit-text-size-adjust:100%;
+            }
+
+            body{
+                @apply bg-surface-50 text-brand-900 font-sans;
+                text-rendering:optimizeLegibility;
+                overscroll-behavior-y:none;
+                overflow-x:hidden;
+                min-height:100dvh;
+            }
+
+            img{
+                user-select:none;
+                -webkit-user-drag:none;
+            }
+
+            button,
+            input,
+            textarea,
+            select{
+                font:inherit;
+            }
+
+            a,
+            button{
+                -webkit-tap-highlight-color:transparent;
+            }
+
+        }
+
+        @layer utilities {
+
+            .safe-top{
+                padding-top:env(safe-area-inset-top);
+            }
+
+            .safe-bottom{
+                padding-bottom:env(safe-area-inset-bottom);
+            }
+
+            .scrollbar-hide::-webkit-scrollbar{
+                display:none;
+            }
+
+            .scrollbar-hide{
+                scrollbar-width:none;
+                -ms-overflow-style:none;
+            }
+
+            /* glass */
+            .glass{
+                background:rgba(250,250,249,.82);
+                backdrop-filter:blur(18px);
+                -webkit-backdrop-filter:blur(18px);
+            }
+
+            /* ultra smooth card */
+            .smooth-card{
+                transform:translateZ(0);
+                will-change:transform;
+                transition:
+                    transform .28s cubic-bezier(.2,.8,.2,1),
+                    box-shadow .28s ease,
+                    opacity .2s ease;
+            }
+
+            .smooth-card:active{
+                transform:scale(.96);
+            }
+
+            /* floating softness */
+            .floating-soft{
+                animation:floatSoft 5s ease-in-out infinite;
+            }
+
+            @keyframes floatSoft{
+                0%{ transform:translateY(0px); }
+                50%{ transform:translateY(-4px); }
+                100%{ transform:translateY(0px); }
+            }
+
+            /* fade */
+            .fade-in{
+                animation:fadeIn .35s ease;
+            }
+
+            @keyframes fadeIn{
+                from{
+                    opacity:0;
+                    transform:translateY(8px);
+                }
+                to{
+                    opacity:1;
+                    transform:translateY(0);
+                }
+            }
+
+        }
+
+        [x-cloak]{
+            display:none !important;
+        }
+
+    </style>
+
+</head>
+
+<body class="bg-[#071120] text-white overflow-x-hidden">
+
+<!-- ================= BACKGROUND EFFECT ================= -->
+<div class="fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/20 blur-3xl rounded-full"></div>
+    <div class="absolute bottom-0 right-0 w-[400px] h-[400px] bg-yellow-400/20 blur-3xl rounded-full"></div>
+
+    <!-- lightning -->
+    <div class="absolute inset-0 opacity-10"
+         style="background-image:
+         linear-gradient(120deg, transparent 0%, rgba(255,255,255,.8) 50%, transparent 100%);
+         background-size:300px 300px;
+         animation:lightning 6s linear infinite;">
+    </div>
+</div>
+
+<style>
+@keyframes lightning{
+    0%{transform:translateX(-100%)}
+    100%{transform:translateX(100%)}
+}
+</style>
+
+<!-- ================= NAVBAR ================= -->
+<header class="sticky top-0 z-50 glass border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-2xl">
+                ⚡
+            </div>
+
+            <div>
+                <h1 class="text-2xl font-black tracking-wide text-yellow-300">
+                    GROOT
+                </h1>
+                <p class="text-sm text-white/60">
+                    Game Studio
+                </p>
+            </div>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-8 text-sm">
+            <a href="#offline" class="hover:text-yellow-300 transition">بازی آفلاین</a>
+            <a href="#online" class="hover:text-yellow-300 transition">بازی آنلاین</a>
+            <a href="#coming" class="hover:text-yellow-300 transition">درحال ساخت</a>
+            <a href="#about" class="hover:text-yellow-300 transition">درباره ما</a>
+        </nav>
+
+    </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="relative min-h-screen flex items-center">
+
+    <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-14 items-center">
+
+        <!-- content -->
+        <div class="space-y-8 fade-in">
+
+            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 border border-white/10 backdrop-blur">
+                <span class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></span>
+                <span class="text-sm text-white/70">
+                    نسل جدید بازی‌های فکری و هیجانی
+                </span>
+            </div>
+
+            <h2 class="text-5xl lg:text-7xl leading-tight font-black">
+                دنیای بازی‌های
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-blue-400">
+                    هیجانی
+                </span>
+                و خانوادگی
+            </h2>
+
+            <p class="text-lg text-white/70 leading-9 max-w-2xl">
+                استودیو Groot مجموعه‌ای از بازی‌های دو بعدی،
+                فکری، چندنفره، آنلاین و خانوادگی را طراحی می‌کند
+                تا تجربه‌ای متفاوت، سریع و هیجان‌انگیز برای بازیکنان بسازد.
+            </p>
+
+            <div class="flex flex-wrap gap-4">
+
+                <a href="#games"
+                   class="px-8 py-4 rounded-2xl bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-black shadow-2xl hover:scale-105 transition">
+                    شروع بازی
+                </a>
+
+                <a href="#about"
+                   class="px-8 py-4 rounded-2xl border border-white/20 hover:bg-white/10 transition">
+                    بیشتر بدانید
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- hero card -->
+        <div class="relative">
+
+            <div class="absolute -inset-10 bg-blue-500/20 blur-3xl rounded-full"></div>
+
+            <div class="relative rounded-[40px] border border-white/10 bg-white/5 backdrop-blur-2xl p-8 shadow-2xl">
+
+                <img
+                    src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1400"
+                    class="rounded-3xl w-full h-[500px] object-cover"
+                    alt=""
+                >
+
+                <div class="absolute bottom-10 right-10 left-10 rounded-3xl bg-black/40 backdrop-blur-xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-2xl font-black">
+                                Thunder Arena
+                            </h3>
+                            <p class="text-white/60 mt-2">
+                                اکشن • آنلاین • چندنفره
+                            </p>
+                        </div>
+
+                        <div class="w-16 h-16 rounded-2xl bg-yellow-400 flex items-center justify-center text-black text-3xl">
+                            ⚡
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="py-28">
+
+    <div class="max-w-7xl mx-auto px-6">
+
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <div class="rounded-3xl p-8 bg-white/5 border border-white/10">
+                <div class="text-5xl mb-5">🎮</div>
+                <h3 class="text-2xl font-black mb-4">
+                    گیم‌پلی جذاب
+                </h3>
+                <p class="text-white/60 leading-8">
+                    طراحی مراحل چالش‌برانگیز با مکانیک‌های ساده و اعتیادآور.
+                </p>
+            </div>
+
+            <div class="rounded-3xl p-8 bg-white/5 border border-white/10">
+                <div class="text-5xl mb-5">⚡</div>
+                <h3 class="text-2xl font-black mb-4">
+                    هیجان سریع
+                </h3>
+                <p class="text-white/60 leading-8">
+                    رقابت لحظه‌ای با افکت‌های رعد و برق و موسیقی مهیج.
+                </p>
+            </div>
+
+            <div class="rounded-3xl p-8 bg-white/5 border border-white/10">
+                <div class="text-5xl mb-5">👨‍👩‍👧</div>
+                <h3 class="text-2xl font-black mb-4">
+                    مناسب خانواده
+                </h3>
+                <p class="text-white/60 leading-8">
+                    بازی‌هایی امن، سرگرم‌کننده و مناسب همه سنین.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= OFFLINE GAMES ================= -->
+<section id="offline" class="py-24">
+
+    <div class="max-w-7xl mx-auto px-6">
+
+        <div class="mb-14">
+            <h2 class="text-5xl font-black mb-5">
+                بازی‌های آفلاین
+            </h2>
+
+            <p class="text-white/60 text-lg">
+                تجربه‌ای آرام، فکری و خانوادگی بدون نیاز به اینترنت
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <!-- card -->
+            <div class="group rounded-[32px] overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition">
+
+                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200"
+                     class="h-64 w-full object-cover group-hover:scale-105 transition duration-500">
+
+                <div class="p-7">
+                    <h3 class="text-2xl font-black mb-3">
+                        Puzzle Storm
+                    </h3>
+
+                    <p class="text-white/60 leading-8">
+                        بازی معمایی و فکری با مراحل متنوع و چالش‌های ذهنی.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="group rounded-[32px] overflow-hidden border border-white/10 bg-white/5">
+
+                <img src="https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?q=80&w=1200"
+                     class="h-64 w-full object-cover">
+
+                <div class="p-7">
+                    <h3 class="text-2xl font-black mb-3">
+                        Family Dash
+                    </h3>
+
+                    <p class="text-white/60 leading-8">
+                        بازی خانوادگی سرگرم‌کننده برای رقابت دوستانه.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="group rounded-[32px] overflow-hidden border border-white/10 bg-white/5">
+
+                <img src="https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?q=80&w=1200"
+                     class="h-64 w-full object-cover">
+
+                <div class="p-7">
+                    <h3 class="text-2xl font-black mb-3">
+                        Shadow Brain
+                    </h3>
+
+                    <p class="text-white/60 leading-8">
+                        حل پازل‌های تاریک و معماهای هوشمندانه در فضایی رازآلود.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= ONLINE GAMES ================= -->
+<section id="online" class="py-24 bg-white/5">
+
+    <div class="max-w-7xl mx-auto px-6">
+
+        <div class="mb-14">
+            <h2 class="text-5xl font-black mb-5">
+                بازی‌های آنلاین
+            </h2>
+
+            <p class="text-white/60 text-lg">
+                رقابت لحظه‌ای و هیجان بی‌نهایت با بازیکنان سراسر دنیا
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+
+            <div class="rounded-3xl p-8 border border-yellow-400/20 bg-gradient-to-b from-blue-500/10 to-black/20">
+
+                <div class="text-6xl mb-6">⚔️</div>
+
+                <h3 class="text-3xl font-black mb-4">
+                    Thunder Arena
+                </h3>
+
+                <p class="text-white/60 leading-8 mb-6">
+                    مبارزات آنلاین سریع با قدرت‌های الکتریکی و رقابت جهانی.
+                </p>
+
+                <button class="px-6 py-3 rounded-xl bg-yellow-400 text-black font-black">
+                    Play Online
+                </button>
+
+            </div>
+
+            <div class="rounded-3xl p-8 border border-white/10 bg-white/5">
+
+                <div class="text-6xl mb-6">🚀</div>
+
+                <h3 class="text-3xl font-black mb-4">
+                    Rocket Clash
+                </h3>
+
+                <p class="text-white/60 leading-8 mb-6">
+                    نبردهای سریع فضایی با دوستان و بازیکنان آنلاین.
+                </p>
+
+                <button class="px-6 py-3 rounded-xl bg-blue-500 font-black">
+                    Start Match
+                </button>
+
+            </div>
+
+            <div class="rounded-3xl p-8 border border-white/10 bg-white/5">
+
+                <div class="text-6xl mb-6">🧠</div>
+
+                <h3 class="text-3xl font-black mb-4">
+                    Mind Battle
+                </h3>
+
+                <p class="text-white/60 leading-8 mb-6">
+                    رقابت فکری آنلاین برای حل سریع‌تر معماها.
+                </p>
+
+                <button class="px-6 py-3 rounded-xl bg-orange-500 font-black">
+                    Challenge
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= COMING SOON ================= -->
+<section id="coming" class="py-28">
+
+    <div class="max-w-7xl mx-auto px-6">
+
+        <div class="text-center mb-16">
+            <h2 class="text-5xl font-black mb-5">
+                بازی‌های درحال ساخت
+            </h2>
+
+            <p class="text-white/60 text-lg">
+                پروژه‌های آینده استودیو GROOT
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <div class="rounded-3xl p-10 bg-gradient-to-b from-orange-500/20 to-transparent border border-orange-400/20">
+                <div class="text-6xl mb-6">🔥</div>
+                <h3 class="text-3xl font-black mb-4">
+                    Fire Run
+                </h3>
+                <p class="text-white/60 leading-8">
+                    یک بازی سرعتی و هیجانی با چالش‌های نفس‌گیر.
+                </p>
+            </div>
+
+            <div class="rounded-3xl p-10 bg-gradient-to-b from-blue-500/20 to-transparent border border-blue-400/20">
+                <div class="text-6xl mb-6">🌩️</div>
+                <h3 class="text-3xl font-black mb-4">
+                    Lightning City
+                </h3>
+                <p class="text-white/60 leading-8">
+                    ماجراجویی دوبعدی در شهری پر از انرژی و معما.
+                </p>
+            </div>
+
+            <div class="rounded-3xl p-10 bg-gradient-to-b from-yellow-400/20 to-transparent border border-yellow-300/20">
+                <div class="text-6xl mb-6">👾</div>
+                <h3 class="text-3xl font-black mb-4">
+                    Pixel Kingdom
+                </h3>
+                <p class="text-white/60 leading-8">
+                    دنیای پیکسلی بزرگ با مأموریت‌های چندنفره.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="py-28">
+
+    <div class="max-w-5xl mx-auto px-6">
+
+        <div class="relative overflow-hidden rounded-[40px] bg-gradient-to-r from-blue-600 via-blue-500 to-orange-500 p-14 text-center">
+
+            <div class="absolute inset-0 opacity-20"
+                 style="background-image:radial-gradient(circle at center,white 1px,transparent 1px);background-size:20px 20px">
+            </div>
+
+            <div class="relative">
+
+                <h2 class="text-5xl font-black mb-6">
+                    آماده ورود به دنیای GROOT هستی؟
+                </h2>
+
+                <p class="text-xl text-white/80 leading-9 mb-10">
+                    بازی کن، رقابت کن و هیجان واقعی را تجربه کن.
+                </p>
+
+                <button class="px-10 py-5 rounded-2xl bg-black text-yellow-300 text-xl font-black hover:scale-105 transition">
+                    دانلود بازی‌ها
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer id="about" class="border-t border-white/10 py-14">
+
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-12">
+
+        <div>
+            <h3 class="text-3xl font-black text-yellow-300 mb-5">
+                GROOT
+            </h3>
+
+            <p class="text-white/60 leading-9">
+                استودیو بازی‌سازی GROOT سازنده بازی‌های
+                دوبعدی، فکری، هیجانی و خانوادگی.
+            </p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

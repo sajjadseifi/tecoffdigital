@@ -1,0 +1,79 @@
+{% url url_name as item_url %}
+{% with is_active=request.resolver_match.url_name|stringformat:"s"|add:"" %}
+
+<a href="{{ item_url }}" 
+   class="relative flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group overflow-hidden
+          {% if is_active == url_name %}
+             bg-brand-900/60 border border-brand-800/50 text-white
+          {% else %}
+             text-brand-300 hover:text-white hover:bg-brand-900/40 border border-transparent
+          {% endif %}">
+    
+    <!-- خط رنگی کنار (نشانگر اکتیو یا هاور) -->
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-gradient-to-b from-accent-400 to-accent-600 rounded-l-full transition-all duration-300
+                {% if is_active == url_name %}
+                    opacity-100 shadow-[0_2px_8px_rgba(245,158,11,0.6)]
+                {% else %}
+                    opacity-0 group-hover:opacity-100 group-hover:shadow-[0_2px_8px_rgba(245,158,11,0.6)]
+                {% endif %}">
+    </div>
+
+    <!-- آیکون و عنوان -->
+    <div class="flex items-center gap-3.5">
+        <div class="transition-all duration-300
+                    {% if is_active == url_name %}
+                        text-accent-500 drop-shadow-[0_2px_4px_rgba(245,158,11,0.4)]
+                    {% else %}
+                        text-brand-400 group-hover:text-accent-500 group-hover:-translate-y-0.5 group-hover:drop-shadow-[0_2px_4px_rgba(245,158,11,0.4)]
+                    {% endif %}">
+                {% include "tec/teclib/palate/depthless_neo_svg.html" with icon=icon  %}
+            {% comment %} <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <!-- رندر آیکون بر اساس نام پاس داده شده -->
+                {% if icon == 'dashboard' %}
+                    <path opacity="0.4" d="M12 2.25l8.25 7.5c.37.33.75.89.75 1.5v8c0 1.24-1.01 2.25-2.25 2.25h-3.5a.75.75 0 01-.75-.75v-4.5a1.5 1.5 0 00-1.5-1.5h-2a1.5 1.5 0 00-1.5 1.5v4.5a.75.75 0 01-.75.75H5.25C4.01 21.5 3 20.49 3 19.25v-8c0-.61.38-1.17.75-1.5L12 2.25z" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.5c.61 0 1.21.24 1.67.68l8.25 7.5a2.25 2.25 0 01-3.03 3.33L12 6.64l-6.89 6.37a2.25 2.25 0 01-3.03-3.33l8.25-7.5A2.25 2.25 0 0112 1.5z" />
+                {% elif icon == 'categories' %}
+                    <path opacity="0.4" d="M21 7.5v9.88c0 2.39-1.39 3.62-3.88 3.62H6.88C4.39 21 3 19.77 3 17.38V7.5h18z"/>
+                    <path d="M21 7.5V6.12C21 3.73 19.61 2.5 17.12 2.5h-2.52c-.85 0-1.63.43-2.07 1.13l-1 1.59c-.22.35-.61.56-1.04.56H6.88C4.39 5.78 3 7.01 3 9.4V7.5h18z"/>
+                {% elif icon == 'items' %}
+                    <path opacity="0.4" d="M12 22c-4.71 0-7.33-2.1-8.5-5.38-.28-.78-.45-1.61-.5-2.52V8.62C3 5.43 4.88 3 8.32 3h7.36C19.12 3 21 5.43 21 8.62v5.48c-.05.91-.22 1.74-.5 2.52C19.33 19.9 16.71 22 12 22z"/>
+                    <path d="M15.75 9H8.25C7.84 9 7.5 8.66 7.5 8.25S7.84 7.5 8.25 7.5h7.5c.41 0 .75.34.75.75s-.34.75-.75.75zM12 13.5H8.25C7.84 13.5 7.5 13.16 7.5 12.75S7.84 12 8.25 12H12c.41 0 .75.34.75.75s-.34.75-.75.75z"/>
+                {% elif icon == 'settings' %}
+                    <path opacity="0.4" d="M12 16.5c-2.48 0-4.5-2.02-4.5-4.5s2.02-4.5 4.5-4.5 4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5z"/>
+                    <path d="M19.9 12.66a1.44 1.44 0 00-.73-1.25l-.26-.15c-.44-.25-.66-.75-.53-1.23l.07-.29c.28-1.13-.57-2.18-1.74-2.18h-.3c-.5 0-.96-.32-1.12-.8l-.1-.31c-.34-1.09-1.63-1.55-2.61-.94l-.26.16c-.43.26-.98.17-1.32-.21l-.22-.24c-.81-.88-2.28-.61-2.73.53l-.11.29c-.19.47-.64.79-1.15.79h-.29C5.3 6.82 4.51 7.82 4.7 8.94l.05.31c.09.5-.16 1.01-.61 1.25l-.27.15c-1.02.57-1.15 2-.25 2.76l.23.19c.38.32.53.85.35 1.33l-.1.28c-.41 1.08.38 2.22 1.54 2.22h.3c.51 0 .97.33 1.13.82l.09.28c.36 1.1 1.67 1.54 2.64.9l.26-.17c.43-.27.99-.18 1.33.22l.21.24c.83.92 2.34.62 2.77-.56l.11-.29c.18-.46.62-.77 1.11-.77h.29c1.17 0 1.95-1 1.76-2.11l-.06-.32c-.1-.5.16-1.01.62-1.26l.27-.15c1-.58 1.12-2.01.21-2.78zM12 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/>
+                {% elif icon == 'website' %}
+                    <path opacity="0.4" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.23-1.8h3.35c.18 3.53.94 6.84 2.15 9.87-.25-.04-.49-.09-.73-.14z"/>
+                    <path d="M12 2c-.35 0-.69.03-1.02.08C12.33 5.48 13.14 9.1 13.3 13h5.93c-.45-4.27-3.57-7.74-7.61-8.56C11.83 4.29 12 4.15 12 4v-2zm-1 17.93c1.13-.37 2.18-.89 3.14-1.54C12.59 15.65 11.4 12.35 11 8.82H5.06c.45 4.14 3.4 7.51 7.29 8.44.22 2.29.98 4.41 2.15 6.22-.51.15-1.05.28-1.6.38z"/>
+                {% elif icon == 'qr' %}
+                    <path opacity="0.4" d="M10 3H4C3.45 3 3 3.45 3 4V10C3 10.55 3.45 11 4 11H10C10.55 11 11 10.55 11 10V4C11 3.45 10.55 3 10 3Z"/>
+                    <path opacity="0.4" d="M20 13H14C13.45 13 13 13.45 13 14V20C13 20.55 13.45 21 14 21H20C20.55 21 21 20.55 21 20V14C21 13.45 20.55 13 20 13Z"/>
+                    <path d="M20 3H14C13.45 3 13 3.45 13 4V10C13 10.55 13.45 11 14 11H20C20.55 11 21 10.55 21 10V4C21 3.45 20.55 3 20 3Z"/>
+                    <path d="M10 13H4C3.45 13 3 13.45 3 14V20C3 20.55 3.45 21 4 21H10C10.55 21 11 20.55 11 20V14C11 13.45 10.55 13 10 13Z"/>
+                {% elif icon == 'theme' %}
+                    <path opacity="0.4" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
+                    <path d="M12 5C11.1716 5 10.5 5.67157 10.5 6.5C10.5 7.32843 11.1716 8 12 8C12.8284 8 13.5 7.32843 13.5 6.5C13.5 5.67157 12.8284 5 12 5ZM7.5 9.5C6.67157 9.5 6 10.1716 6 11C6 11.8284 6.67157 12.5 7.5 12.5C8.32843 12.5 9 11.8284 9 11C9 10.1716 8.32843 9.5 7.5 9.5ZM16.5 9.5C15.6716 9.5 15 10.1716 15 11C15 11.8284 15.6716 12.5 16.5 12.5C17.3284 12.5 18 11.8284 18 11C18 10.1716 17.3284 9.5 16.5 9.5ZM10 16.5C10 15.3954 10.8954 14.5 12 14.5C13.1046 14.5 14 15.3954 14 16.5V17H10V16.5Z"/>
+                {% elif icon == 'palate' %}
+                    <path stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 3c-4.97 0-9 3.13-9 7s3.13 7 7 7h1.5c.7 0 1.5.6 1.5 1.5S12.7 21 14 21c3 0 6-3 6-7 0-5-4-11-8-11z" />
+                    <circle cx="8.5" cy="10" r="1" fill="currentColor"/>
+                    <circle cx="12" cy="8" r=".9" fill="currentColor"/>
+                    <circle cx="10.5" cy="13" r=".9" fill="currentColor"/>
+                {% endif %}
+            </svg> {% endcomment %}
+        </div>
+        
+        <span class="text-sm transition-colors duration-300 {% if is_active == url_name %}font-bold text-accent-400{% else %}font-medium{% endif %}">
+            {{ title }}
+        </span>
+    </div>
+
+    <!-- نشانگر (Badge) کانت / متن در صورت وجود -->
+    {% if badge %}
+    <span class="bg-brand-950/80 border text-center min-w-[28px] text-[10px] px-1.5 py-1 rounded-lg text-brand-200 font-nums transition-colors
+                 {% if is_active == url_name %}border-accent-500/50{% else %}border-brand-800 group-hover:border-accent-500/30{% endif %}">
+        {{ badge }}
+    </span>
+    {% endif %}
+
+</a>
+{% endwith %}

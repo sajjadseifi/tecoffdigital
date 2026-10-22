@@ -1,0 +1,147 @@
+<!-- components/item_form.html -->
+<div id="item-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300" role="dialog" aria-modal="true">
+    <!-- پس‌زمینه تاریک -->
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="toggleItemModal('close')"></div>
+
+    <!-- محتوای مودال -->
+    <div class="relative z-10 flex items-center justify-center min-h-screen p-4 sm:p-6">
+        <!-- کانتینر اصلی مودال -->
+        <div class="w-full max-w-3xl bg-white rounded-2xl shadow-2xl transform transition-all flex flex-col max-h-[90vh] overflow-hidden">
+            
+            <!-- فرم کل مودال را در بر می‌گیرد تا هدر و فوتر ثابت بمانند -->
+            <form id="item-main-form" method="POST" enctype="multipart/form-data" class="flex flex-col h-full max-h-[90vh] overflow-hidden">
+                {% csrf_token %}
+                
+                <!-- هدر مودال (ثابت) -->
+                <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 id="modal-form-title" class="text-lg font-bold text-gray-800">
+                        افزودن / ویرایش آیتم
+                    </h3>
+                    <button type="button" onclick="toggleItemModal('close')" class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500/20">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- بدنه فرم (اسکرول‌خور) -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-white">
+                    
+                    <!-- بخش تصویر -->
+                    <div class="space-y-3 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+                        <label class="block text-sm font-semibold text-gray-700">تصویر آیتم</label>
+                        {% include 'components/files/image_file_upload.html' %}
+                        
+                        <!-- پیش‌نمایش تصویر فعلی -->
+                        <div id="current-image-preview" class="hidden flex items-center gap-3 mt-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <img id="current-image-img" src="" class="w-12 h-12 rounded-lg object-cover border border-gray-100 shadow-sm">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-gray-700">تصویر فعلی سیستم</span>
+                                <span class="text-xs text-gray-400">در صورت آپلود عکس جدید، این تصویر جایگزین می‌شود.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- گرید فیلدها -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                        
+                        <!-- عنوان -->
+                        <div class="space-y-1.5">
+                            <label for="input-title" class="text-sm font-semibold text-gray-700">عنوان آیتم <span class="text-rose-500">*</span></label>
+                            <input type="text" name="title" id="input-title" required class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none" placeholder="مثلاً: قهوه لاته اسپشیال">
+                        </div>
+                        
+                        <!-- اسلاگ -->
+                        <div class="space-y-1.5">
+                            <label for="input-slug" class="text-sm font-semibold text-gray-700">شناسه لینک (Slug)</label>
+                            <input type="text" name="slug" id="input-slug" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none text-left dir-ltr" placeholder="latte-coffee">
+                        </div>
+
+                        <!-- دسته‌بندی -->
+                        <div class="space-y-1.5">
+                            <label for="input-category" class="text-sm font-semibold text-gray-700">دسته‌بندی <span class="text-rose-500">*</span></label>
+                            <select name="category" id="input-category" required class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none cursor-pointer appearance-none">
+                                <option value="" disabled selected>انتخاب دسته‌بندی...</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- SKU -->
+                        <div class="space-y-1.5">
+                            <label for="input-sku" class="text-sm font-semibold text-gray-700">کد محصول (SKU)</label>
+                            <input type="text" name="sku" id="input-sku" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none text-left dir-ltr" placeholder="PRD-001">
+                        </div>
+
+                        <!-- قیمت -->
+                        <div class="space-y-1.5">
+                            <label for="input-price" class="text-sm font-semibold text-gray-700">قیمت اصلی <span class="text-xs text-gray-400 font-normal">(ریال)</span></label>
+                            <input type="number" name="price" id="input-price" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none font-nums" placeholder="0">
+                        </div>
+
+                        <!-- قیمت با تخفیف -->
+                        <div class="space-y-1.5">
+                            <label for="input-discount_price" class="text-sm font-semibold text-gray-700">قیمت با تخفیف <span class="text-xs text-gray-400 font-normal">(ریال)</span></label>
+                            <input type="number" name="discount_price" id="input-discount_price" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-500/20 transition-all outline-none font-nums" placeholder="در صورت نداشتن تخفیف خالی بگذارید">
+                        </div>
+                        
+                        <!-- موجودی -->
+                        <div class="space-y-1.5">
+                            <label for="input-stock" class="text-sm font-semibold text-gray-700">موجودی انبار</label>
+                            <input type="number" name="stock" id="input-stock" value="100" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none font-nums">
+                        </div>
+                        
+                        <!-- ترتیب نمایش -->
+                        <div class="space-y-1.5">
+                            <label for="input-order" class="text-sm font-semibold text-gray-700">ترتیب نمایش</label>
+                            <input type="number" name="order" id="input-order" value="0" class="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none font-nums" placeholder="اولویت نمایش (مثلا 1)">
+                        </div>
+                    </div>
+
+                    <!-- توضیحات -->
+                    <div class="space-y-1.5">
+                        <label for="input-description" class="text-sm font-semibold text-gray-700">توضیحات محصول</label>
+                        <textarea name="description" id="input-description" rows="3" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all outline-none resize-none custom-scrollbar" placeholder="توضیحات جذاب و مختصری درباره این آیتم بنویسید..."></textarea>
+                    </div>
+
+                    <!-- سوئیچ‌ها (Toggles) -->
+                    <div class="flex flex-col sm:flex-row gap-6 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                        <!-- سوئیچ موجودی -->
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative flex items-center">
+                                <input type="checkbox" name="is_available" id="input-is_available" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:bg-emerald-500 transition-colors duration-300"></div>
+                                <div class="absolute w-4 h-4 bg-white rounded-full shadow right-1 peer-checked:translate-x-[-1.25rem] transition-transform duration-300"></div>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-800 group-hover:text-emerald-600 transition-colors">موجود و فعال</span>
+                                <span class="text-[11px] text-gray-500">قابل سفارش برای مشتریان</span>
+                            </div>
+                        </label>
+
+                        <!-- سوئیچ ویژه -->
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <div class="relative flex items-center">
+                                <input type="checkbox" name="is_featured" id="input-is_featured" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-500/20 rounded-full peer peer-checked:bg-amber-500 transition-colors duration-300"></div>
+                                <div class="absolute w-4 h-4 bg-white rounded-full shadow right-1 peer-checked:translate-x-[-1.25rem] transition-transform duration-300"></div>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-800 group-hover:text-amber-600 transition-colors">آیتم ویژه (Featured)</span>
+                                <span class="text-[11px] text-gray-500">نمایش متمایز در منو</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                </div> <!-- پایان بدنه اسکرول‌خور -->
+
+                <!-- فوتر مودال (ثابت) -->
+                <div class="flex-shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+                        <button type="button" onclick="toggleItemModal('close')" class="flex-1 px-6 py-3 bg-surface-100 hover:bg-surface-200 text-brand-700 font-bold rounded-xl transition-colors">انصراف</button>
+                        <button type="submit" id="modal-submit-btn" class="flex-[2] px-6 py-3 bg-brand-800 hover:bg-brand-900 text-white font-bold rounded-xl shadow-lg shadow-brand-900/20 transition-all transform active:scale-95">ذخیره تغییرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

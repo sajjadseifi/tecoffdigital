@@ -1,0 +1,394 @@
+<!-- ========================= -->
+<!-- QR CARD GENERATOR -->
+<!-- ========================= -->
+
+<div class="max-w-6xl mx-auto">
+
+    <!-- WRAPPER -->
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-5 md:p-7 shadow-2xl">
+
+        <!-- TOP INPUT -->
+        <div class="flex flex-col md:flex-row-reverse gap-4 items-center">
+
+            <!-- INPUT -->
+            <input
+                dir="ltr"
+                type="text"
+                x-model="qrInput"
+                placeholder="https://example.com"
+                class="w-full h-14 bg-white/10 border border-white/10 text-white rounded-2xl px-5 focus:outline-none focus:border-cyan-400 transition-all placeholder:text-gray-500"
+            >
+
+            <!-- BUTTON -->
+            <button
+                @click="generateQR()"
+                class="w-full md:w-auto h-14 px-8 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold hover:scale-[1.02] transition-all shadow-lg shadow-cyan-500/20"
+            >
+                ساخت QR
+            </button>
+
+        </div>
+
+        <!-- CONTENT -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+
+            <!-- SETTINGS -->
+            <div class="lg:col-span-7 flex flex-col gap-5">
+
+                <!-- CUSTOMIZE -->
+                <div class="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/10 to-black/20 p-5">
+
+                    <!-- HEADER -->
+                    <div class="flex items-center gap-3 mb-6">
+
+                        <div class="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-cyan-400"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5">
+                                </path>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h2 class="text-white font-bold text-lg">
+                                شخصی‌سازی کارت
+                            </h2>
+
+                            <p class="text-xs text-gray-400 mt-1">
+                                متن، لوگو و رنگ‌ها را تغییر دهید
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <!-- FIELDS -->
+                    <div class="space-y-5">
+
+                        <!-- TITLE -->
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">
+                                عنوان کارت
+                            </label>
+
+                            <input
+                                type="text"
+                                x-model="customTitle"
+                                class="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4 text-white focus:border-cyan-400 focus:outline-none"
+                                placeholder="TECOFF DIGITAL"
+                            >
+                        </div>
+
+                        <!-- DESC -->
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-2">
+                                عنوان دوم کارت
+                            </label>
+
+                            <textarea
+                                rows="3"
+                                x-model="customDesc"
+                                class="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white focus:border-cyan-400 focus:outline-none resize-none"
+                                placeholder="برای مشاهده اطلاعات اسکن کنید"
+                            ></textarea>
+                        </div>
+
+                        <!-- BRAND -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-2">
+                                    برند پایین
+                                </label>
+
+                                <input
+                                    type="text"
+                                    x-model="brandText"
+                                    class="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4 text-white focus:border-cyan-400 focus:outline-none"
+                                    placeholder="TECOFF DIGITAL"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-2">
+                                    توضیح برند
+                                </label>
+
+                                <input
+                                    type="text"
+                                    x-model="brandDesc"
+                                    class="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4 text-white focus:border-cyan-400 focus:outline-none"
+                                    placeholder="پلتفرم دیجیتال کسب و کار"
+                                >
+                            </div>
+
+                        </div>
+
+                        <!-- COLORS -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-2">
+                                    رنگ QR
+                                </label>
+
+                                <input
+                                    type="color"
+                                    x-model="qrDarkColor"
+                                    @input="updateQrStyle()"
+                                    class="w-full h-12 rounded-xl bg-transparent border border-white/10"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-2">
+                                    رنگ زمینه QR
+                                </label>
+
+                                <input
+                                    type="color"
+                                    x-model="qrLightColor"
+                                    @input="updateQrStyle()"
+                                    class="w-full h-12 rounded-xl bg-transparent border border-white/10"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-2">
+                                    پس‌زمینه کارت
+                                </label>
+
+                                <input
+                                    type="color"
+                                    x-model="cardBg"
+                                    class="w-full h-12 rounded-xl bg-transparent border border-white/10"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-2">
+                                    رنگ متن
+                                </label>
+
+                                <input
+                                    type="color"
+                                    x-model="cardText"
+                                    class="w-full h-12 rounded-xl bg-transparent border border-white/10"
+                                >
+                            </div>
+
+                        </div>
+
+                        <!-- LOGO -->
+                        <div>
+
+                            <label class="block text-xs text-gray-400 mb-3">
+                                لوگو مرکز QR
+                            </label>
+
+                            <div class="flex flex-wrap items-center gap-3">
+
+                                <label class="cursor-pointer px-5 h-12 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-sm text-gray-300 transition-all">
+
+                                    انتخاب تصویر
+
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        class="hidden"
+                                        @change="handleLogoUpload"
+                                    >
+
+                                </label>
+
+                                <button
+                                    x-show="logoBase64"
+                                    @click="logoBase64 = null"
+                                    class="px-4 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm"
+                                >
+                                    حذف لوگو
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- TEMPLATE -->
+                <div class="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/10 to-black/20 p-5 overflow-hidden">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <div>
+                            <h3 class="text-white font-bold">
+                                قالب‌ها
+                            </h3>
+
+                            <p class="text-xs text-gray-400 mt-1">
+                                انتخاب رنگ آماده
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <!-- SCROLL -->
+                    <div class="overflow-x-auto hide-scrollbar">
+
+                        <div class="flex gap-3 min-w-max">
+
+                            <template x-for="template in templates" :key="template.id">
+
+                                <button
+                                    @click="applyTemplate(template.id)"
+
+                                    :class="
+                                        selectedTemplate === template.id
+                                        ? 'border-cyan-400 bg-cyan-500/10'
+                                        : 'border-white/10'
+                                    "
+
+                                    class="min-w-[90px] rounded-2xl border p-3 flex flex-col items-center gap-2 transition-all"
+                                >
+
+                                    <div
+                                        class="w-10 h-10 rounded-full border border-white/20"
+                                        :style="`background:${template.colorDark}`"
+                                    ></div>
+
+                                    <span
+                                        class="text-[11px] text-gray-300"
+                                        x-text="template.name"
+                                    ></span>
+
+                                </button>
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="lg:col-span-5">
+
+                <div class="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/10 to-black/30 p-5 sticky top-5">
+
+                    <div class="flex items-center justify-between mb-5">
+
+                        <h3 class="text-white font-bold">
+                            پیش‌نمایش زنده
+                        </h3>
+
+                        <div class="text-xs text-gray-400">
+                            PNG Export
+                        </div>
+
+                    </div>
+
+                    <!-- EXPORT CARD -->
+                    <div class="flex justify-center">
+
+                        <div
+                            id="export-card"
+
+                            class="w-full max-w-[320px] rounded-[30px] p-6 shadow-2xl transition-all duration-300"
+
+                            :style="`
+                                background:${cardBg};
+                                color:${cardText};
+                            `"
+                        >
+
+                            <!-- TITLE -->
+                            <h2
+                                class="text-center font-black text-2xl break-words"
+                                x-text="customTitle || 'TECOFF DIGITAL'"
+                            ></h2>
+
+                            <!-- DESC -->
+                            <p
+                                class="text-center text-sm mt-2 opacity-80 leading-7"
+                                x-text="customDesc || 'برای مشاهده اطلاعات اسکن کنید'"
+                            ></p>
+
+                            <!-- LINE -->
+
+                            <!-- QR -->
+                            <div class="relative flex items-center justify-center">
+
+                                <div id="qrcode-canvas"></div>
+
+                                <!-- LOGO -->
+                                <template x-if="logoBase64">
+
+                                    <div class="absolute w-16 h-16 bg-white rounded-2xl p-2 shadow-xl flex items-center justify-center">
+
+                                        <img
+                                            :src="logoBase64"
+                                            class="w-full h-full object-contain rounded-xl"
+                                        >
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+                            <!-- BRAND -->
+                            <div class="mt-6 text-center">
+
+                                <h4
+                                    class="font-black text-lg"
+                                    x-text="brandText || 'TECOFF DIGITAL'"
+                                ></h4>
+
+                                <p
+                                    class="text-xs opacity-70 mt-1"
+                                    x-text="brandDesc || 'پلتفرم دیجیتال کسب و کار'"
+                                ></p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- DOWNLOAD -->
+                    <button
+                        @click="downloadQR()"
+                        class="mt-6 w-full h-14 rounded-2xl bg-green-500 hover:bg-green-400 text-black font-black transition-all"
+                    >
+                        دانلود تصویر نهایی
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+</style>

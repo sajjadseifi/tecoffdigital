@@ -1,0 +1,556 @@
+{% extends './layout.html' %}
+{% load static %}
+{% block title %}{{ catalog.title|default:"منوی کافه" }}{% endblock %}
+
+{% block page_x_data %}chalkboardApp(){% endblock %}
+
+{% block extra_head %}
+<script>
+    const ITEMS_API_URL_TEMPLATE = "{% url 'api_category_items' catalog_slug=catalog.slug category_slug='__CAT_SLUG__' %}";
+    const INITIAL_CATEGORIES = [
+        {% for cat in catalog.categories_first_level %}
+            { slug: "{{ cat.slug }}", title: "{{ cat.title }}" }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+</script>
+<link rel="preload" href="{% static 'fonts/Lalezar/Lalezar-Regular.ttf' %}" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="{% static 'fonts/Lalezar/Lalezar-Regular.otf' %}" as="font" type="font/woff2" crossorigin />
+
+<style>
+    @font-face {
+        font-family: 'Lalezar';
+        src: local('Lalezar Regular'), local('Lalezar-Regular'),
+            url("{% static 'fonts/Lalezar/Lalezar-Regular.otf' %}") format('opentype'),
+            url("{% static 'fonts/Lalezar/Lalezar-Regular.ttf' %}") format('truetype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }
+
+    /* متغیرهای رنگی برای تخته ثابت و گچ‌های مختلف */
+    :root {
+        --board-bg-1: #2c3e50; 
+        --board-bg-2: #1a252f; /* زمینه تخته تیره */
+        --wood-1: #5c4033; 
+        --wood-2: #3e2723;
+        
+        /* پیش‌فرض: گچ سفید */
+        --chalk-color: #f8f9fa;
+        --chalk-shadow: rgba(248, 249, 250, 0.4);
+        --accent-color: #dee2e6;
+    }
+
+    [data-theme="red"] {
+        --chalk-color: #ff7675;
+        --chalk-shadow: rgba(255, 118, 117, 0.4);
+        --accent-color: #ff9ff3;
+    }
+
+    [data-theme="yellow"] {
+        --chalk-color: #ffeaa7;
+        --chalk-shadow: rgba(255, 234, 167, 0.4);
+        --accent-color: #fdcb6e;
+    }
+
+    [data-theme="blue"] {
+        --chalk-color: #74b9ff;
+        --chalk-shadow: rgba(116, 185, 255, 0.4);
+        --accent-color: #81ecec;
+    }
+
+    .chalkboard-bg {
+        background-color: var(--board-bg-2);
+        background-image: 
+            radial-gradient(circle, var(--board-bg-1) 0%, var(--board-bg-2) 100%),
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+        color: var(--chalk-color);
+        transition: color 0.5s ease;
+    }
+
+    .wood-border {
+        border: 16px solid var(--wood-2);
+        border-image: repeating-linear-gradient(45deg, var(--wood-1), var(--wood-1) 15px, var(--wood-2) 15px, var(--wood-2) 30px) 16;
+        border-radius: 6px;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    /* طاقچه پایین تخته برای قرارگیری گچ‌ها */
+    .chalk-ledge {
+        background: repeating-linear-gradient(90deg, var(--wood-2), var(--wood-2) 15px, var(--wood-1) 15px, var(--wood-1) 30px);
+        border-top: 8px solid rgba(0,0,0,0.4);
+        box-shadow: inset 0 10px 10px -10px rgba(0,0,0,0.8), 0 -5px 15px rgba(0,0,0,0.5);
+    }
+
+    .chalk-font {
+        font-family: 'Lalezar', cursive;
+        color: var(--chalk-color);
+        text-shadow: 0px 0px 4px var(--chalk-shadow), 1px 1px 2px rgba(0,0,0,0.3);
+        letter-spacing: 1px;
+    }
+
+    .chalk-line {
+        height: 2px;
+        background: repeating-linear-gradient(to right, var(--accent-color) 0, var(--accent-color) 5px, transparent 5px, transparent 10px);
+        opacity: 0.5;
+        flex-grow: 1;
+        margin: 0 10px;
+        transform: translateY(-8px);
+    }
+
+    .brand-box {
+        border: 3px solid var(--accent-color);
+        border-radius: 10px 255px 15px 255px / 255px 5px 225px 10px;
+        padding: 15px;
+        display: inline-block;
+        transform: rotate(-1deg);
+    }
+    
+    .info-box {
+        border: 1px solid var(--accent-color);
+        border-radius: 5px 20px 5px 20px / 20px 5px 20px 5px;
+    }
+
+    .chalk-piece {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 4px 2px rgba(0,0,0,0.6));
+    }
+    .chalk-piece:hover {
+        transform: translateY(-5px) rotate(-10deg);
+    }
+    .chalk-piece.active {
+        transform: translateY(-8px) scale(1.15);
+        filter: drop-shadow(0 8px 4px rgba(0,0,0,0.6)) drop-shadow(0 0 6px currentColor);
+    }
+        /* --- انیمیشن‌های لودینگ گچی --- */
+    
+    /* افکت ظاهر شدن متن از راست به چپ (نوشتن فارسی) */
+    .writing-text-rtl {
+        clip-path: inset(0 0 0 100%);
+        animation: writeText 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+    }
+    
+    @keyframes writeText {
+        0% { clip-path: inset(0 0 0 100%); }
+        100% { clip-path: inset(0 0 0 0); }
+    }
+
+    /* افکت کشیده شدن دایره گچی (اسپینر) */
+    .chalk-spinner {
+        animation: spin 2s linear infinite;
+    }
+    .chalk-spinner circle {
+        stroke-dasharray: 1, 150;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @keyframes dash {
+        0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+        50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+        100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* افکت اسکلتون (رد گچ مات روی تخته) */
+    .skeleton-chalk {
+        background-color: currentColor; /* هماهنگ با رنگ گچ فعلی */
+        border-radius: 3px;
+        animation: chalkPulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes chalkPulse {
+        0%, 100% { opacity: 0.05; filter: blur(1px); }
+        50% { opacity: 0.15; filter: blur(2px); }
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fixed inset-0 w-full h-full bg-[#1e1e1e] p-4 md:p-8 flex justify-center items-center" :data-theme="currentTheme">
+    <div class="wood-border w-full max-w-md h-full relative flex flex-col bg-[#1a252f]">
+        <!-- Main Board Content -->
+        <div class="chalkboard-bg w-full flex-grow overflow-y-auto overflow-x-hidden p-5 scrollbar-hide">
+            <div class="text-center mt-4 mb-10 relative">
+                <div class="brand-box">
+                    <h1 class="chalk-font text-4xl mb-1">{{ catalog.title|default:"کافه منو" }}</h1>
+                                        <!-- وضعیت کاری (ساعات کاری) -->
+                    {% if catalog.working_hours %}
+                    <div class="mt-4 pt-4 border-t border-[var(--accent-color)] border-dashed text-center">
+                        <span class="text-base yekan-text">
+                            {% if catalog.is_open_now %}
+                                <span class="text-green-400 font-bold chalk-font tracking-wide text-xl mr-2">باز است</span>
+                            {% else %}
+                                <span class="text-red-400 font-bold chalk-font tracking-wide text-xl mr-2">بسته‌ است</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% if catalog.description %}
+                        <p class="text-sm yekan-text mt-2 opacity-80 font-bold">{{ catalog.description }}</p>
+                    {% endif %}
+                    {% if catalog.tagline %}
+                        <p class="text-xs yekan-text mt-1 opacity-60">{{ catalog.tagline }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Loading State (انیمیشن نوشتن + اسکلتون گچی) -->
+            <div x-show="isLoading" class="flex flex-col items-center justify-center py-6 w-full" x-cloak>
+                
+                <!-- انیمیشن در حال نوشتن -->
+                <div class="mb-12 flex flex-col items-center">
+                    <!-- اسپینر گچی -->
+                    <svg class="w-12 h-12 mb-4 chalk-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                    <!-- متن در حال نوشتن -->
+                    <div class="chalk-font text-2xl relative inline-block text-center" dir="rtl">
+                        <span class="opacity-20 absolute inset-0">در حال نوشتن منو...</span>
+                        <span class="relative writing-text-rtl text-current">در حال نوشتن منو...</span>
+                    </div>
+                </div>
+
+                <!-- Skeleton UI (اسکلتون‌های گچی) -->
+                <div class="w-full space-y-12 px-2">
+                    <!-- دسته بندی فرضی ۱ -->
+                    <div>
+                        <div class="flex items-center justify-center mb-6">
+                            <div class="w-8 h-[2px] rounded-full mr-3 bg-current opacity-30"></div>
+                            <div class="w-32 h-8 skeleton-chalk"></div>
+                            <div class="w-8 h-[2px] rounded-full ml-3 bg-current opacity-30"></div>
+                        </div>
+                        <div class="space-y-6">
+                            <!-- آیتم ۱ -->
+                            <div>
+                                <div class="flex items-end justify-between mb-2">
+                                    <div class="w-1/3 h-5 skeleton-chalk"></div>
+                                    <div class="chalk-line opacity-20"></div>
+                                    <div class="w-16 h-5 skeleton-chalk"></div>
+                                </div>
+                                <div class="w-2/3 h-3 mt-2 skeleton-chalk opacity-10"></div>
+                                <div class="w-1/2 h-3 mt-1.5 skeleton-chalk opacity-10"></div>
+                            </div>
+                            <!-- آیتم ۲ -->
+                            <div>
+                                <div class="flex items-end justify-between mb-2">
+                                    <div class="w-2/5 h-5 skeleton-chalk"></div>
+                                    <div class="chalk-line opacity-20"></div>
+                                    <div class="w-20 h-5 skeleton-chalk"></div>
+                                </div>
+                                <div class="w-3/4 h-3 mt-2 skeleton-chalk opacity-10"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- دسته بندی فرضی ۲ -->
+                    <div class="opacity-60">
+                        <div class="flex items-center justify-center mb-6">
+                            <div class="w-8 h-[2px] rounded-full mr-3 bg-current opacity-30"></div>
+                            <div class="w-24 h-8 skeleton-chalk"></div>
+                            <div class="w-8 h-[2px] rounded-full ml-3 bg-current opacity-30"></div>
+                        </div>
+                        <div class="space-y-6">
+                            <!-- آیتم ۱ -->
+                            <div>
+                                <div class="flex items-end justify-between mb-2">
+                                    <div class="w-1/3 h-5 skeleton-chalk"></div>
+                                    <div class="chalk-line opacity-20"></div>
+                                    <div class="w-16 h-5 skeleton-chalk"></div>
+                                </div>
+                                <div class="w-1/2 h-3 mt-2 skeleton-chalk opacity-10"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Menu Content -->
+            <div x-show="!isLoading" class="space-y-12 pb-10" x-cloak>
+                <template x-for="category in menuData" :key="category.slug">
+                    <div x-show="category.items && category.items.length > 0">
+                        <!-- Category Title -->
+                        <div class="flex items-center justify-center mb-6 opacity-90">
+                            <div class="w-8 h-[2px] rounded-full mr-3" style="background-color: var(--accent-color)"></div>
+                            <h2 class="chalk-font text-2xl" x-text="category.title"></h2>
+                            <div class="w-8 h-[2px] rounded-full ml-3" style="background-color: var(--accent-color)"></div>
+                        </div>
+
+                        <!-- Items List -->
+                        <div class="space-y-6">
+                            <template x-for="item in category.items" :key="item.id">
+                                <div @click="$store.sheet.open('item', item)" class="cursor-pointer group hover:opacity-80 transition-opacity px-2">
+                                    <div class="flex items-end justify-between chalk-font text-xl mb-1">
+                                        <span x-text="item.title"></span>
+                                        <div class="chalk-line"></div>
+                                        <div class="whitespace-nowrap flex items-center gap-1">
+                                            <span x-text="item.final_price"></span> 
+                                            <span class="text-sm opacity-70">ریال</span>
+                                        </div>
+                                    </div>
+                                    <template x-if="item.description">
+                                        <p class="text-xs font-medium opacity-60 line-clamp-2 leading-relaxed" style="font-family: 'YekanBakh', sans-serif;" x-text="item.description"></p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <!-- Footer / Catalog Info -->
+            <footer class="mt-12 pt-8 border-t border-[var(--accent-color)] border-dashed opacity-90">
+                <div class="info-box p-5 space-y-6 relative bg-black/10">
+                    <h3 class="chalk-font text-3xl text-center mb-6">اطلاعات کافه</h3>
+
+                    <!-- درباره ما (About / Description) -->
+                    {% if catalog.about or catalog.description %}
+                    <div class="text-sm yekan-text leading-loose text-justify opacity-80 border-b border-[var(--accent-color)] border-dashed pb-4">
+                        {{ catalog.about|default:catalog.description }}
+                    </div>
+                    {% endif %}
+
+                    <!-- اطلاعات تماس و آدرس -->
+                    <div class="grid grid-cols-1 gap-4 text-sm yekan-text opacity-90">
+                        
+                        <!-- شماره تماس‌ها -->
+                        {% if catalog.phone or catalog.mobile %}
+                        <div class="flex items-start gap-3">
+                            <span class="text-lg">📞</span>
+                            <div class="flex flex-col space-y-1">
+                                {% if catalog.phone %}
+                                    <a href="{{ catalog.phone_link }}" class="hover:text-white transition dir-ltr text-right inline-block">{{ catalog.phone }}</a>
+                                {% endif %}
+                                {% if catalog.mobile %}
+                                    <a href="tel:{{ catalog.mobile }}" class="hover:text-white transition dir-ltr text-right inline-block">{{ catalog.mobile }}</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- وبسایت و ایمیل -->
+                        {% if catalog.website %}
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">🌐</span>
+                            <a href="{{ catalog.website }}" target="_blank" class="hover:text-white transition truncate">{{ catalog.website }}</a>
+                        </div>
+                        {% endif %}
+
+                        {% if catalog.email %}
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">✉️</span>
+                            <a href="{{ catalog.email_link }}" class="hover:text-white transition truncate">{{ catalog.email }}</a>
+                        </div>
+                        {% endif %}
+
+                        <!-- آدرس و مسیریابی -->
+                        {% if catalog.full_address %}
+                        <div class="flex items-start gap-3 mt-2">
+                            <span class="text-lg">📍</span>
+                            <div class="flex flex-col">
+                                <span class="leading-relaxed">{{ catalog.full_address }}</span>
+                                {% if catalog.google_maps_link %}
+                                    <a href="{{ catalog.google_maps_link }}" target="_blank" class="mt-2 inline-block w-max border-b-2 border-dashed border-[var(--accent-color)] hover:text-white transition pb-1 opacity-80 hover:opacity-100">
+                                        مسیریابی روی نقشه 🗺️
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+
+
+                    <!-- دکمه‌های اکشن (سفارش، رزرو، دانلود منو، دکمه اصلی) -->
+                    {% if catalog.has_cta or catalog.booking_url or catalog.order_url or catalog.menu_pdf %}
+                    <div class="flex flex-wrap justify-center gap-3 mt-6 pt-4 border-t border-[var(--accent-color)] border-dashed">
+                        {% if catalog.order_url %}
+                            <a href="{{ catalog.order_url }}" target="_blank" class="border-2 border-[var(--accent-color)] rounded-xl px-4 py-2 chalk-font text-lg hover:bg-[var(--accent-color)] hover:text-[var(--board-bg-2)] transition shadow-sm">سفارش آنلاین</a>
+                        {% endif %}
+                        
+                        {% if catalog.booking_url %}
+                            <a href="{{ catalog.booking_url }}" target="_blank" class="border-2 border-[var(--accent-color)] rounded-xl px-4 py-2 chalk-font text-lg hover:bg-[var(--accent-color)] hover:text-[var(--board-bg-2)] transition shadow-sm">رزرو میز</a>
+                        {% endif %}
+                        
+                        {% if catalog.has_cta %}
+                            <a href="{{ catalog.cta_link }}" target="_blank" class="border-2 border-[var(--accent-color)] rounded-xl px-4 py-2 chalk-font text-lg hover:bg-[var(--accent-color)] hover:text-[var(--board-bg-2)] transition shadow-sm">{{ catalog.cta_text }}</a>
+                        {% endif %}
+
+                        {% if catalog.menu_pdf %}
+                            <a href="{{ catalog.menu_pdf.url }}" target="_blank" class="border-2 border-dashed border-[var(--accent-color)] rounded-xl px-4 py-2 chalk-font text-lg hover:bg-[var(--accent-color)] hover:text-[var(--board-bg-2)] transition flex items-center gap-2">
+                                <span>دانلود منو</span> <span class="text-xs opacity-70 yekan-text">PDF</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- شبکه‌های اجتماعی -->
+                    {% if catalog.has_social %}
+                    <div class="flex justify-center items-center flex-wrap gap-6 mt-6 pt-6 border-t border-[var(--accent-color)] border-dashed">
+                        {% for social in catalog.social_links %}
+                            <a href="{{ social.url }}" target="_blank" title="{{ social.name }}" class="p-2 hover:scale-125 transition-all duration-300 opacity-70 hover:opacity-100 hover:-translate-y-1">
+                                
+                                {% if social.name == 'instagram' %}
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                </svg>
+                                {% endif %}
+                                
+                                {% if social.name == 'whatsapp' %}
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"></path>
+                                    <path d="M9 10a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"></path>
+                                </svg>
+                                {% endif %}
+                                
+                                {% if social.name == 'telegram' %}
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M15 10l-4 4l6 6l4-16l-18 7l4 2l2 6l3-4"></path>
+                                </svg>
+                                {% endif %}
+                                
+                                {% if social.name == 'linkedin' %}
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                                    <rect x="2" y="9" width="4" height="12"></rect>
+                                    <circle cx="4" cy="4" r="2"></circle>
+                                </svg>
+                                {% endif %}
+                                
+                                {% if social.name == 'youtube' %}
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path>
+                                    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+                                </svg>
+                                {% endif %}
+                                
+                                {% if social.name == 'aparat' %}
+                                <!-- آیکون خطی مدیا/ویدیو برای آپارات -->
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                                    <line x1="7" y1="2" x2="7" y2="22"></line>
+                                    <line x1="17" y1="2" x2="17" y2="22"></line>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <line x1="2" y1="7" x2="7" y2="7"></line>
+                                    <line x1="2" y1="17" x2="7" y2="17"></line>
+                                    <line x1="17" y1="17" x2="22" y2="17"></line>
+                                    <line x1="17" y1="7" x2="22" y2="7"></line>
+                                </svg>
+                                {% endif %}
+                                
+                            </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+
+            </footer>
+
+
+        </div>
+
+        <!-- Chalk Ledge / Theme Switcher (طاقچه گچ‌ها) -->
+        <div class="chalk-ledge w-full p-2 flex flex-col items-center z-10 relative">
+            <div class="flex items-center justify-center gap-4 mt-2">
+                <!-- گچ سفید -->
+                <button @click="currentTheme='white'" class="chalk-piece flex items-center gap-1" :class="{'active': currentTheme==='white'}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#f8f9fa">
+                        <path d="M19 3L5 17V21H9L23 7L19 3Z"/>
+                    </svg>
+                    <span class="chalk-font text-xs text-[#f8f9fa] mt-1">گچ سفید</span>
+                </button>
+
+                <!-- گچ قرمز -->
+                <button @click="currentTheme='red'" class="chalk-piece flex  items-center gap-1" :class="{'active': currentTheme==='red'}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7675">
+                        <path d="M19 3L5 17V21H9L23 7L19 3Z"/>
+                    </svg>
+                    <span class="chalk-font text-xs text-[#ff7675] mt-1">گچ قرمز</span>
+                </button>
+
+                <!-- گچ زرد -->
+                <button @click="currentTheme='yellow'" class="chalk-piece flex  items-center gap-1" :class="{'active': currentTheme==='yellow'}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffeaa7">
+                        <path d="M19 3L5 17V21H9L23 7L19 3Z"/>
+                    </svg>
+                    <span class="chalk-font text-xs text-[#ffeaa7] mt-1">گچ زرد</span>
+                </button>
+
+                <!-- گچ آبی -->
+                <button @click="currentTheme='blue'" class="chalk-piece flex  items-center gap-1" :class="{'active': currentTheme==='blue'}">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#74b9ff">
+                        <path d="M19 3L5 17V21H9L23 7L19 3Z"/>
+                    </svg>
+                    <span class="chalk-font text-xs text-[#74b9ff] mt-1">گچ آبی</span>
+                </button>
+            </div>
+            <div class="text-white/80 text-sm font-bold my-2 yekan-text tracking-wide drop-shadow-md">
+                تکوف پلت | جعبه گچ‌ها
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('chalkboardApp', () => ({
+        currentTheme: 'white', // تم‌های گچ: white, red, yellow, blue
+        categories: INITIAL_CATEGORIES,
+        menuData: [], 
+        isLoading: true,
+
+        async init() {
+            if(localStorage.getItem('chalkColor')) {
+                this.currentTheme = localStorage.getItem('chalkColor');
+            }
+            
+            this.$watch('currentTheme', value => {
+                localStorage.setItem('chalkColor', value);
+            });
+
+            if(this.categories.length === 0) {
+                this.isLoading = false;
+                return;
+            }
+            try {
+                const fetchPromises = this.categories.map(cat => this.fetchCategoryData(cat));
+                this.menuData = await Promise.all(fetchPromises);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async fetchCategoryData(category) {
+            const url = ITEMS_API_URL_TEMPLATE.replace('__CAT_SLUG__', category.slug);
+            try {
+                const res = await fetch(url);
+                if(!res.ok) return { ...category, items: [] };
+                
+                const data = await res.json();
+                let items = (Array.isArray(data) && data.length > 0 && data[0].items) 
+                            ? data.flatMap(cat => cat.items) 
+                            : data;
+                
+                return { ...category, items: items };
+            } catch(error) {
+                return { ...category, items: [] };
+            }
+        }
+    }));
+});
+</script>
+{% endblock %}

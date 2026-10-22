@@ -1,0 +1,170 @@
+<!-- مدل دعوت عضو جدید -->
+<div
+  x-data="inviteMemberModal()"
+  x-show="open"
+  x-cloak
+  x-transition.opacity
+  class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+  style="display:none;"
+>
+  <div
+    @click.away="close()"
+    x-transition
+    class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-lg"
+  >
+    <h3 class="text-range-700 font-bold text-lg mb-5">دعوت عضو جدید</h3>
+    
+    <form @submit.prevent="submitInvite" class="space-y-4" novalidate>
+      {% csrf_token %}
+      
+      <input
+        type="tel"
+        name="phone"
+        placeholder="شماره تماس (با کد کشور، مثلا +989123456789)"
+        pattern="^\+?\d{10,15}$"
+        required
+        class="w-full border border-surface-300 rounded-lg px-3 py-2 text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        x-model="phone"
+        :disabled="loading"
+        autocomplete="tel"
+      />
+
+      <select
+        name="role"
+        required
+        class="w-full border border-surface-300 rounded-lg px-3 py-2 text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        x-model="role"
+        :disabled="loading"
+      >
+        {% for role, label in member.Role.choices %}
+            <option :value="'{{ role }}'">{{ label }}</option>
+        {% endfor %}
+      </select>
+      
+      <template x-if="error">
+        <p class="text-red-600 text-sm" x-text="error"></p>
+      </template>
+      <template x-if="success">
+        <p class="text-green-600 text-sm" x-text="success"></p>
+      </template>
+
+      <div class="flex justify-end gap-3 mt-4">
+        <button
+          type="button"
+          @click="close()"
+          class="text-sm text-surface-600 hover:text-surface-800 transition"
+          :disabled="loading"
+        >
+          بستن
+        </button>
+
+        <button
+          type="submit"
+          class="bg-brand-900 text-white px-5 py-2 rounded-lg text-sm hover:bg-brand-800 transition flex items-center justify-center gap-2"
+          :disabled="loading"
+        >
+          <span x-show="!loading">ارسال دعوت</span>
+          <svg 
+            x-show="loading"
+            class="animate-spin h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function inviteMemberModal() {
+  return {
+    open: false,
+    phone: '',
+    role: '',
+
+    loading: false,
+    error: null,
+    success: null,
+
+    init() {
+      window.addEventListener('open-invite-modal', () => {
+        this.openModal();
+      });
+      this.reset();
+    },
+
+    openModal() {
+      this.reset();
+      this.open = true;
+    },
+
+    close() {
+      if (!this.loading) {
+        this.open = false;
+        this.reset();
+      }
+    },
+
+    reset() {
+      this.phone = '';
+      this.role = '{{ member.Role.choices.0.0 }}'; // مقدار اولیه معتبر بگذار
+      this.error = null;
+      this.success = null;
+      this.loading = false;
+    },
+
+    submitInvite() {
+      this.error = null;
+      this.success = null;
+
+      if (!this.phone || !this.role) {
+        this.error = "وارد کردن شماره تماس و نقش الزامی است.";
+        return;
+      }
+
+      this.loading = true;
+
+      const formData = new FormData();
+      formData.append('phone', this.phone);
+      formData.append('role', this.role);
+
+      // دریافت داینامیک CSRF
+      const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+      formData.append('csrfmiddlewaretoken', csrfToken);
+
+      fetch("{% url 'api_member_invite' %}", {
+        method: "POST",
+        body: formData,
+      })
+        .then(async response => {
+          this.loading = false;
+          if (!response.ok) {
+            let errMsg = "خطا در ارسال دعوت";
+            try {
+              const errJson = await response.json();
+              errMsg = errJson.error || errMsg;
+            } catch {}
+            throw new Error(errMsg);
+          }
+          return response.json();
+        })
+        .then(data => {
+          this.success = "دعوت با موفقیت ارسال شد.";
+          this.phone = '';
+          this.role = '{{ member.Role.choices.0.0 }}';
+          setTimeout(() => {
+            this.close();
+          }, 2500);
+          window.dispatchEvent(new Event('member-invited'));
+        })
+        .catch(err => {
+          this.error = err.message;
+        });
+    }
+  }
+}
+
+</script>

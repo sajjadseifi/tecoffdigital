@@ -1,0 +1,111 @@
+<!-- مسیر فایل: wallpapers/tecof.html -->
+<!-- مدل پایه تکوف - طراحی مینیمال و استاندارد -->
+
+<div class="bg-gray-50 min-h-full flex flex-col font-sans text-right" dir="rtl">
+    
+    <!-- هدر: نام کسب‌وکار و لوگو -->
+    <div class="bg-white px-5 pt-6 pb-4 rounded-b-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] z-10 relative">
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <!-- لوگو (می‌تواند داینامیک باشد) -->
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md shadow-blue-200">
+                    🛍️
+                </div>
+                <div>
+                    <h2 class="font-black text-gray-800 text-lg tracking-tight">تکوف شاپ</h2>
+                    <p class="text-[10px] text-gray-400 font-medium">فروشگاه جامع شما</p>
+                </div>
+            </div>
+            <!-- دکمه سبد خرید / پروفایل -->
+            <button class="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- نوار جستجو -->
+        <div class="relative">
+            <input type="text" placeholder="جستجوی محصول..." class="w-full bg-gray-50 text-gray-700 text-xs px-4 py-3 rounded-2xl pr-10 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute top-1/2 right-4 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="flex-1 overflow-y-auto px-4 pt-4 pb-10 scrollbar-hide">
+        
+        <!-- تب‌های دسته‌بندی (اسکرول افقی) -->
+        <div class="flex overflow-x-auto gap-2 pb-4 scrollbar-hide -mx-4 px-4">
+            <button class="whitespace-nowrap bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm shadow-blue-200">همه موارد</button>
+            <button class="whitespace-nowrap bg-white text-gray-600 border border-gray-100 px-4 py-2 rounded-xl text-xs font-medium">پرفروش‌ترین‌ها</button>
+            <button class="whitespace-nowrap bg-white text-gray-600 border border-gray-100 px-4 py-2 rounded-xl text-xs font-medium">جدیدترین‌ها</button>
+        </div>
+
+        <!-- لیست محصولات (کارت‌های استاندارد) -->
+        <div class="flex flex-col gap-3">
+            
+            <!-- آیتم ۱ -->
+            <div class="bg-white p-3 rounded-[1.25rem] flex gap-3 shadow-sm border border-gray-50 items-center">
+                <!-- تصویر (Placeholder) -->
+                <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-xl shrink-0">
+                    🎧
+                </div>
+                <!-- اطلاعات محصول -->
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800 text-sm mb-1">هدفون بلوتوثی</h3>
+                    <p class="text-[10px] text-gray-400 line-clamp-1 mb-2">کیفیت صدای عالی با بیس قوی</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-blue-600 font-bold text-xs">۴۵۰,۰۰۰ <span class="text-[9px] font-normal text-gray-500">تومان</span></span>
+                    </div>
+                </div>
+                <!-- دکمه افزودن -->
+                <button class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 hover:bg-blue-600 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- آیتم ۲ -->
+            <div class="bg-white p-3 rounded-[1.25rem] flex gap-3 shadow-sm border border-gray-50 items-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-xl shrink-0">
+                    ⌚
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800 text-sm mb-1">ساعت هوشمند پرو</h3>
+                    <p class="text-[10px] text-gray-400 line-clamp-1 mb-2">ضد آب، سنسور ضربان قلب</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-blue-600 font-bold text-xs">۱,۲۰۰,۰۰۰ <span class="text-[9px] font-normal text-gray-500">تومان</span></span>
+                    </div>
+                </div>
+                <button class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 hover:bg-blue-600 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- آیتم ۳ -->
+            <div class="bg-white p-3 rounded-[1.25rem] flex gap-3 shadow-sm border border-gray-50 items-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-xl shrink-0">
+                    🔋
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800 text-sm mb-1">پاوربانک فست‌شارژ</h3>
+                    <p class="text-[10px] text-gray-400 line-clamp-1 mb-2">ظرفیت 20000 میلی‌آمپر</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-blue-600 font-bold text-xs">۸۹۰,۰۰۰ <span class="text-[9px] font-normal text-gray-500">تومان</span></span>
+                    </div>
+                </div>
+                <button class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 hover:bg-blue-600 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

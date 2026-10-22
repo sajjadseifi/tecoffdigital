@@ -1,0 +1,309 @@
+{% extends 'layouts/dashboard_base.html' %}
+
+{% block title %}فهرست دسته‌بندی‌ها | تکوف دیجیتال{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8 pb-12">
+    
+    <!-- هدر صفحه -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-brand-900 mb-1">فهرست دسته‌بندی‌ها</h1>
+            <p class="text-sm text-brand-500 font-medium">مدیریت و مرتب‌سازی دسته‌بندی‌های منوی شما</p>
+        </div>
+        <div>
+            <!-- دکمه افزودن (بدون onclick، کلاس btn-open-create اضافه شد) -->
+            <button type="button" 
+                    id="btn-open-create" 
+                    data-create-url="{% url 'catalog:category_create' %}" 
+                    class="inline-flex items-center gap-2 bg-accent-500 hover:bg-accent-600 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-accent-500/30">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                افزودن دسته‌بندی جدید
+            </button>
+        </div>
+    </div>
+
+    <!-- بخش جستجو و فیلتر پیشرفته -->
+    <div class="bg-white p-4 rounded-2xl shadow-soft border border-surface-200">
+        <form method="GET" action="" class="flex flex-col sm:flex-row flex-wrap items-center gap-4">
+            <div class="relative w-full sm:flex-1 sm:min-w-[200px]">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-brand-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" name="search" value="{{ request.GET.search|default:'' }}" class="w-full bg-surface-50 border border-surface-200 text-brand-900 text-sm rounded-xl focus:ring-accent-500 focus:border-accent-500 block px-10 py-2.5 outline-none transition-all placeholder-brand-400" placeholder="جستجو در عنوان یا شناسه...">
+            </div>
+            <div class="w-full sm:w-auto">
+                <select name="status" class="w-full bg-surface-50 border border-surface-200 text-brand-900 text-sm rounded-xl focus:ring-accent-500 focus:border-accent-500 block px-4 py-2.5 outline-none transition-all cursor-pointer">
+                    <option value="" {% if not request.GET.status %}selected{% endif %}>همه وضعیت‌ها</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>فقط فعال</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>فقط غیرفعال</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-auto">
+                <select name="sort" class="w-full bg-surface-50 border border-surface-200 text-brand-900 text-sm rounded-xl focus:ring-accent-500 focus:border-accent-500 block px-4 py-2.5 outline-none transition-all cursor-pointer">
+                    <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>جدیدترین</option>
+                    <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>قدیمی‌ترین</option>
+                    <option value="order" {% if request.GET.sort == 'order' %}selected{% endif %}>ترتیب نمایش (صعودی)</option>
+                    <option value="-order" {% if request.GET.sort == '-order' %}selected{% endif %}>ترتیب نمایش (نزولی)</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 bg-brand-100 hover:bg-brand-200 text-brand-700 font-bold rounded-xl transition-colors text-sm">اعمال فیلتر</button>
+                {% if request.GET.search or request.GET.status or request.GET.sort %}
+                    <a href="?" class="flex-1 sm:flex-none px-5 py-2.5 text-rose-500 hover:bg-rose-50 font-bold rounded-xl transition-colors text-sm text-center">پاک کردن</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- جدول داده‌ها -->
+    <div class="bg-white rounded-2xl shadow-soft border border-surface-200 min-h-[50svh] flex flex-col justify-between overflow-hidden">
+        <div class="overflow-x-auto h-full overflow-y-auto">
+            <table class="w-full text-right border-collapse">
+                <thead>
+                    <tr class="bg-surface-50 border-b border-surface-200 text-brand-500 text-sm">
+                        <th class="p-4 font-bold whitespace-nowrap">تصویر / عنوان</th>
+                        <th class="p-4 font-bold whitespace-nowrap">ترتیب</th>
+                        <th class="p-4 font-bold whitespace-nowrap">وضعیت</th>
+                        <th class="p-4 font-bold whitespace-nowrap">تعداد آیتم‌ها</th>
+                        <th class="p-4 font-bold whitespace-nowrap text-left">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-surface-200">
+                    {% for category in data %}
+                    <tr class="hover:bg-surface-50 transition-colors group">
+                        <td class="px-8 p-2">
+                            <div class="flex items-center gap-4">
+                                {% if category.image %}
+                                    <img src="{{ category.image.url }}" alt="{{ category.title }}" class="w-12 h-12 rounded-xl object-cover border border-surface-200 shadow-sm">
+                                {% else %}
+                                    <div class="w-12 h-12 rounded-xl bg-surface-100 flex items-center justify-center border border-surface-200 text-brand-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h3 class="font-bold text-brand-900 text-base mb-0.5">{{ category.title }}</h3>
+                                    <p class="text-xs text-brand-400 font-medium font-mono">{{ category.slug }}</p>
+                                </div>
+                            </div>
+                        </td>
+                      
+                        <td class="p-4 align-middle text-brand-500 font-medium font-nums">{{ category.order }}</td>
+                        <td class="p-4 align-middle">
+                            {% if category.is_active %}
+                                <span class="inline-flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> فعال</span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg text-xs font-bold border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> غیرفعال</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 align-middle">
+                            <span class="inline-flex items-center justify-center bg-brand-100 text-brand-800 text-xs font-bold px-2.5 py-1 rounded-lg">{{ category.total_items|default:"0" }} آیتم</span>
+                        </td>
+                        <td class="p-4 align-middle text-left">
+                            <div class="flex items-center justify-end gap-2">
+                                <!-- دکمه ویرایش (بدون onclick، کلاس btn-edit-category اضافه شد) -->
+                                <button type="button" 
+                                        data-url="{% url 'catalog:category_edit' category.id %}" 
+                                        data-title="{{ category.title }}"
+                                        data-slug="{{ category.slug }}"
+                                        data-order="{{ category.order }}"
+                                        data-is-active="{{ category.is_active|yesno:'true,false' }}"
+                                        data-image-url="{% if category.image %}{{ category.image.url }}{% endif %}"
+                                        class="btn-edit-category p-2 text-brand-400 hover:text-accent-500 hover:bg-accent-50 rounded-lg transition-colors" title="ویرایش">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </button>
+                                <!-- دکمه حذف -->
+                                <button type="button" 
+                                        data-url="{% url 'catalog:category_delete' category.id %}"
+                                        data-title="{{ category.title }}"
+                                        class="btn-delete-category p-2 text-brand-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="حذف">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-12 text-center text-brand-500">
+                            <p class="text-lg font-bold text-brand-800">هیچ دسته‌بندی یافت نشد!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% include 'components/data/pagination.html' with data=data %}
+    </div>
+</div>
+
+<!-- فراخوانی مودال‌ها -->
+{% include 'components/category_form.html' %}
+{% include 'components/category_delete_form.html' with modal_id='modal-delete-category' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // تابع استاندارد برای ساخت اسلاگ
+    function generateSlug(text) {
+        if (!text) return '';
+        return text.toString().toLowerCase().trim()
+            .replace(/\s+/g, '-')                  
+            .replace(/[^\w\-\u0600-\u06FF]+/g, '') 
+            .replace(/\-\-+/g, '-')                
+            .replace(/^-+/, '')                    
+            .replace(/-+$/, '');                   
+    }
+
+    // ==========================================
+    // تابع باز و بسته کردن فرم اصلی (چون در HTML مودال شما این تابع صدا زده می‌شود)
+    // ==========================================
+    window.toggleCategoryModal = function(action) {
+        // شناسه مودال در فایل کامپوننت شما category-modal است
+        const $modal = $('#category-modal'); 
+        const $form = $('#category-main-form'); 
+
+        if (action === 'open') {
+            $modal.removeClass('hidden');
+        } else {
+            $modal.addClass('hidden');
+            setTimeout(() => {
+                 if ($form.length) $form[0].reset();
+                 $('#current-cat-image-preview').addClass('hidden');
+                 $('#input-cat-slug').data('is-dirty', false);
+            }, 300);
+        }
+    };
+
+    $(document).ready(function() {
+        
+        // ==========================================
+        // 1. باز کردن مودال افزودن
+        // ==========================================
+        $('#btn-open-create').on('click', function(e) {
+            e.preventDefault();
+            const $form = $('#category-main-form');
+            const createUrl = $(this).data('create-url');
+            
+            if ($form.length) $form[0].reset();
+            $('#current-cat-image-preview').addClass('hidden');
+
+            $('#modal-category-title').text("افزودن دسته‌بندی جدید");
+            $('#modal-cat-submit-btn').text("ایجاد دسته‌بندی");
+            $form.attr('action', createUrl);
+            $('#input-cat-slug').data('is-dirty', false);
+
+            toggleCategoryModal('open');
+        });
+
+        // ==========================================
+        // 2. باز کردن مودال ویرایش
+        // ==========================================
+        $(document).on('click', '.btn-edit-category', function(e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const $form = $('#category-main-form');
+            
+            if ($form.length) $form[0].reset();
+
+            // جایگذاری داده‌ها در فیلدها بر اساس ID های فایل فرم شما
+            $form.attr('action', $btn.data('url'));
+            $('#input-cat-title').val($btn.data('title'));
+            $('#input-cat-slug').val($btn.data('slug'));
+            $('#input-cat-order').val($btn.data('order'));
+            
+            if ($('#input-cat-active').length) {
+                // تبدیل رشته به بولین برای چک باکس
+                const isActive = $btn.data('is-active') === true || $btn.data('is-active') === 'true';
+                $('#input-cat-active').prop('checked', isActive);
+            }
+
+            const imageUrl = $btn.data('image-url');
+            if (imageUrl) {
+                $('#current-cat-img').attr('src', imageUrl);
+                $('#current-cat-image-preview').removeClass('hidden');
+            } else {
+                $('#current-cat-image-preview').addClass('hidden');
+            }
+
+            $('#modal-category-title').text("ویرایش دسته‌بندی: " + $btn.data('title'));
+            $('#modal-cat-submit-btn').text("بروزرسانی دسته‌بندی");
+            $('#input-cat-slug').data('is-dirty', true);
+
+            toggleCategoryModal('open');
+        });
+
+        // ==========================================
+        // 3. باز کردن مودال حذف
+        // ==========================================
+        $(document).on('click', '.btn-delete-category', function(e) {
+            e.preventDefault();
+            const url = $(this).data('url');
+            const title = $(this).data('title');
+            
+            // پر کردن اطلاعات فرم حذف
+            $('#delete-form-action').attr('action', url);
+            $('#delete-category-name').text(title);
+            
+            // باز کردن مودال حذف
+            $('#modal-delete-category').removeClass('hidden');
+        });
+
+        // ==========================================
+        // 4. مدیریت اسلاگ خودکار
+        // ==========================================
+        $(document).on('input', '#input-cat-title', function() {
+            const titleVal = $(this).val();
+            const $slugInput = $('#input-cat-slug');
+            const isDirty = $slugInput.data('is-dirty');
+            const currentSlug = $slugInput.val().trim();
+
+            if (!isDirty || currentSlug === '') {
+                $slugInput.val(generateSlug(titleVal));
+                if (currentSlug === '') {
+                    $slugInput.data('is-dirty', false);
+                }
+            }
+        });
+
+        $(document).on('input', '#input-cat-slug', function() {
+            const currentVal = $(this).val().trim();
+            const $titleInput = $('#input-cat-title');
+            
+            if (currentVal === '') {
+                $(this).data('is-dirty', false);
+                $(this).val(generateSlug($titleInput.val()));
+            } else {
+                $(this).data('is-dirty', true);
+            }
+        });
+
+        $(document).on('blur', '#input-cat-slug', function() {
+            const val = $(this).val().trim();
+            if (val !== '') {
+                $(this).val(generateSlug(val));
+            }
+        });
+
+        // ==========================================
+        // 5. بستن مودال حذف (مودال فرم با توابع داخلی خودش بسته میشه)
+        // ==========================================
+        $(document).on('click', '.btn-close-modal', function(e) {
+            e.preventDefault();
+            $(this).closest('.fixed[role="dialog"]').addClass('hidden');
+        });
+        
+        // بستن مودال حذف با کلیک روی پس‌زمینه
+        $(document).on('click', '#modal-delete-category', function(e) {
+            if (e.target === this) {
+                $(this).addClass('hidden');
+            }
+        });
+
+    });
+</script>
+{% endblock %}

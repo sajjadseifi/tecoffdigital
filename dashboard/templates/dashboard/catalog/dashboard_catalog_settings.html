@@ -1,0 +1,344 @@
+{% extends 'layouts/dashboard_base.html' %}
+
+{% block page_title %}تنظیمات کاتالوگ{% endblock %} 
+{% block page_info %}هویت بصری، مشخصات و راه‌های ارتباطی کسب‌وکار خود را مدیریت کنید.{% endblock %}
+
+{% block content %}
+<!-- حذف overflow از کانتینر اصلی -->
+<div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 h-full"
+     x-data="{ 
+        activeTab: '{% if form.logo.errors or form.cover.errors or form.banner.errors or form.promo_video.errors or form.theme.errors %}branding{% elif form.phone.errors or form.mobile.errors or form.email.errors or form.website.errors or form.address.errors or form.instagram.errors or form.telegram.errors or form.whatsapp.errors or form.linkedin.errors or form.aparat.errors or form.youtube.errors or form.twitter.errors %}contact{% elif form.established_year.errors or form.registration_number.errors or form.tax_id.errors %}registration{% elif form.about.errors or form.services.errors or form.working_hours.errors or form.facilities.errors %}about{% elif form.latitude.errors or form.longitude.errors %}location{% elif form.is_active.errors %}settings{% else %}basic{% endif %}' 
+     }">
+     
+    <!-- اضافه کردن flex، flex-col و یک ارتفاع ثابت (مثلا 80vh یا h-[700px]) -->
+    <div class="bg-white rounded-2xl shadow-soft border border-surface-200 overflow-hidden flex flex-col h-[80vh]">
+        
+        <!-- هدر (تب‌ها) - اضافه شدن shrink-0 برای جلوگیری از فشرده شدن -->
+        <div class="border-b border-surface-200 bg-surface-50 shrink-0">
+            <nav class="flex overflow-x-auto p-2 gap-2 custom-scrollbar" aria-label="Tabs">
+
+                {% for tab in tabs %}
+                <button
+                    @click.prevent="activeTab='{{ tab.key }}'"
+                    type="button"
+                    :class="activeTab === '{{ tab.key }}' ? 'text-accent-600 bg-accent-50' : 'text-brand-600 hover:text-brand-900 hover:bg-surface-100'"
+                    class="flex items-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-colors whitespace-nowrap relative"
+                >
+                    {{ tab.icon|safe }}
+                    {{ tab.label }}
+
+                    {# Display red error dot if there are errors in any of the tab's fields #}
+                    {% if tab.key == 'basic' %}
+                        {% if form.title.errors or form.slug.errors or form.description.errors or form.business_type.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% elif tab.key == 'about' %}
+                        {% if form.about.errors or form.services.errors or form.working_hours.errors or form.facilities.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% elif tab.key == 'registration' %}
+                        {% if form.established_year.errors or form.registration_number.errors or form.tax_id.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% elif tab.key == 'branding' %}
+                        {% if form.logo.errors or form.cover.errors or form.banner.errors or form.promo_video.errors or form.theme.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% elif tab.key == 'contact' %}
+                        {% if form.phone.errors or form.mobile.errors or form.email.errors or form.website.errors or form.address.errors or form.instagram.errors or form.telegram.errors or form.whatsapp.errors or form.linkedin.errors or form.aparat.errors or form.youtube.errors or form.twitter.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% elif tab.key == 'location' %}
+                        {% if form.latitude.errors or form.longitude.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% elif tab.key == 'settings' %}
+                        {% if form.is_active.errors %}
+                            <span class="w-2 h-2 rounded-full bg-red-500 absolute -top-1 -right-1"></span>
+                        {% endif %}
+                    {% endif %}
+                </button>
+                {% endfor %}
+            </nav>
+        </div>
+
+        <!-- فرم به صورت flex در می‌آید تا محتوا کل فضا را پر کند و اسکرول شود -->
+        <form method="post" enctype="multipart/form-data" novalidate class="flex flex-col flex-1 overflow-hidden">
+            {% csrf_token %}
+            
+            <!-- بخش محتوا - اضافه شدن flex-1 و overflow-y-auto -->
+            <div class="p-6 md:p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+                
+                <!-- Basic Info -->
+                <div x-show="activeTab === 'basic'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">اطلاعات پایه</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<p class="text-sm text-red-600">{{ form.title.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.slug.label }}</label>
+                            {{ form.slug }}
+                            {% if form.slug.errors %}<p class="text-sm text-red-600">{{ form.slug.errors.0 }}</p>{% endif %}
+                            {% if form.slug.help_text %}
+                                <p class="text-xs text-brand-400 mt-1">{{ form.slug.help_text }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.business_type.label }}</label>
+                            {{ form.business_type }}
+                            {% if form.business_type.errors %}<p class="text-sm text-red-600">{{ form.business_type.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<p class="text-sm text-red-600">{{ form.description.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About & Services -->
+                <div x-show="activeTab === 'about'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">درباره کسب‌وکار و خدمات</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-brand-800">{{ form.about.label }}</label>
+                            {{ form.about }}
+                            {% if form.about.errors %}<p class="text-sm text-red-600">{{ form.about.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-brand-800">{{ form.services.label }}</label>
+                            {{ form.services }}
+                            {% if form.services.errors %}<p class="text-sm text-red-600">{{ form.services.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-brand-800">{{ form.working_hours.label }}</label>
+                            {{ form.working_hours }}
+                            {% if form.working_hours.errors %}<p class="text-sm text-red-600">{{ form.working_hours.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-brand-800">{{ form.facilities.label }}</label>
+                            {{ form.facilities }}
+                            {% if form.facilities.errors %}<p class="text-sm text-red-600">{{ form.facilities.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Info -->
+                <div x-show="activeTab === 'registration'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">اطلاعات ثبتی و حقوقی</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.established_year.label }}</label>
+                            {{ form.established_year }}
+                            {% if form.established_year.errors %}<p class="text-sm text-red-600">{{ form.established_year.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.registration_number.label }}</label>
+                            {{ form.registration_number }}
+                            {% if form.registration_number.errors %}<p class="text-sm text-red-600">{{ form.registration_number.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.tax_id.label }}</label>
+                            {{ form.tax_id }}
+                            {% if form.tax_id.errors %}<p class="text-sm text-red-600">{{ form.tax_id.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Branding & Media -->
+                <div x-show="activeTab === 'branding'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">برندینگ و رسانه</h2>
+                    <p class="text-sm text-brand-500 mb-4">لوگو، پوشش، بنر و ویدیوی معرفی را آپلود کنید.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-surface-50 p-5 rounded-2xl border border-surface-200">
+                            <label class="block text-sm font-bold text-brand-800 mb-4">{{ form.logo.label }}</label>
+                            {% if catalog.logo %}
+                                <div class="mb-4 flex items-center gap-4">
+                                    <img src="{{ catalog.logo.url }}" alt="Logo" class="w-16 h-16 rounded-xl object-cover border border-surface-200 shadow-sm">
+                                </div>
+                            {% endif %}
+                            {{ form.logo }}
+                            {% if form.logo.errors %}<p class="text-sm text-red-600 mt-2">{{ form.logo.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="bg-surface-50 p-5 rounded-2xl border border-surface-200">
+                            <label class="block text-sm font-bold text-brand-800 mb-4">{{ form.cover.label }}</label>
+                            {% if catalog.cover %}
+                                <div class="mb-4">
+                                    <img src="{{ catalog.cover.url }}" alt="Cover" class="w-full h-24 rounded-xl object-cover border border-surface-200 shadow-sm">
+                                </div>
+                            {% endif %}
+                            {{ form.cover }}
+                            {% if form.cover.errors %}<p class="text-sm text-red-600 mt-2">{{ form.cover.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="bg-surface-50 p-5 rounded-2xl border border-surface-200 md:col-span-2">
+                            <label class="block text-sm font-bold text-brand-800 mb-4">{{ form.banner.label }}</label>
+                            {% if catalog.banner %}
+                                <div class="mb-4">
+                                    <img src="{{ catalog.banner.url }}" alt="Banner" class="w-full h-32 rounded-xl object-cover border border-surface-200 shadow-sm">
+                                </div>
+                            {% endif %}
+                            {{ form.banner }}
+                            {% if form.banner.errors %}<p class="text-sm text-red-600 mt-2">{{ form.banner.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.promo_video.label }}</label>
+                            {{ form.promo_video }}
+                            {% if form.promo_video.errors %}<p class="text-sm text-red-600">{{ form.promo_video.errors.0 }}</p>{% endif %}
+                            <p class="text-xs text-brand-400 mt-1">لینک ویدیوی آپارات، یوتیوب و...</p>
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.theme.label }}</label>
+                            {{ form.theme }}
+                            {% if form.theme.errors %}<p class="text-sm text-red-600">{{ form.theme.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Social -->
+                <div x-show="activeTab === 'contact'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">راه‌های ارتباطی و شبکه‌های اجتماعی</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.phone.label }}</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}<p class="text-sm text-red-600">{{ form.phone.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.mobile.label }}</label>
+                            {{ form.mobile }}
+                            {% if form.mobile.errors %}<p class="text-sm text-red-600">{{ form.mobile.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<p class="text-sm text-red-600">{{ form.email.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.website.label }}</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-400 font-mono text-sm">https://</span>
+                                {{ form.website }}
+                            </div>
+                            {% if form.website.errors %}<p class="text-sm text-red-600">{{ form.website.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.address.label }}</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}<p class="text-sm text-red-600">{{ form.address.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <!-- شبکه‌های اجتماعی -->
+                        <div class="md:col-span-2 pt-4 border-t border-surface-200">
+                            <h3 class="text-md font-bold text-brand-800 mb-4">شبکه‌های اجتماعی</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.whatsapp.label }}</label>
+                                    {{ form.whatsapp }}
+                                    {% if form.whatsapp.errors %}<p class="text-sm text-red-600">{{ form.whatsapp.errors.0 }}</p>{% endif %}
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.telegram.label }}</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-400 font-mono">@</span>
+                                        {{ form.telegram }}
+                                    </div>
+                                    {% if form.telegram.errors %}<p class="text-sm text-red-600">{{ form.telegram.errors.0 }}</p>{% endif %}
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.instagram.label }}</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-400 font-mono">@</span>
+                                        {{ form.instagram }}
+                                    </div>
+                                    {% if form.instagram.errors %}<p class="text-sm text-red-600">{{ form.instagram.errors.0 }}</p>{% endif %}
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.linkedin.label }}</label>
+                                    {{ form.linkedin }}
+                                    {% if form.linkedin.errors %}<p class="text-sm text-red-600">{{ form.linkedin.errors.0 }}</p>{% endif %}
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.aparat.label }}</label>
+                                    {{ form.aparat }}
+                                    {% if form.aparat.errors %}<p class="text-sm text-red-600">{{ form.aparat.errors.0 }}</p>{% endif %}
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.youtube.label }}</label>
+                                    {{ form.youtube }}
+                                    {% if form.youtube.errors %}<p class="text-sm text-red-600">{{ form.youtube.errors.0 }}</p>{% endif %}
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-brand-800">{{ form.twitter.label }}</label>
+                                    {{ form.twitter }}
+                                    {% if form.twitter.errors %}<p class="text-sm text-red-600">{{ form.twitter.errors.0 }}</p>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div x-show="activeTab === 'location'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">موقعیت جغرافیایی</h2>
+                    <p class="text-sm text-brand-500 mb-4">عرض و طول جغرافیایی را وارد کنید تا روی نقشه نمایش داده شود.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.latitude.label }}</label>
+                            {{ form.latitude }}
+                            {% if form.latitude.errors %}<p class="text-sm text-red-600">{{ form.latitude.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-brand-800">{{ form.longitude.label }}</label>
+                            {{ form.longitude }}
+                            {% if form.longitude.errors %}<p class="text-sm text-red-600">{{ form.longitude.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div x-show="activeTab === 'settings'" x-transition class="space-y-6">
+                    <h2 class="text-lg font-bold text-brand-900">تنظیمات کاتالوگ</h2>
+                    <div class="flex items-center gap-3 bg-surface-50 px-4 py-2 rounded-xl border border-surface-200 max-w-sm">
+                        <label class="text-sm font-bold text-brand-800 cursor-pointer" for="{{ form.is_active.id_for_label }}">
+                            {{ form.is_active.label }}
+                        </label>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            {{ form.is_active }}
+                        </div>
+                        {% if form.is_active.errors %}<p class="text-xs text-red-600">{{ form.is_active.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- دکمه‌های اکشن (فوتر) - اضافه شدن shrink-0 -->
+            <div class="bg-surface-50/80 p-6 border-t border-surface-200 flex items-center justify-end gap-3 backdrop-blur-sm shrink-0">
+                <a href="#" class="px-5 py-2.5 text-sm font-bold text-brand-600 hover:text-brand-900 transition-colors rounded-xl hover:bg-surface-100">انصراف</a>
+                <button type="submit" class="bg-accent-600 hover:bg-accent-500 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition-all shadow-glow hover:-translate-y-0.5 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    ذخیره تغییرات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!-- Catalogs Table Component (API Driven) -->
+<div x-data="catalogsTableComponent()" x-init="fetchCatalogs(1)" class="w-full">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-3">
+            <h2 class="text-lg font-bold text-brand-900 dark:text-white">لیست آخرین کاتالوگ‌ها</h2>
+            <!-- Loading Indicator -->
+            <span x-show="loading" style="display: none;" class="text-sm text-brand-500 animate-pulse">
+                <i class="fas fa-circle-notch fa-spin"></i> در حال دریافت...
+            </span>
+        </div>
+        <a href="{% url 'admin:catalog_catalog_changelist' %}" target="_blank" class="text-sm text-accent-500 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 transition">
+            مشاهده همه در پنل ادمین &larr;
+        </a>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto border border-surface-200 dark:border-surface-700 rounded-xl bg-white dark:bg-surface-800 shadow-sm">
+        <table class="w-full text-right min-w-[800px]">
+            <thead class="bg-surface-50 dark:bg-surface-900 text-brand-600 dark:text-brand-400 text-sm border-b border-surface-200 dark:border-surface-700">
+                <tr>
+                    <th class="p-4 font-medium">نام کسب‌وکار</th>
+                    <th class="p-4 font-medium">مالک</th>
+                    <th class="p-4 font-medium">وضعیت</th>
+                    <th class="p-4 font-medium">بازدید</th>
+                    <th class="p-4 font-medium">لینک عمومی</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-surface-100 dark:divide-surface-700 text-sm relative">
+                
+                <!-- Skeleton Loader -->
+                <template x-if="loading && catalogs.length === 0">
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-surface-400">
+                            در حال بارگذاری کاتالوگ‌ها...
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Empty State -->
+                <template x-if="!loading && catalogs.length === 0">
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-brand-400 dark:text-surface-500">
+                            هیچ کاتالوگی ثبت نشده است.
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Data Rows -->
+                <template x-for="catalog in catalogs" :key="catalog.id">
+                    <tr class="hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors">
+                        <td class="p-4 flex items-center gap-3">
+                            <img :src="catalog.logo_or_default" alt="Logo" class="w-10 h-10 rounded-lg bg-surface-100 dark:bg-surface-800 object-cover border border-surface-200 dark:border-surface-600">
+                            <div>
+                                <span class="block font-medium text-brand-900 dark:text-surface-100" x-text="catalog.title"></span>
+                                <span class="block text-xs text-brand-400 dark:text-surface-400 mt-0.5">شناسه: <span x-text="catalog.slug"></span></span>
+                            </div>
+                        </td>
+                        
+                        <td class="p-4 text-brand-600 dark:text-brand-300" x-text="catalog.owner_display_name"></td>
+                        
+                        <td class="p-4">
+                            <template x-if="catalog.is_active">
+                                <span class="bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full text-xs">فعال</span>
+                            </template>
+                            <template x-if="!catalog.is_active">
+                                <span class="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 px-2.5 py-1 rounded-full text-xs">غیرفعال</span>
+                            </template>
+                            
+                            <template x-if="catalog.is_verified">
+                                <span class="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full text-xs mr-1">تیک آبی</span>
+                            </template>
+                        </td>
+                        
+                        <td class="p-4 text-brand-600 dark:text-brand-300" x-text="catalog.views"></td>
+                        
+                        <td class="p-4">
+                            <a :href="catalog.absolute_url" target="_blank" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg flex items-center gap-1 w-max transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                مشاهده
+                            </a>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-between items-center mt-4 px-2" x-show="totalPages > 1" style="display: none;">
+        <span class="text-sm text-surface-500 dark:text-surface-400">
+            نمایش <span x-text="catalogs.length"></span> کاتالوگ از <span x-text="totalItems"></span>
+        </span>
+        
+        <div class="flex items-center gap-2">
+            <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-600 dark:text-surface-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-50 dark:hover:bg-surface-700 transition">
+                قبلی
+            </button>
+            <span class="text-sm font-medium text-surface-700 dark:text-surface-200">
+                صفحه <span x-text="currentPage"></span> از <span x-text="totalPages"></span>
+            </span>
+            <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages" class="px-3 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-600 dark:text-surface-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-50 dark:hover:bg-surface-700 transition">
+                بعدی
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Alpine.js Logic -->
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('catalogsTableComponent', () => ({
+        catalogs: [],
+        loading: false,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        
+        // آدرس API خود را برای دریافت لیست کاتالوگ‌ها در اینجا قرار دهید
+        apiUrl: '/api/catalogs/', 
+
+        async fetchCatalogs(page = 1) {
+            this.loading = true;
+            this.currentPage = page;
+            
+            try {
+                const response = await fetch(`${this.apiUrl}?page=${page}`);
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                
+                // در صورتی که از Django REST Framework استفاده می‌کنید
+                this.catalogs = data.results || data; 
+                this.totalItems = data.count || this.catalogs.length;
+                
+                // محاسبه صفحات (فرض بر نمایش 10 آیتم در هر صفحه)
+                const itemsPerPage = 10; 
+                this.totalPages = Math.ceil(this.totalItems / itemsPerPage) || 1;
+                
+            } catch (error) {
+                console.error("Error fetching catalogs:", error);
+                this.catalogs = []; 
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        changePage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.fetchCatalogs(page);
+            }
+        }
+    }))
+})
+</script>

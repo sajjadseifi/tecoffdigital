@@ -1,0 +1,28 @@
+<!-- دکمه باز کردن جستجو -->
+<button @click="searchModalOpen = true" class="flex items-center gap-2 bg-surface-50 hover:bg-surface-100 text-brand-500 px-4 py-2.5 rounded-xl border border-surface-200 transition-colors w-full md:w-64">
+    <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <span class="text-sm">جستجو در سیستم...</span>
+    <kbd class="mr-auto hidden md:inline-block bg-white border border-surface-200 rounded px-2 py-0.5 text-xs text-brand-400 font-sans shadow-sm">Ctrl+K</kbd>
+</button>
+
+<!-- مودال جستجو (Alpine.js) -->
+<div x-show="searchModalOpen" x-cloak class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- پس‌زمینه تاریک -->
+    <div x-show="searchModalOpen" x-transition.opacity class="fixed inset-0 bg-brand-900/40 backdrop-blur-sm transition-opacity"></div>
+
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <!-- پنل مودال -->
+            <div x-show="searchModalOpen" @click.away="searchModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-right shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-surface-100">
+                
+                <div class="p-4 border-b border-surface-100 relative">
+                    <svg class="w-6 h-6 text-brand-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" class="w-full bg-transparent border-none focus:ring-0 text-brand-900 placeholder-brand-400 pr-12 text-lg outline-none" placeholder="نام کاتالوگ، کاربر یا شناسه..." autofocus>
+                </div>
+                <div class="p-4 bg-surface-50 text-center py-12">
+                    <p class="text-brand-500 text-sm">برای جستجو شروع به تایپ کنید...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,137 @@
+{% extends 'layouts/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}داشبورد مدیریت کل | {{ user_display_name }}{% endblock %}
+
+{% block content %}
+<!-- کامپوننت مدیریت State کل صفحه با Alpine.js -->
+<div x-data="{ activeTab: 'overview', searchModalOpen: false }" class="space-y-4 md:space-y-6 pb-8 md:pb-12">
+
+    <!-- Top Header -->
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 md:mb-8 gap-4 md:gap-6">
+        <div class="w-full xl:w-auto">
+            <h1 class="text-2xl md:text-3xl font-bold text-range-600 flex items-center gap-2 md:gap-3">
+                سلام، {{ user_display_name }}
+                <span class="text-2xl md:text-3xl animate-wave  origin-bottom-right inline-block">👋</span>
+            </h1>
+            <p class="text-surface-500 dark:text-surface-400 mt-1.5 md:mt-2 text-xs md:text-sm lg:text-base">
+                امروز {{ current_date }} است. نمای کلی سیستم شما آماده است.
+            </p>
+        </div>
+        
+        <div class="flex flex-wrap items-center justify-start xl:justify-end gap-2 md:gap-3 w-full xl:w-auto">
+            
+            <!-- Notifications Dropdown (Alpine.js) -->
+            <div x-data="{ notifyOpen: false }" class="relative">
+                <button @click="notifyOpen = !notifyOpen" @click.away="notifyOpen = false" class="p-2.5 md:p-3 rounded-xl bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors relative flex-shrink-0">
+                    <i class="fas fa-bell"></i>
+                    <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface-100 dark:border-surface-800"></span>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div x-show="notifyOpen" x-transition class="absolute right-0 sm:left-0 sm:right-auto mt-2 w-72 md:w-80 bg-white dark:bg-surface-800 rounded-xl shadow-lg border border-surface-200 dark:border-surface-700 z-50 overflow-hidden">
+                    <div class="p-3 md:p-4 border-b border-surface-200 dark:border-surface-700 flex justify-between items-center">
+                        <span class="font-bold text-sm">اعلان‌ها</span>
+                        <button class="text-xs text-brand-500 hover:underline">خواندن همه</button>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto custom-scrollbar">
+                        <a href="#" class="block p-3 md:p-4 hover:bg-surface-50 dark:hover:bg-surface-700 border-b border-surface-100 dark:border-surface-700 transition">
+                            <p class="text-sm font-semibold text-surface-800 dark:text-surface-100">کاربر جدید ثبت نام کرد</p>
+                            <p class="text-xs text-surface-500 mt-1">۲ دقیقه پیش</p>
+                        </a>
+                        <a href="#" class="block p-3 md:p-4 hover:bg-surface-50 dark:hover:bg-surface-700 transition">
+                            <p class="text-sm font-semibold text-surface-800 dark:text-surface-100">تیکت پشتیبانی #102</p>
+                            <p class="text-xs text-surface-500 mt-1">۱ ساعت پیش</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% include './forms/quick_search.html' %}
+            
+            <!-- Export Button -->
+            <button class="p-2.5 md:p-3 rounded-xl bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors tooltip flex-shrink-0" title="دریافت گزارش (PDF)">
+                <i class="fas fa-download"></i>
+            </button>
+
+            <a href="{% url 'app_catalog_user' %}" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-lg shadow-brand-500/30 transition-all font-medium text-sm transform hover:-translate-y-0.5 whitespace-nowrap">
+                <i class="fas fa-plus"></i>
+                <span>کاتالوگ جدید</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- کارت‌های آماری -->
+    {% include './includes/stats_cards.html' %}
+    <!-- بخش تب‌بندی پیشرفته -->
+    <!-- کانتینر اصلی: در موبایل استایل‌ها حذف می‌شوند تا محتوا نفس بکشد، در دسکتاپ کارت یکپارچه است -->
+    <div class="md:bg-white md:dark:bg-surface-800 md:rounded-2xl md:shadow-sm md:border md:border-surface-200 md:dark:border-surface-700 md:overflow-hidden transition-colors duration-300">
+        
+        <!-- هدر تب‌ها (با قابلیت اسکرول افقی در موبایل) -->
+        <div class="relative mb-4 md:mb-0 group/tabs">
+            
+            <!-- هاله‌های محو در موبایل برای نشان دادن قابلیت اسکرول (UX Hack) -->
+            <div class="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-surface-50 dark:from-surface-900 to-transparent pointer-events-none md:hidden z-10 rounded-r-2xl"></div>
+            <div class="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-surface-50 dark:from-surface-900 to-transparent pointer-events-none md:hidden z-10 rounded-l-2xl"></div>
+
+            <!-- نوار تب‌ها -->
+            <!-- در موبایل: شناور، بلوری (Backdrop Blur)، گوشه‌های گرد و مینیمال -->
+            <!-- در دسکتاپ: ادغام شده با بالای کارت، خط جداکننده نرم در پایین -->
+            <nav class="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory gap-1.5 md:gap-0 p-1 md:p-0 
+                        bg-white/80 dark:bg-surface-800/80 backdrop-blur-md border border-surface-200 dark:border-surface-700 shadow-sm rounded-2xl
+                        md:bg-surface-50 md:dark:bg-surface-800/50 md:border-0 md:border-b md:border-surface-200 md:dark:border-surface-700 md:shadow-none md:rounded-none md:px-4">
+                
+                <!-- نکته: حتماً مطمئن شوید که تگ اصلی داخل `tab_button.html` کلاس‌های `shrink-0 snap-center` را داشته باشد -->
+                {% include './components/tab_button.html' with target="overview" icon="home" text="نمای کلی" active_default="true" %}
+                {% include './components/tab_button.html' with target="catalogs" icon="storefront" text="مدیریت کاتالوگ‌ها" %}
+                {% include './components/tab_button.html' with target="users" icon="users" text="کاربران سیستم" %}
+                {% include './components/tab_button.html' with target="icons" icon="cube" text="گالری آیکون" %}
+                
+            </nav>
+        </div>
+
+        <!-- محتوای تب‌ها -->
+        <div class="relative p-0 md:p-6 min-h-[400px]">
+            
+            <!-- تب نمای کلی -->
+            <div x-show="activeTab === 'overview'" 
+                x-transition:enter="transition ease-out duration-300" 
+                x-transition:enter-start="opacity-0 scale-[0.98] translate-y-3" 
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0" 
+                style="display: none;" class="absolute inset-x-0 md:inset-auto md:relative top-0">
+                {% include './includes/tabs/overview_tab.html' %}
+            </div>
+
+            <!-- تب کاتالوگ‌ها -->
+            <div x-show="activeTab === 'catalogs'" x-cloak 
+                x-transition:enter="transition ease-out duration-300" 
+                x-transition:enter-start="opacity-0 scale-[0.98] translate-y-3" 
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0" 
+                style="display: none;" class="absolute inset-x-0 md:inset-auto md:relative top-0">
+                {% include './includes/tabs/catalogs_tab.html' %}
+            </div>
+
+            <!-- تب کاربران -->
+            <div x-show="activeTab === 'users'" x-cloak 
+                x-transition:enter="transition ease-out duration-300" 
+                x-transition:enter-start="opacity-0 scale-[0.98] translate-y-3" 
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0" 
+                style="display: none;" class="absolute inset-x-0 md:inset-auto md:relative top-0">
+                {% include './includes/tabs/users_tab.html' %}
+            </div>
+            
+            <!-- تب آیکون‌ها -->
+            <div x-show="activeTab === 'icons'" x-cloak 
+                x-transition:enter="transition ease-out duration-300" 
+                x-transition:enter-start="opacity-0 scale-[0.98] translate-y-3" 
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0" 
+                style="display: none;" class="absolute inset-x-0 md:inset-auto md:relative top-0">
+                {% include './includes/tabs/icons_tab.html' %}
+            </div>
+            
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}

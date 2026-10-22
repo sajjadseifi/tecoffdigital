@@ -1,0 +1,88 @@
+{% load static %}
+<!-- AI Floating Button -->
+<div x-data="{open:false}" class="absolute bottom-30 left-4 z-10">
+    <!-- AI Button -->
+    <button
+        @click="open = !open"
+        class="group relative flex items-center gap-1.5 px-4 h-9 rounded-3xl
+               shadow-[0_10px_30px_rgba(0,0,0,0.35)]
+               active:translate-y-[2px]
+               transition-all duration-200
+               bg-black hover:bg-neutral-900"
+    >
+        <!-- Typography Logo (Gradient Text) -->
+        <span class="text-base font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-l from-[#87FCC4] to-[#28C1F5] drop-shadow-[0_0_8px_rgba(40,193,245,0.3)]">
+            پُرسا
+        </span>
+        <span class="text-white/70 text-[10px] font-medium mr-1">(هوشمند)</span>
+    </button>
+
+    <div 
+        x-show="open"
+        x-transition.opacity.scale
+        @click.outside="open=false"
+        x-cloak
+        class="absolute bottom-16 left-0 w-xs rounded-3xl
+               bg-white/95 backdrop-blur-2xl
+               border border-white/40
+               shadow-[0_20px_60px_rgba(0,0,0,0.25)]
+               p-4 space-y-3"
+    >
+
+        <!-- Header -->
+        <div class="flex items-baseline gap-2">
+           <!-- Porsa Typography Logo for Header -->
+           <span class="text-lg font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-l from-[#87FCC4] to-[#28C1F5]">
+                پُرسا
+            </span>
+            
+            <span class="font-bold text-xs text-slate-700">
+                دستیار هوشمند تکوف
+            </span>
+            <div class="flex-1"></div>
+        
+            <span class="font-bold text-[10px] text-slate-500">
+                همراه {{catalog.title}}
+            </span>
+        </div>
+
+
+        <!-- AI Description Box -->
+        <div class="text-xs text-slate-600 leading-relaxed bg-slate-50 border border-slate-200 rounded-xl p-3">
+            این بخش به شما کمک می‌کند با استفاده از هوش مصنوعی،  
+            محصولات مناسب یا دسته‌بندی‌های مرتبط این کاتالوگ را سریع‌تر پیدا کنید.
+            <br><br>
+            به زودی می‌توانید درخواست‌هایی مثل:
+            <br>
+                • غذای سبک پیشنهاد بده  
+                • نوشیدنی خنک چی دارید  
+                • غذای گیاهی چی هست  
+            <br>
+            را بنویسید و بهترین گزینه‌ها نمایش داده می‌شوند.
+        </div>
+
+
+        <!-- Input -->
+        <input
+            type="text"
+            placeholder="به زودی می‌توانید اینجا جستجو کنید..."
+            disabled
+            class="w-full bg-white border border-slate-200
+                   rounded-xl px-3 py-2 text-sm
+                   text-slate-400 cursor-not-allowed"
+        />
+
+
+        <!-- Disabled Search Button -->
+        <button
+            disabled
+            class="w-full rounded-xl py-2 text-xs font-semibold
+                   bg-slate-200 text-slate-500
+                   cursor-not-allowed"
+        >
+            در حال توسعه
+        </button>
+
+    </div>
+
+</div>

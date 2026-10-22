@@ -1,0 +1,230 @@
+<header class="flex-none bg-white/80 rounded-b-3xl backdrop-blur-2xl z-35 border-b border-gray-200/60 relative shadow-sm shadow-slate-200/20">
+    <div class="py-3 px-5 flex flex-col gap-2">
+        
+        <!-- بخش بالایی: لوگو و پروفایل -->
+        <div class="flex items-center justify-between">
+            <a
+            {% if catalog.website %}
+                href="{{catalog.website}}"
+            {% endif %}
+            class="flex items-center gap-3">
+                {% if catalog and catalog.logo %}
+                    <div class="w-10 h-10 box-border flex items-center justify-center overflow-hidden shrink-0 ">
+                        <img src="{{ catalog.logo.url }}" class="w-full h-full rounded-md object-cover" alt="Logo">
+                    </div>
+                    {% else %}
+                        <div class="w-10 h-10 p-2 overflow-hidden bg-slate-900 rounded-md box-border flex items-center justify-center overflow-hidden shrink-0 ">
+                            <span class="text-orange-200 text-lg font-bold  text-center">{{catalog.title|first|upper|default:"T"}}</span>
+                        </div>
+                    {% endif %}
+                <div class="flex flex-col">
+                    <h1 class="font-extrabold text-slate-800 text-sm tracking-tight line-clamp-1">{{catalog.headline}}</h1>
+                    <span class="text-[12px] text-gray-500 font-medium">{{catalog.subheadline}}</span>
+                </div>
+            </a>
+            
+            <div class="flex items-center gap-3 md:gap-4">
+                {% if request.user.is_authenticated and request.user == catalog.owner %}
+                    <!-- حالت لاگین شده (صاحب کاتالوگ): داشبورد -->
+                    <a href="/dashboard/" class="flex items-center gap-1.5 text-slate-600 hover:text-indigo-600 font-semibold text-xs md:text-sm whitespace-nowrap transition-colors outline-none -webkit-tap-highlight-color-transparent">
+                        <svg class="w-5 h-5 text-indigo-500/70" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path opacity="0.4" d="M12 2.25l8.25 7.5c.37.33.75.89.75 1.5v8c0 1.24-1.01 2.25-2.25 2.25h-3.5a.75.75 0 01-.75-.75v-4.5a1.5 1.5 0 00-1.5-1.5h-2a1.5 1.5 0 00-1.5 1.5v4.5a.75.75 0 01-.75-.75H5.25C4.01 21.5 3 20.49 3 19.25v-8c0-.61.38-1.17.75-1.5L12 2.25z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.5c.61 0 1.21.24 1.67.68l8.25 7.5a2.25 2.25 0 01-3.03 3.33L12 6.64l-6.89 6.37a2.25 2.25 0 01-3.03-3.33l8.25-7.5A2.25 2.25 0 0112 1.5z" />
+                        </svg>
+                        داشبورد
+                    </a>
+                    
+                    <!-- جداکننده ظریف -->
+                    <div class="w-px h-4 bg-slate-200/80 mx-0.5 rounded-full"></div>
+                    
+                    <!-- حالت لاگین شده: مودال حساب کاربری -->
+                    <button type="button" 
+                            @click.prevent="$store.sheet.open('account')"
+                            class="flex items-center gap-1.5 text-slate-600 hover:text-emerald-600 font-semibold text-xs md:text-sm whitespace-nowrap transition-colors focus:outline-none cursor-pointer -webkit-tap-highlight-color-transparent">
+                        <svg class="w-5 h-5 text-emerald-500/70" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path opacity="0.4" d="M12 13.5c-4.418 0-8 2.686-8 6 0 .828.672 1.5 1.5 1.5h13c.828 0 1.5-.672 1.5-1.5 0-3.314-3.582-6-8-6z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 11.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM12 9a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                        <span class="hidden sm:inline">حساب من</span>
+                    </button>
+                {% else %}
+                    <!-- حالت مهمان: دکمه ورود -->
+                    <button type="button" 
+                            @click.prevent="$store.sheet.open('auth'); activeTab = 'login'"
+                            class="flex items-center gap-2 px-3.5 py-2 bg-slate-50/50 border border-slate-200/70 rounded-xl hover:border-orange-200 hover:bg-orange-50/50 transition-all duration-300 group focus:outline-none cursor-pointer -webkit-tap-highlight-color-transparent">
+                        
+                        <div class="flex flex-col text-right">
+                            <span class="text-[9px] text-slate-400 group-hover:text-orange-500/80 font-medium leading-tight transition-colors">ورود به</span>
+                            <span class="text-[11px] font-bold text-slate-600 group-hover:text-orange-600 transition-colors leading-tight">حساب کاربری</span>
+                        </div>
+                        
+                        <svg class="w-5 h-5 text-slate-400 group-hover:text-orange-500/70 transition-colors duration-300" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path opacity="0.4" d="M12 13.5c-4.418 0-8 2.686-8 6 0 .828.672 1.5 1.5 1.5h13c.828 0 1.5-.672 1.5-1.5 0-3.314-3.582-6-8-6z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 11.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM12 9a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- بخش جستجو -->
+        {% if search_enable %}
+            <div class="relative w-full">
+                <input 
+                    type="search" 
+                    name="q_menu_search_xyz" 
+                    autocomplete="off" 
+                    data-lpignore="true" 
+                    spellcheck="false"
+                    x-model="searchQuery" 
+                    x-init="$el.value = ''" 
+                    @input.debounce.500ms="handleSearch()" 
+                    placeholder="جستجو در {{catalog.title}}..." 
+                    class="w-full bg-slate-100/80 text-slate-900 text-sm px-4 py-3.5 rounded-2xl pr-12 pl-12 border border-slate-200/60 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all duration-300 placeholder-slate-400 font-medium shadow-inner -webkit-appearance-none"
+                >
+                
+                <!-- آیکون ذره‌بین -->
+                <svg x-show="!isLoading" 
+                    x-transition:enter="transition ease-out duration-300 delay-100"
+                    x-transition:enter-start="opacity-0 scale-75 rotate-90"
+                    x-transition:enter-end="opacity-100 scale-100 rotate-0"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100 rotate-0"
+                    x-transition:leave-end="opacity-0 scale-75 -rotate-90"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    class="h-5 w-5 text-slate-400 absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+
+                <!-- آیکون لودینگ -->
+                <svg x-show="isLoading" x-cloak 
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-75"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-75"
+                    class="animate-spin h-5 w-5 text-orange-500 absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                
+                <!-- دکمه پاک کردن -->
+                <button 
+                    x-cloak
+                    x-show="searchQuery.length > 0" 
+                    @click="clearSearch()" 
+                    x-transition:enter="transition ease-out duration-300 delay-100"
+                    x-transition:enter-start="opacity-0 scale-50"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-50"
+                    class="absolute top-1/2 left-4 -translate-y-1/2 text-slate-400 hover:text-slate-700 bg-white rounded-full p-0.5 shadow-sm transition-colors cursor-pointer z-10 outline-none -webkit-tap-highlight-color-transparent"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        {% endif %}
+
+        <!-- بخش متغیر: شبکه‌بندی (Grid) برای همپوشانی و جلوگیری از پرش ارتفاع -->
+        <div class="grid grid-cols-1 grid-rows-1 mt-0.5">
+            
+            <!-- حالت اول: نتایج جستجو (زمانی که در حال جستجو هستیم) -->
+            {% if search_enable %}
+                <div class="col-start-1 row-start-1 w-full flex items-center h-[52px]"
+                    x-cloak
+                    x-show="isSearching" 
+                    x-transition:enter="transition ease-out duration-400 delay-100"
+                    x-transition:enter-start="opacity-0 -translate-y-3"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-300"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 translate-y-3"
+                >
+                    <!-- محتوای نتیجه جستجو (طراحی شبیه یک نوار اطلاعاتی) -->
+                    <div class="w-full h-full bg-slate-50 border border-slate-100/80 rounded-xl px-4 flex items-center gap-2"
+                         x-show="searchQuery.length > 0 && !isLoading && hasSearchResults()"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100">
+                        
+                        <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        
+                        <span class="text-xs text-slate-500 font-bold whitespace-nowrap">نتیجه:</span>
+                        
+                        <div class="flex items-center text-xs font-bold gap-1 mr-1">
+                            <span class="text-orange-600 bg-orange-100/60 px-2 py-1 rounded-md transition-all shadow-sm" x-text="filteredCategoriesCount || 0"></span>
+                            <span class="text-slate-500">دسته‌بندی</span>
+                            <span class="text-slate-300 mx-0.5">و</span>
+                            <span class="text-orange-600 bg-orange-100/60 px-2 py-1 rounded-md transition-all shadow-sm" x-text="filteredItemsCount || 0"></span>
+                            <span class="text-slate-500">آیتم</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if categories_enable %}
+                <div class="col-start-1 row-start-1 w-full h-[46px]" 
+                    x-show="!isSearching" 
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-400 delay-100"
+                    x-transition:enter-start="opacity-0 translate-y-3"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-300"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-3"
+                >
+                    <div class="relative flex overflow-x-auto rounded-xl scrollbar-hide touch-pan-x p-1 bg-slate-600/5 items-center h-full w-full" x-ref="categoryContainer">
+                        
+                        <!-- پیام زمانی که هیچ دسته‌بندی وجود ندارد -->
+                        <div x-show="categories.length === 0" 
+                            class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs font-medium gap-1.5 w-full h-full" x-cloak>
+                            <svg class="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <span>هنوز دسته‌بندی ایجاد نشده است</span>
+                        </div>
+
+                        <!-- نشانگر متحرک پس‌زمینه (Pill) -->
+                        <div class="absolute top-1 bottom-1 bg-slate-900 rounded-xl shadow-md z-0"
+                            :class="readyToAnimate ? 'transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)' : ''"
+                            :style="`left: ${indicatorLeft}px; width: ${indicatorWidth}px;`"
+                            x-show="indicatorWidth > 0 && categories.length > 0"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-90"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-cloak>
+                        </div>
+
+                        <template x-for="category in categories" :key="category.slug">
+                            <button :id="'cat-btn-' + category.slug"
+                                @pointerdown="handleCatPress($event, category.slug)"
+                                @click="selectCategory(category.slug)"
+                                class="relative z-10 flex items-center  justify-center px-3 py-1 h-full rounded-xl transition-all duration-300 shrink-0 whitespace-nowrap gap-2 overflow-hidden outline-none -webkit-tap-highlight-color-transparent"
+                                :class="activeCategory === category.slug ? 'text-white font-bold' : 'text-slate-500 hover:text-slate-800'">
+                                
+                                <!-- افکت Ripple -->
+                                <div class="absolute inset-0 pointer-events-none z-0 opacity-0 transition-opacity duration-300"
+                                    :class="isRippling && rippleCatId === category.slug ? 'opacity-100' : 'opacity-0'">
+                                    <div x-show="isRippling && rippleCatId === category.slug"
+                                        class="absolute w-4 h-4 rounded-full blur-[2px] bg-slate-400/30"
+                                        :style="`left: ${rippleX}px; top: ${rippleY}px; transform: translate(-50%, -50%);`"
+                                        :class="isRippling && rippleCatId === category.slug ? 'animate-cat-ripple' : ''"></div>
+                                </div>
+                                <span class="text-xs tracking-wide relative z-10" x-text="category.title"></span>
+                                <template x-if="category.is_featured && category.image">
+                                    <img  class="w-4 h-4 rounded-md" :src="category.image" />
+                                </template>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</header>

@@ -1,0 +1,308 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8"/>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <meta name="theme-color" content="#ffffff"/>
+
+    <title>
+        {{ catalog.title }} | PORTXL
+    </title>
+
+    <link
+        rel="icon"
+        href="{% static 'icons/tecof_faveicon.png' %}"
+        type="image/png"
+    />
+
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}"/>
+
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+
+        @theme {
+
+            --font-sans: 'YekanBakh', sans-serif;
+
+            --color-border:#e5e7eb;
+            --color-muted:#6b7280;
+            --color-soft:#f8fafc;
+
+        }
+
+        @layer base {
+
+            *{
+                box-sizing:border-box;
+                -webkit-tap-highlight-color:transparent;
+            }
+
+            html{
+                scroll-behavior:smooth;
+            }
+
+            body{
+                @apply font-sans;
+                background:white;
+                color:#111827;
+                min-height:100dvh;
+                overflow:auto;
+            }
+
+            iframe{
+                border:none;
+            }
+
+            [x-cloak]{
+                display:none !important;
+            }
+
+        }
+
+        @layer utilities {
+
+            .app-shell{
+                background:white;
+                border:1px solid #e5e7eb;
+                box-shadow:
+                    0 10px 30px rgba(0,0,0,.04);
+            }
+
+            .top-blur{
+                backdrop-filter:blur(16px);
+                -webkit-backdrop-filter:blur(16px);
+                background:rgba(255,255,255,.82);
+            }
+
+            .loader{
+                width:38px;
+                height:38px;
+                border-radius:9999px;
+                border:3px solid #e5e7eb;
+                border-top-color:#111827;
+                animation:spin .8s linear infinite;
+            }
+
+            @keyframes spin{
+                to{
+                    transform:rotate(360deg);
+                }
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body x-data="{ loaded:false }">
+
+    <!-- APP -->
+
+    <div class="w-full min-h-dvh bg-white">
+
+        <!-- HEADER -->
+
+        <header
+            class="
+                sticky top-0 z-30
+                border-b border-gray-200
+                top-blur
+            "
+        >
+
+            <div
+                class="
+                    h-16
+                    px-4
+                    flex items-center justify-between
+                    gap-3
+                "
+            >
+
+                <!-- RIGHT -->
+
+                <div class="flex items-center gap-3 min-w-0">
+
+                    {% if catalog.logo %}
+
+                        <img
+                            src="{{ catalog.logo.url }}"
+                            alt="{{ catalog.title }}"
+                            class="
+                                w-10 h-10
+                                rounded-2xl
+                                object-cover
+                                border border-gray-200
+                                shrink-0
+                            "
+                        />
+
+                    {% else %}
+
+                        <div
+                            class="
+                                w-10 h-10
+                                rounded-2xl
+                                bg-gray-100
+                                border border-gray-200
+                                flex items-center justify-center
+                                text-sm font-black
+                            "
+                        >
+                            PX
+                        </div>
+
+                    {% endif %}
+
+                    <div class="min-w-0">
+
+                        <h1
+                            class="
+                                text-[14px]
+                                font-black
+                                truncate
+                            "
+                        >
+                            {{ catalog.title }}
+                        </h1>
+
+                        <p
+                            class="
+                                text-[11px]
+                                text-gray-500
+                                truncate
+                            "
+                        >
+                            مشاهده سایت
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- LEFT -->
+
+                <div class="flex items-center gap-2 shrink-0">
+
+                    <a
+                        href="{{ catalog.redirect_url }}"
+                        target="_blank"
+                        class="
+                            h-10 px-4
+                            rounded-xl
+                            bg-black
+                            text-white
+                            text-[12px]
+                            font-bold
+                            inline-flex items-center justify-center
+                            active:scale-[.97]
+                            transition
+                        "
+                    >
+                        باز کردن
+                    </a>
+
+                    <button
+                        onclick="window.history.back()"
+                        class="
+                            h-10 px-4
+                            rounded-xl
+                            border border-gray-200
+                            bg-white
+                            text-[12px]
+                            font-bold
+                            active:scale-[.97]
+                            transition
+                        "
+                    >
+                        بازگشت
+                    </button>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- CONTENT -->
+
+        <main
+            class="
+                relative
+                w-full
+                h-[calc(100dvh-64px)]
+                overflow-hidden
+                bg-white
+            "
+        >
+
+            <!-- LOADING -->
+
+            <div
+                x-show="!loaded"
+                x-transition.opacity
+                class="
+                    absolute inset-0 z-20
+                    flex flex-col items-center justify-center
+                    bg-white
+                "
+            >
+
+                <div class="loader"></div>
+
+                <div
+                    class="
+                        mt-4
+                        text-[14px]
+                        font-bold
+                        text-gray-900
+                    "
+                >
+                    در حال بارگذاری سایت...
+                </div>
+
+                <div
+                    class="
+                        mt-1
+                        text-[12px]
+                        text-gray-500
+                    "
+                >
+                    لطفاً کمی صبر کنید
+                </div>
+
+            </div>
+
+            <!-- WEBSITE -->
+
+            <iframe
+                src="{{ catalog.redirect_url }}"
+                class="
+                    w-full
+                    h-full
+                    bg-white
+                "
+                allowfullscreen
+                loading="eager"
+                referrerpolicy="strict-origin-when-cross-origin"
+                @load="loaded = true"
+            ></iframe>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

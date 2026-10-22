@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+    {# حفظ استایل‌های اصلی ادمین جنگو #}
+    {{ block.super }}
+    <link rel="icon" href="{% static 'icons/tecof_logo.png' %}" type="image/svg+xml" />
+    <title>Tecof | مدیریت ادمین</title>
+    <!-- ================= پیش‌بارگذاری و معرفی فونت یکان بخ ================= -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script src="{% static 'js/jquery.js' %}"></script>
+    <script src="{% static 'js/cropper.min.js' %}"></script>
+    <script src="{% static 'js/jszip.min.js' %}"></script>
+    <style>
+        /* تغییر متغیرهای اصلی فونت در ادمین جنگو */
+        :root {
+            --font-family-primary: 'YekanBakh', 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* اعمال اجباری فونت روی تمام بخش‌های پنل ادمین */
+        body, h1, h2, h3, h4, h5, h6, p, span, a, div, input, button, select, textarea, th, td, label, caption, li {
+            font-family: var(--font-family-primary) !important;
+        }
+    </style>
+{% endblock %}
+
+{% block nav-sidebar %}
+    {# حفظ منوهای پیش‌فرض جنگو #}
+    {{ block.super }}
+    
+    {# اضافه کردن دکمه گالری آیکون‌ها به انتهای منوی کناری #}
+    <div style="padding: 15px; border-top: 1px solid var(--hairline-color); margin-top: auto;">
+        <a href="{% url 'icons_gallery' %}" style="color: var(--primary); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; text-decoration: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            گالری آیکون‌ها
+        </a>
+    </div>
+{% endblock %}

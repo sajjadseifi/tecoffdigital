@@ -1,0 +1,192 @@
+{% extends 'layouts/dashboard_base.html' %}
+
+{% block title %}مدیریت منو | {{ user_display_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8 pb-12">
+    <!-- 1. هدر و عملیات سریع -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">
+                پنل مدیریت <span class="text-brand-600">منوی آنلاین</span>
+            </h1>
+            <p class="text-slate-500 mt-2 flex items-center gap-2 font-medium">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                منوی شما در حال حاضر فعال و در دسترس است
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- مشاهده منو (لینک به ویوی اختصاصی کاربر که به منوی او ریدایرکت می‌شود) -->
+            <a href="{% url 'app_catalog_user' %}" target="_blank" class="bg-white text-slate-700 px-5 py-2.5 rounded-2xl font-bold border border-slate-200 hover:border-brand-500 transition-all shadow-sm flex items-center gap-2">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                مشاهده منو
+            </a>
+            <!-- افزودن محصول جدید (لینک به صفحه آیتم‌ها) -->
+            <a href="{% url 'dashboard_catalog_items' %}" class="bg-brand-950 text-white px-6 py-2.5 rounded-2xl font-bold hover:shadow-xl hover:shadow-brand-900/20 transition-all active:scale-95 flex items-center gap-2 inline-flex">
+                <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                افزودن محصول جدید
+            </a>
+        </div>
+    </div>
+    <!-- 2. کارت‌های آمار (بدون تغییر لینک - فقط نمایش دیتا) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- بازدید کل -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </div>
+                <span class="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg uppercase">۳۰ روز اخیر</span>
+            </div>
+            <p class="text-sm text-slate-500 font-bold">بازدید کل منو</p>
+            <div class="flex items-baseline gap-1.5 mt-1">
+                {% comment %} <p class="text-2xl font-black text-slate-900">درحال توسعه سیستم TQRS</p> {% endcomment %}
+                <p class="text-xs font-black text-slate-900">درحال توسعه سیستم TQRS</p>
+                <span class="text-xs font-medium text-slate-400">صبور باشید...</span>
+            </div>
+        </div>
+        <!-- کاتالوگ ها -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </div>
+            </div>
+            <p class="text-sm text-slate-500 font-bold">کاتالوگ های فعال</p>
+            <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="text-2xl font-black text-slate-900">{{ u_statstotal_catalogs|default:"0" }}</p>
+                <span class="text-xs font-medium text-slate-400">دسته</span>
+            </div>
+        </div>
+        <!-- تعداد محصولات -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 shadow-inner group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+            </div>
+            <p class="text-sm text-slate-500 font-bold">تعداد کل محصولات</p>
+            <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="text-2xl font-black text-slate-900">{{ u_statstotal_items|default:"0" }}</p>
+                <span class="text-xs font-medium text-slate-400">آیتم</span>
+            </div>
+        </div>
+
+        <!-- دسته‌بندی‌ها -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </div>
+            </div>
+            <p class="text-sm text-slate-500 font-bold">دسته‌بندی‌های فعال</p>
+            <div class="flex items-baseline gap-1.5 mt-1">
+                <p class="text-2xl font-black text-slate-900">{{ u_statstotal_categories|default:"0" }}</p>
+                <span class="text-xs font-medium text-slate-400">دسته</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. محصولات پربازدید و وضعیت بسته -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- محصولات پربازدید (2/3) -->
+        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-slate-50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-6 bg-accent-500 rounded-full"></span>
+                    <h3 class="font-black text-slate-900 text-lg">کاتالوگ های شما</h3>
+                </div>
+                <!-- لینک به مدیریت محصولات -->
+                <a href="{% url 'dashboard_catalog_categories' %}" class="text-xs text-brand-600 font-black px-4 py-2 bg-brand-50 rounded-xl hover:bg-brand-100 transition-colors">آیتم ها و محصولات</a>
+                <a href="{% url 'dashboard_catalog_items' %}" class="text-xs text-brand-600 font-black px-4 py-2 bg-brand-50 rounded-xl hover:bg-brand-100 transition-colors">دسته بندی ها</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                    <thead class="bg-slate-50/50 text-slate-400 text-[11px] font-black uppercase">
+                        <tr>
+                            <th class="px-6 py-4">عنوان</th>
+                            <th class="px-6 py-4">وضعیت</th>
+                            <th class="px-6 py-4">قالب</th>
+                            <th class="px-6 py-4">بازدید</th>
+                            <th class="px-6 py-4 text-center">دسته بندی ها</th>
+                            <th class="px-6 py-4 text-center">آیتم ها</th>
+                            <th class="px-6 py-4 text-center">مدیریت</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for catalogs in u_catalogs  %}
+                            <tr class="hover:bg-slate-50/30 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400">🍕</div>
+                                        <p class="text-sm font-bold text-slate-800">پیتزا سیر و استیک</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-xs text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded-lg">پیتزا ایتالیایی</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-black text-slate-700">۴۵۲</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-full">موجود</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ستون سمت راست: وضعیت بسته (1/3) -->
+        <div class="space-y-6">
+            {% comment %} <!-- بسته اشتراک -->
+            <div class="bg-gradient-to-br from-brand-900 to-brand-950 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start">
+                        <p class="text-brand-400 text-xs font-black uppercase tracking-widest">وضعیت اشتراک</p>
+                        <span class="px-2 py-1 bg-white/10 rounded-lg text-[10px] font-bold">باقیمانده: ۴۵ روز</span>
+                    </div>
+                    <h4 class="text-xl font-black mt-2">پلن تجاری (نقره‌ای)</h4>
+                    
+                    <!-- نوار پیشرفت مصرف محصول -->
+                    <div class="mt-6">
+                        <div class="flex justify-between text-[10px] mb-2 font-bold">
+                            <span>ظرفیت محصولات</span>
+                            <span>۴۸ از ۱۰۰</span>
+                        </div>
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-accent-500" style="width: 48%"></div>
+                        </div>
+                    </div>
+
+                    <button class="w-full mt-8 py-3 bg-accent-500 hover:bg-accent-400 text-brand-950 font-black rounded-2xl transition-all shadow-lg shadow-accent-500/20 active:scale-95">
+                        ارتقا یا تمدید بسته
+                    </button>
+                </div>
+            </div> {% endcomment %}
+
+            <!-- راهنمای سریع -->
+            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+                <h4 class="font-black text-slate-900 flex items-center gap-2 mb-4 text-sm">
+                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>
+                    راهنمای سریع
+                </h4>
+                <div class="space-y-3">
+                    <div class="p-3 bg-slate-50 rounded-2xl flex items-center gap-3">
+                        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm text-lg">📱</div>
+                        <p class="text-[11px] text-slate-600 leading-5">برای دریافت **فایل لایه باز QR کد** مخصوص میز، به بخش <a href="{% url 'dashboard_qr_codes' %}" class="text-brand-600 font-black hover:underline">«کیوآر کدها»</a> بروید.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

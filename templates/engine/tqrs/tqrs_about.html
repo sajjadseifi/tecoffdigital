@@ -1,0 +1,68 @@
+{% extends "./layouts/tqrs_layout.html" %}
+
+{% load static %}
+
+{% block title %}درباره پروتکل TQRS{% endblock %}
+
+{% block content %}
+<div class="relative w-full max-w-5xl mx-auto py-12 px-4 overflow-hidden">
+    <!-- Hero Section -->
+    <div class="text-center mb-16 relative z-10">
+        <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-400 text-[10px] tracking-[0.3em] uppercase">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            System Documentation v5.2
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold text-white text-glow mb-6">پروتکل مسیریابی <span class="text-cyan-400">TQRS</span></h1>
+        <p class="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
+            سیستم TQRS (Tecof Quick Routing System) لایه‌ای هوشمند برای مدیریت و هدایت هویت‌های دیجیتال است که توسط هسته مرکزی تکوف توسعه یافته است.
+        </p>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+        <!-- Vision -->
+        <div class="bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-[32px] shadow-2xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <svg class="w-24 h-24 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span class="w-8 h-[2px] bg-cyan-400"></span>
+                چشم‌انداز ما
+            </h2>
+            <p class="text-gray-400 leading-7 text-sm md:text-base">
+                ما در حال ساختن پلی میان دنیای فیزیکی و ماتریس‌های دیجیتال هستیم. TQRS تنها یک کوتاه‌کننده لینک یا مولد کیو‌آر کد نیست؛ بلکه پروتکلی برای "Soul Routing" است که دسترسی به منابع را در امن‌ترین و سریع‌ترین حالت ممکن فراهم می‌کند.
+            </p>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-[32px] shadow-2xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <svg class="w-24 h-24 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                <span class="w-8 h-[2px] bg-cyan-400"></span>
+                امنیت پروتکل
+            </h2>
+            <p class="text-gray-400 leading-7 text-sm md:text-base">
+                تمامی هش‌کدها در هسته مرکزی تکوف تحت نظارت الگوریتم‌های آنتی‌فیشینگ (Anti-Phishing) قرار دارند. پایداری ۹۹.۹٪ سرورهای ابری ما تضمین می‌کند که روتینگ‌های شما هیچ‌گاه در فضای وب معلق نمانند.
+            </p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="mt-12 flex flex-wrap justify-center gap-6">
+        <div class="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+            <div class="text-2xl font-bold text-cyan-400">+1M</div>
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest">Processed Codes</div>
+        </div>
+        <div class="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+            <div class="text-2xl font-bold text-cyan-400">40ms</div>
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest">Avg Response Time</div>
+        </div>
+        <div class="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-center">
+            <div class="text-2xl font-bold text-cyan-400">24/7</div>
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest">Core Monitoring</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

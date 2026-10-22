@@ -1,0 +1,96 @@
+{% load static %}
+<div class="space-y-3" 
+     x-data="locationPicker('{{ widget.name }}', {{ widget.lat_val }}, {{ widget.lng_val }})">
+    
+    <!-- این فیلد پنهان مقدار نهایی JSON را به جنگو ارسال می‌کند -->
+    <input type="hidden" name="{{ widget.name }}" :value="getJsonValue()" />
+
+    <!-- فیلدهای ورودی دستی (فقط برای نمایش و تعامل کاربر) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-1">
+            <label class="text-sm font-bold text-brand-800">عرض جغرافیایی (Latitude)</label>
+            <input type="text" 
+                   x-model="lat"
+                   @input="updateMap"
+                   class="w-full rounded-lg border-brand-200 focus:ring-accent-500"/>
+        </div>
+
+        <div class="space-y-1">
+            <label class="text-sm font-bold text-brand-800">طول جغرافیایی (Longitude)</label>
+            <input type="text"
+                   x-model="lng"
+                   @input="updateMap"
+                   class="w-full rounded-lg border-brand-200 focus:ring-accent-500"/>
+        </div>
+    </div>
+
+    <!-- نقشه -->
+    <div class="rounded-xl overflow-hidden border border-brand-200 h-72">
+        <div :id="'map_' + fieldName" class="w-full h-full"></div>
+    </div>
+</div>
+
+<script src="{% static 'js/leaflet.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!document.getElementById('leaflet-css-link')) {
+            document.head.insertAdjacentHTML('beforeend', `<link id="leaflet-css-link" rel="stylesheet" href="{% static 'css/leaflet.css' %}"/>`);
+        }
+    });
+
+    document.addEventListener("alpine:init", () => {
+        // جلوگیری از تعریف مجدد کامپوننت اگر چندبار لود شد
+        if (!window.locationPickerInitialized) {
+            Alpine.data("locationPicker", (fieldName, initialLat, initialLng) => ({
+                fieldName: fieldName,
+                lat: initialLat,
+                lng: initialLng,
+                map: null,
+                marker: null,
+
+                // این متد خروجی JSON را برای ذخیره در دیتابیس آماده می‌کند
+                getJsonValue() {
+                    return JSON.stringify({ 
+                        lat: parseFloat(this.lat) || null, 
+                        lng: parseFloat(this.lng) || null 
+                    });
+                },
+
+                // در صورت تغییر دستی اعداد، نقشه هم آپدیت شود
+                updateMap() {
+                    if (this.marker && this.lat && this.lng) {
+                        this.marker.setLatLng([this.lat, this.lng]);
+                        this.map.setView([this.lat, this.lng]);
+                    }
+                },
+
+                init() {
+                    this.$nextTick(() => {
+                        this.map = L.map(`map_${this.fieldName}`).setView([this.lat, this.lng], 12);
+
+                        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                            maxZoom: 19,
+                        }).addTo(this.map);
+
+                        this.marker = L.marker([this.lat, this.lng], { draggable: true }).addTo(this.map);
+
+                        // با درگ کردن مارکر، مختصات آپدیت شود
+                        this.marker.on("dragend", (e) => {
+                            let p = e.target.getLatLng();
+                            this.lat = p.lat.toFixed(6);
+                            this.lng = p.lng.toFixed(6);
+                        });
+
+                        // با کلیک روی نقشه، مارکر جابجا شود
+                        this.map.on("click", (e) => {
+                            this.lat = e.latlng.lat.toFixed(6);
+                            this.lng = e.latlng.lng.toFixed(6);
+                            this.marker.setLatLng([this.lat, this.lng]);
+                        });
+                    });
+                },
+            }));
+            window.locationPickerInitialized = true;
+        }
+    });
+</script>

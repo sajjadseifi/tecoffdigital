@@ -1,0 +1,27 @@
+<!-- تغییر absolute به fixed و افزایش z-index به z-[9999] -->
+<div x-show="isNavigating" 
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-30 flex flex-col items-center justify-center bg-slate-200/50 backdrop-blur-md"
+     style="display: none;">
+    
+    <!-- لودینگ -->
+    <div class="relative flex items-center justify-center w-20 h-20">
+        <div class="absolute inset-0 rounded-full border-4 border-orange-400/30 animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+        
+        <div class="absolute inset-2 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-500 animate-[spin_1s_linear_infinite] opacity-80"></div>
+        <div class="absolute inset-4 rounded-full border-4 border-transparent border-b-orange-400 border-l-orange-400 animate-[spin_1.5s_linear_infinite_reverse] opacity-60"></div>
+        
+        <div class="w-5 h-5 bg-gradient-to-tr from-orange-600 to-orange-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.8)]"></div>
+    </div>
+
+    <!-- متن -->
+    <div class="mt-20 text-sm font-medium text-orange-600 tracking-wide animate-pulse max-w-xs text-center">
+        {{catalog.tagline}}
+    </div>
+
+</div>

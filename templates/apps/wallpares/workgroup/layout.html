@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="transparent" />
+    <title>{% block title %}{{ catalog.title|default:"منوی دیجیتال" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ catalog.description|default:'کاتالوگ دیجیتال و منوی آنلاین با بهترین طراحی و رابط کاربری' }}{% endblock %}" />
+    <meta name="keywords" content="منوی دیجیتال, کاتالوگ آنلاین, سفارش آنلاین, {{ catalog.title }}, رستوران" />
+    <link rel="icon" type="image/svg+xml" href="{% if catalog and catalog.favicon %}{{ catalog.favicon.url }}{% else %}{% static 'icons/tecof_logo.png' %}{% endif %}" />
+
+    <!-- OpenGraph -->
+    <meta property="og:title" content="{{ catalog.title|default:'منوی دیجیتال' }}" />
+    <meta property="og:description" content="{{ catalog.description|default:'کاتالوگ دیجیتال و منوی آنلاین' }}" />
+    {% if catalog.cover %}
+        <meta property="og:image" content="{{ catalog.cover.url }}" />
+    {% endif %}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ catalog.title }}" />
+    <meta name="twitter:description" content="{{ catalog.description }}" />
+    {% if catalog.cover %}
+        <meta name="twitter:image" content="{{ catalog.cover.url }}" />
+    {% endif %}
+
+    <!-- JSON-LD Schema.org -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Restaurant",
+            "name": "{{ catalog.title }}",
+            "image": "{% if catalog and catalog.logo %}{{ catalog.logo.url }}{% else %}""{% endif %}",
+            "url": "{{ request.build_absolute_uri }}",
+            "telephone": "{{ catalog.phone|default:'' }}",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "{{ catalog.address|default:'' }}"
+            },
+            "description": "{{ catalog.description|default:'' }}"
+        }
+    </script>
+
+    <!-- Fonts preload / Styles -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Vazirmatn', 'YekanBakh', system-ui, sans-serif;
+        }
+        @layer base {
+            body { 
+                margin: 0;
+                padding: 0;
+                font-family: var(--font-sans); 
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            .touch-pan-x { touch-action: pan-x; }
+        }
+        @layer utilities {
+            .pb-safe { padding-bottom:0; }
+            .h-screen-dvh { height: 100dvh; }
+        }
+        [x-cloak] { display: none !important; }
+        .touch-pan-y { touch-action: pan-y; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-200 text-gray-800 fixed inset-0 h-full flex flex-col items-center justify-center overflow-hidden">
+    <div x-data="appShell()" class="w-full max-w-md mx-auto relative h-screen-dvh sm:my-1 flex flex-col bg-slate-200 overflow-hidden sm:h-[90vh] sm:rounded-[3rem] sm:border-[10px] sm:border-slate-800 shadow-2xl shadow-slate-400/50">
+        <div x-data="{% block page_x_data %}{% endblock %}" class="flex flex-col h-full w-full overflow-hidden relative">
+            {% block header %}
+            {% endblock %}
+            <main 
+                x-data="pullToRefresh"
+                @touchstart="start($event)"
+                @touchmove="move($event)"
+                @touchend="end()"
+                class="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide bg-slate-200 -mt-8 pt-2"
+            >
+                <div class="pb-8 transition-opacity duration-300" :class="isNavigating ? 'opacity-30' : 'opacity-100'">
+                    <!-- به جای include از محتوای مستقیم استفاده شده است تا نیازی به فایل مجزا برای PullToRefresh نباشد -->
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+
+            {% block bottom_nav %}
+            {% endblock %}
+        </div>
+
+        <div class="h-8"></div>
+        <div class="w-full flex justify-center items-center pt-3">
+            <div class="flex items-center gap-2 text-[10px] text-gray-400">
+                <span class="w-6 h-[1px] bg-gray-200"></span>
+                <span>
+                    مفتخریم از همکاری در طراحی این کاتالوگ
+                    <span class="mx-1 text-gray-300">|</span>
+                    <a href="/" class="text-orange-500 font-semibold tracking-wide">TECOF Digital</a>
+                </span>
+                <span class="w-6 h-[1px] bg-gray-200"></span>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    // --- App Shell ---
+    Alpine.data('appShell', () => ({
+        activeTab: '{{ current_page }}',
+        isNavigating: true, 
+        loading: false,
+        init() {
+            window.addEventListener('load', () => {
+                setTimeout(() => { this.isNavigating = false; }, 300);
+            });
+        },
+        goTo(tabName, url) {
+            if (this.activeTab === tabName) return;
+            this.activeTab = tabName;
+            this.isNavigating = true; 
+            setTimeout(() => { window.location.href = url; }, 300);
+        }
+    }));
+
+    // --- Bottom Sheet ---
+    Alpine.store('sheet', {
+        active: null,
+        data: null, 
+        open(id, payload = null) {
+            this.active = id;
+            this.data = payload; 
+            document.body.style.overflow = 'hidden';
+        },
+        close() {
+            this.active = null;
+            document.body.style.overflow = '';
+            setTimeout(() => { this.data = null; }, 300);
+        }
+    });
+
+    // --- Pull to Refresh ---
+    Alpine.data('pullToRefresh', () => ({
+        startX: 0,
+        startY: 0,
+        pullDistance: 0,
+        threshold: 75, 
+        isRefreshing: false,
+        isDragging: false,
+        
+        // متغیرهای جدید برای تشخیص جهت
+        isDirectionLocked: false, 
+        isHorizontal: false,
+
+        start(ev) {
+            if (this.$el.scrollTop > 0 || this.isRefreshing) return;
+            
+            this.startX = ev.touches[0].clientX;
+            this.startY = ev.touches[0].clientY;
+            this.isDragging = true;
+            
+            // ریست کردن وضعیت جهت در هر بار لمس جدید
+            this.isDirectionLocked = false;
+            this.isHorizontal = false;
+        },
+
+        move(ev) {
+            if (this.startY === 0 || this.$el.scrollTop > 0 || this.isRefreshing) return;
+
+            let currentX = ev.touches[0].clientX;
+            let currentY = ev.touches[0].clientY;
+            let deltaX = currentX - this.startX;
+            let deltaY = currentY - this.startY;
+
+            // 1. تشخیص جهت غالب در اولین پیکسل‌های حرکت
+            if (!this.isDirectionLocked) {
+                // اگر فاصله افقی بیشتر از عمودی بود، یعنی کاربر قصد اسکرول افقی دارد
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    this.isHorizontal = true;
+                }
+                this.isDirectionLocked = true;
+            }
+
+            // 2. اگر حرکت افقی تشخیص داده شد، کدهای Pull-to-Refresh را کلا نادیده بگیر
+            if (this.isHorizontal) return;
+
+            // 3. ادامه منطق قبلی برای کشش عمودی
+            if (deltaY > 0) {
+                if (ev.cancelable) ev.preventDefault(); 
+                this.pullDistance = Math.min(deltaY * 0.45, 120);
+            }
+        },
+
+        end() {
+            if (this.startY === 0) return;
+            
+            this.startY = 0;
+            this.startX = 0;
+            this.isDragging = false;
+
+            // فقط در صورتی که حرکت افقی نبوده و به حد نصاب رسیده رفرش کن
+            if (!this.isHorizontal && this.pullDistance >= this.threshold) {
+                this.triggerRefresh();
+            } else {
+                this.pullDistance = 0;
+            }
+            
+            this.isDirectionLocked = false;
+            this.isHorizontal = false;
+        },
+
+        triggerRefresh() {
+            this.isRefreshing = true;
+            this.pullDistance = 65; 
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 600);
+        }
+    }));
+});
+</script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!-- هدر آمار و فیلتر زمان -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
+    <div>
+        <h2 class="text-base md:text-xl font-bold text-white">آمار کلی سیستم</h2>
+        <p class="text-[10px] md:text-xs text-brand-400 mt-0.5 md:mt-1">خلاصه‌ای از وضعیت پلتفرم شما</p>
+    </div>
+    
+    <!-- فیلتر زمان با Alpine.js -->
+    <div x-data="{ filterOpen: false, currentFilter: 'این ماه' }" class="relative self-end sm:self-auto z-20">
+        <button @click="filterOpen = !filterOpen" @click.away="filterOpen = false" 
+                class="text-xs md:text-sm flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-brand-950 border border-brand-800 rounded-lg md:rounded-xl text-white hover:bg-brand-900 transition shadow-sm">
+            <i class="fas fa-calendar-alt text-brand-400"></i>
+            <span x-text="currentFilter" class="font-medium"></span>
+            <i class="fas fa-chevron-down text-[10px] md:text-xs mr-1 transition-transform duration-200" :class="filterOpen ? 'rotate-180' : ''"></i>
+        </button>
+        
+        <!-- منوی کشویی -->
+        <div x-show="filterOpen" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" 
+             class="absolute left-0 sm:left-auto sm:right-0 mt-2 w-36 md:w-40 bg-brand-900 rounded-lg md:rounded-xl shadow-xl border border-brand-800 overflow-hidden">
+            <template x-for="item in ['امروز', 'این هفته', 'این ماه', 'سال جاری', 'کل زمان']">
+                <button @click="currentFilter = item; filterOpen = false" 
+                        class="w-full text-right px-3 py-2 md:px-4 md:py-2.5 text-xs md:text-sm transition-colors flex items-center justify-between"
+                        :class="currentFilter === item ? 'bg-brand-800 text-accent-500 font-bold border-r-2 border-accent-500' : 'text-brand-400 hover:bg-brand-800 hover:text-white'">
+                    <span x-text="item"></span>
+                    <i x-show="currentFilter === item" class="fas fa-check text-[10px] md:text-xs"></i>
+                </button>
+            </template>
+        </div>
+    </div>
+</div>
+
+<!-- شبکه کارت‌های آماری -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-6">
+    
+    <!-- کارت ۱: کاربران (تم نارنجی/Accent) -->
+    <div class="bg-brand-900 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm border border-brand-800 relative overflow-hidden group flex flex-col justify-between transition-all hover:border-accent-500 hover:shadow-[var(--shadow-glow)]">
+        <div class="absolute -left-6 -top-6 w-20 h-20 md:w-24 md:h-24 bg-accent-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 ease-in-out"></div>
+        <div class="relative z-10 flex-1">
+            <div class="flex justify-between items-start mb-3 md:mb-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-accent-500/20 text-accent-500 flex items-center justify-center text-lg md:text-xl border border-accent-500/20">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="text-left">
+                    <span class="flex items-center gap-1 text-[10px] md:text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg">
+                        <i class="fas fa-arrow-trend-up"></i> ۱۲٪
+                    </span>
+                </div>
+            </div>
+            <h3 class="text-brand-400 text-xs md:text-sm font-medium mb-0.5 md:mb-1">کل کاربران سیستم</h3>
+
+            <div class="text-2xl md:text-3xl font-bold text-white flex items-center gap-4">
+                <span>کل : {{ stats.all_users|default:"-" }}</span>
+                <span>|</span>
+                <span>فعال : {{ stats.active_users|default:"-" }}</span>
+            </div>
+        </div>
+        <div class="relative z-10 mt-3 md:mt-5 pt-3 md:pt-4 border-t border-brand-800">
+            <a href="#" class="flex items-center justify-between text-xs md:text-sm text-brand-400 hover:text-accent-500 transition-colors group/link">
+                <span>مدیریت کاربران</span>
+                <i class="fas fa-arrow-left transform group-hover/link:-translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- کارت ۲: کاتالوگ‌های فعال (تم سبز/Emerald) -->
+    <div class="bg-brand-900 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm border border-brand-800 relative overflow-hidden group flex flex-col justify-between transition-all hover:border-emerald-500/50 hover:shadow-lg">
+        <div class="absolute -left-6 -top-6 w-20 h-20 md:w-24 md:h-24 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 ease-in-out"></div>
+        <div class="relative z-10 flex-1">
+            <div class="flex justify-between items-start mb-3 md:mb-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg md:text-xl border border-emerald-500/20">
+                    <i class="fas fa-storefront"></i>
+                </div>
+                <div class="text-left">
+                    <span class="flex items-center gap-1 text-[10px] md:text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg">
+                        <i class="fas fa-arrow-trend-up"></i> ۸٪
+                    </span>
+                </div>
+            </div>
+            <h3 class="text-brand-400 text-xs md:text-sm font-medium mb-0.5 md:mb-1">کاتالوگ‌های فعال</h3>
+            <div class="text-2xl md:text-3xl font-bold text-white">{{ stats.total_catalogs|default:"-" }}</div>
+        </div>
+        <div class="relative z-10 mt-3 md:mt-5 pt-3 md:pt-4 border-t border-brand-800">
+            <a href="#" class="flex items-center justify-between text-xs md:text-sm text-brand-400 hover:text-emerald-400 transition-colors group/link">
+                <span>لیست کاتالوگ‌ها</span>
+                <i class="fas fa-arrow-left transform group-hover/link:-translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- کارت ۳: بازدید کل (تم بنفش/Violet) -->
+    <div class="bg-brand-900 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm border border-brand-800 relative overflow-hidden group flex flex-col justify-between transition-all hover:border-violet-500/50 hover:shadow-lg">
+        <div class="absolute -left-6 -top-6 w-20 h-20 md:w-24 md:h-24 bg-violet-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 ease-in-out"></div>
+        <div class="relative z-10 flex-1">
+            <div class="flex justify-between items-start mb-3 md:mb-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center text-lg md:text-xl border border-violet-500/20">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="text-left">
+                    <span class="flex items-center gap-1 text-[10px] md:text-xs font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg">
+                        <i class="fas fa-arrow-trend-up"></i> ۲۴٪
+                    </span>
+                </div>
+            </div>
+            <h3 class="text-brand-400 text-xs md:text-sm font-medium mb-0.5 md:mb-1">مجموع بازدیدها</h3>
+            <div class="text-2xl md:text-3xl font-bold text-white">{{ stats.total_views|default:"-" }}</div>
+        </div>
+        <div class="relative z-10 mt-3 md:mt-5 pt-3 md:pt-4 border-t border-brand-800">
+            <a href="#" class="flex items-center justify-between text-xs md:text-sm text-brand-400 hover:text-violet-400 transition-colors group/link">
+                <span>گزارش ترافیک</span>
+                <i class="fas fa-arrow-left transform group-hover/link:-translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- کارت ۴: تیکت‌های باز (تم قرمز/Red) -->
+    <div class="bg-brand-900 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-sm border border-brand-800 relative overflow-hidden group flex flex-col justify-between transition-all hover:border-red-500/50 hover:shadow-lg">
+        <div class="absolute -left-6 -top-6 w-20 h-20 md:w-24 md:h-24 bg-red-500/5 rounded-full group-hover:scale-150 transition-transform duration-700 ease-in-out"></div>
+        <div class="relative z-10 flex-1">
+            <div class="flex justify-between items-start mb-3 md:mb-4">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center text-lg md:text-xl border border-red-500/20">
+                    <i class="fas fa-life-ring"></i>
+                </div>
+                <span class="px-2 py-0.5 md:px-2.5 md:py-1 rounded-md text-[10px] md:text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/20 animate-pulse">
+                    نیازمند بررسی
+                </span>
+            </div>
+            <h3 class="text-brand-400 text-xs md:text-sm font-medium mb-0.5 md:mb-1">تیکت‌های باز</h3>
+            <div class="text-2xl md:text-3xl font-bold text-white">{{ stats.open_tickets|default:"-" }}</div>
+        </div>
+        <div class="relative z-10 mt-3 md:mt-5 pt-3 md:pt-4 border-t border-brand-800">
+            <a href="#" class="flex items-center justify-between text-xs md:text-sm font-medium text-red-400 hover:text-red-300 transition-colors group/link">
+                <span>پاسخ به تیکت‌ها</span>
+                <i class="fas fa-arrow-left transform group-hover/link:-translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+    </div>
+
+</div>

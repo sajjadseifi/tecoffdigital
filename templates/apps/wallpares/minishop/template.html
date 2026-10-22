@@ -1,0 +1,705 @@
+
+{% load static %}
+{% load static custom_filters %}
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="transparent" />
+    <title>{{ catalog.title|default:"منوی دیجیتال" }}</title>
+
+    <meta name="description"
+          content="{{ catalog.description|default:'کاتالوگ دیجیتال و منوی آنلاین با بهترین طراحی و رابط کاربری' }}" />
+    <meta name="keywords" content="منوی دیجیتال, کاتالوگ آنلاین, سفارش آنلاین, {{ catalog.title }}, رستوران" />
+    <link rel="icon" href="catalog.logo.url" />
+
+    <!-- OpenGraph -->
+    <meta property="og:title" content="{{ catalog.title|default:'منوی دیجیتال' }}" />
+    <meta property="og:description" content="{{ catalog.description|default:'کاتالوگ دیجیتال و منوی آنلاین' }}" />
+    {% if catalog.cover %}
+        <meta property="og:image" content="{{ catalog.cover.url }}" />
+    {% endif %}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ catalog.title }}" />
+    <meta name="twitter:description" content="{{ catalog.description }}" />
+    {% if catalog.cover %}
+        <meta name="twitter:image" content="{{ catalog.cover.url }}" />
+    {% endif %}
+
+    <!-- JSON-LD Schema.org -->
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Restaurant",
+          "name": "{{ catalog.title }}",
+          "image": "{% if catalog and catalog.logo %}{{ catalog.logo.url }}{% else %}""{% endif %}",
+          "url": "{{ request.build_absolute_uri }}",
+          "telephone": "{{ catalog.phone|default:'' }}",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ catalog.address|default:'' }}"
+          },
+          "description": "{{ catalog.description|default:'' }}"
+        }
+    </script>
+
+    <!-- Fonts & Scripts -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Vazirmatn', 'YekanBakh', system-ui, sans-serif;
+            --primary: #fb923c;
+        }
+
+        @layer base {
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: var(--font-sans);
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                background: #0f172a;
+            }
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        }
+
+        @layer utilities {
+            .h-screen-dvh { height: 100dvh; }
+        }
+
+        [x-cloak] { display: none !important; }
+
+        .featured-card {
+            @apply flex-none w-24 flex flex-col items-center gap-2 transition-all duration-300 active:scale-95;
+        }
+
+        .category-card {
+            @apply flex items-center gap-4 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition cursor-pointer;
+        }
+
+        .category-image {
+            @apply w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center;
+        }
+
+        .placeholder {
+            @apply w-full h-full flex items-center justify-center text-slate-400;
+        }
+
+        .fade-in {
+            animation: fade .4s ease forwards;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        .skeleton {
+            @apply animate-pulse bg-slate-200 rounded-xl;
+        }
+    </style>
+
+    <script>
+        // دسته‌ها از سرور – اگر ساختار متفاوت است این قسمت را با دیتای خودت هماهنگ کن
+        const INITIAL_CATEGORIES = [
+            {% for cat in catalog.categories_first_level %}
+            {
+                id: {{ cat.id }},
+                slug: "{{ cat.slug }}",
+                title: "{{ cat.title|escapejs }}",
+                image: "{% if cat.image %}{{ cat.image.url }}{% else %}{% endif %}",
+                featured: {{ cat.is_featured|yesno:"true,false" }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // محصولات بر اساس دسته – فرض: products_by_category[slug] در ویو پاس شده
+        const INITIAL_PRODUCTS = {
+            {% for cat in catalog.categories_first_level %}
+            "{{ cat.slug }}": [
+                {% if products_by_category and products_by_category|get_item:cat.slug %}
+                    {% for p in products_by_category|get_item:cat.slug %}
+                    {
+                        id: {{ p.id }},
+                        title: "{{ p.title|escapejs }}",
+                        price: "{{ p.price|floatformat:0 }}",
+                        image: "{% if p.image %}{{ p.image.url }}{% else %}{% endif %}",
+                        description: "{{ p.description|default_if_none:''|truncatechars:80|escapejs }}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                {% endif %}
+            ]{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        function app() {
+            return {
+                // state
+                page: 'categories',      // 'categories' | 'products'
+                categories: INITIAL_CATEGORIES,
+                productsByCategory: INITIAL_PRODUCTS,
+                loadingCategories: false,
+                loadingProducts: false,
+                activeCategory: null,    // آبجکت دسته انتخاب‌شده
+
+                get hasCategories() {
+                    return this.categories && this.categories.length > 0;
+                },
+                get featured() {
+                    return this.categories.filter(x => x.featured);
+                },
+                get normal() {
+                    return this.categories.filter(x => !x.featured);
+                },
+                get products() {
+                    if (!this.activeCategory) return [];
+                    const slug = this.activeCategory.slug;
+                    return this.productsByCategory[slug] || [];
+                },
+
+                // اکشن‌ها
+                openCategory(cat) {
+                    this.activeCategory = cat;
+                    this.page = 'products';
+                    this.loadingProducts = true;
+
+                    // شبیه‌سازی لود (اگر واقعی از API می‌گیری می‌توانی این را حذف کنی)
+                    setTimeout(() => {
+                        this.loadingProducts = false;
+                    }, 500);
+                },
+
+                backToCategories() {
+                    this.page = 'categories';
+                    this.activeCategory = null;
+                },
+
+                init() {
+                    // اگر خواستی اسکلتون اولیه داشته باشی
+                    if (!this.hasCategories) {
+                        this.loadingCategories = true;
+                        setTimeout(() => {
+                            this.loadingCategories = false;
+                        }, 800);
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex items-center justify-center min-h-screen">
+
+<div x-data="app()"
+     x-init="init()"
+     class="w-full max-w-[430px] h-screen-dvh bg-slate-900 sm:h-[92vh] sm:rounded-[2.5rem] sm:border-[10px] sm:border-slate-900 shadow-2xl flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="flex-none bg-slate-900/95 rounded-b-3xl backdrop-blur-2xl z-10 border-b border-slate-800/70 relative">
+        <div class="py-3 px-5  gap-3">
+
+            <!-- ردیف بالا: لوگو و عنوان -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 flex flex-col">
+                        <h1 class="font-extrabold text-slate-50 text-sm tracking-tight line-clamp-1">
+                            {{ catalog.headline|default:catalog.title }}
+                        </h1>
+                        <span class="text-[11px] text-slate-400 font-medium line-clamp-1">
+                            {{ catalog.subheadline|default:"منوی دیجیتال و کاتالوگ آنلاین" }}
+                        </span>
+                    </div>
+                        {% if catalog and catalog.logo %}
+                        <div class="w-10 h-10 flex items-center justify-center overflow-hidden shrink-0 rounded-xl bg-slate-800 border border-slate-700">
+                            <img src="{{ catalog.logo.url }}" class="w-full h-full object-cover" alt="Logo">
+                        </div>
+                    {% else %}
+                        <div class="w-10 h-10 flex items-center justify-center overflow-hidden shrink-0 rounded-xl bg-orange-500/90 border border-orange-400/80">
+                            <span class="text-white text-lg font-bold text-center">
+                                {{ catalog.title|first|upper|default:"M" }}
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="flex-1 overflow-y-auto bg-slate-950 scrollbar-hide relative">
+
+        <!-- تصویر کاور -->
+        {% if catalog.cover %}
+            <div class="h-36 overflow-hidden">
+                <img src="{{ catalog.cover.url }}" class="w-full h-full object-cover opacity-90">
+            </div>
+        {% endif %}
+
+<!-- صفحه دسته‌ها (نسخه Redesign شده) -->
+<section x-show="page === 'categories'" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-cloak>
+
+    <div class="px-5 pt-6 pb-24 space-y-8">
+
+        <!-- 1. بخش دسته‌های ویژه (Featured) -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-white text-base font-bold flex items-center gap-2">
+                    <span class="w-1.5 h-5 bg-orange-500 rounded-full"></span>
+                    پیشنهادهای ویژه
+                </h2>
+                <span class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Scroll Left</span>
+            </div>
+
+            <div class="flex gap-5 overflow-x-auto scrollbar-hide pb-2 snap-x px-1">
+                <!-- Skeleton for Featured -->
+                <template x-if="loadingCategories">
+                    <template x-for="i in 4">
+                        <div class="flex-none w-20 space-y-3">
+                            <div class="w-20 h-20 skeleton rounded-3xl relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-tr from-slate-800 to-transparent"></div>
+                            </div>
+                            <div class="h-2.5 w-14 skeleton mx-auto rounded-full"></div>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- Featured Cards -->
+                <template x-if="!loadingCategories">
+                    <template x-for="cat in featured" :key="cat.id">
+                        <button type="button"
+                                @click="openCategory(cat)"
+                                class="flex-none w-20 group snap-start outline-none">
+                            <div class="relative p-1 rounded-[2rem] transition-all duration-300 group-active:scale-90 border border-slate-800 group-hover:border-orange-500/50">
+                                <div class="w-16 h-16 rounded-[1.6rem] bg-slate-900 overflow-hidden shadow-2xl relative">
+                                    <div class="relative w-20 h-20 mr-4 rounded-2xl overflow-hidden shadow-lg border border-slate-800/50">
+                                        <img x-show="cat.image" :src="cat.image" class="w-full h-full object-cover">
+                                        <div x-show="!cat.image" class="w-full h-full flex items-center justify-center bg-slate-800">
+                                            <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Overlay Gradient -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent opacity-60"></div>
+                                </div>
+                            </div>
+                            <p class="mt-2 text-[11px] text-center font-bold text-slate-300 group-hover:text-orange-400 transition-colors truncate" x-text="cat.title"></p>
+                        </button>
+                    </template>
+                </template>
+            </div>
+        </section>
+
+        <!-- 2. لیست تمام دسته‌بندی‌ها -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-white text-base font-bold flex items-center gap-2">
+                    <span class="w-1.5 h-5 bg-slate-700 rounded-full"></span>
+                    همه دسته‌بندی‌ها
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Skeleton for Normal List -->
+                <template x-if="loadingCategories">
+                    <template x-for="i in 5">
+                        <div class="h-24 skeleton rounded-[2rem]"></div>
+                    </template>
+                </template>
+
+                <!-- Category Row Cards -->
+                <template x-if="!loadingCategories">
+                    <template x-for="cat in normal" :key="cat.id">
+                        <button type="button"
+                                @click="openCategory(cat)"
+                                class="group relative flex items-center p-2 pr-4 bg-slate-900/40 border border-slate-800/60 rounded-[2rem] transition-all duration-300 hover:bg-slate-900 hover:border-orange-500/30 active:scale-[0.98] overflow-hidden">
+                            
+                            <!-- محتوای متنی -->
+                            <div class="flex-1 text-right z-10">
+                                <h3 class="text-sm font-black text-slate-100 group-hover:text-white transition-colors" x-text="cat.title"></h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] text-slate-500 font-medium">مشاهده منوی کامل</span>
+                                    <svg class="w-3 h-3 text-orange-500 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- تصویر دسته -->
+                            <div class="relative w-20 h-20 mr-4 rounded-2xl overflow-hidden shadow-lg border border-slate-800/50">
+                                <img x-show="cat.image" :src="cat.image" class="w-full h-full object-cover">
+                                <div x-show="!cat.image" class="w-full h-full flex items-center justify-center bg-slate-800">
+                                    <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                </div>
+                            </div>
+
+                            <!-- دکوراسیون پس‌زمینه کارت -->
+                            <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/10 transition-colors"></div>
+                        </button>
+                    </template>
+                </template>
+            </div>
+        </section>
+
+        <!-- 3. فوتر تزئینی انتهای لیست -->
+        <div class="py-10 text-center space-y-2 opacity-40">
+            <div class="flex justify-center gap-1">
+                <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+                <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+                <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+            </div>
+            <p class="text-[10px] text-slate-500 font-medium tracking-widest uppercase">End of Menu</p>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* اضافه کردن استایل Shimmer به Skeleton برای حرفه‌ای‌تر شدن */
+    .skeleton {
+        position: relative;
+        overflow: hidden;
+        background-color: #1e293b; /* slate-800 */
+    }
+    .skeleton::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.03) 20%,
+            rgba(255, 255, 255, 0.06) 60%,
+            rgba(255, 255, 255, 0)
+        );
+        animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+        100% { transform: translateX(100%); }
+    }
+</style>
+
+
+        <!-- صفحه محصولات یک دسته -->
+        <section x-show="page === 'products'" x-transition.opacity x-cloak>
+            <div x-data="menuApp()" class="px-4 pt-3 pb-20 space-y-4">
+
+                <!-- نوار بالای محصولات -->
+                <div class="flex items-center gap-3 mb-1">
+                    <button type="button"
+                            class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-200 hover:bg-slate-800"
+                            @click="backToCategories">
+                        <svg width="18" height="18" stroke="currentColor">
+                            <path d="M11 5L6 10l5 5" fill="none" stroke-width="1.6" />
+                        </svg>
+                    </button>
+                    <div class="flex flex-col">
+                        <h2 class="text-sm font-extrabold text-slate-50"
+                            x-text="activeCategory ? activeCategory.title : 'محصولات'"></h2>
+                        <span class="text-[11px] text-slate-400">
+                            لیست محصولات این دسته
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Skeleton Products -->
+                <template x-if="loadingProducts">
+                    <div class="space-y-3">
+                        <template x-for="i in 5">
+                            <div class="flex gap-3 p-3 bg-slate-900 border border-slate-800 rounded-2xl">
+                                <div class="w-20 h-20 skeleton rounded-2xl"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-3 w-32 skeleton rounded-full"></div>
+                                    <div class="h-2.5 w-40 skeleton rounded-full"></div>
+                                    <div class="h-3 w-20 skeleton rounded-full"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Products List -->
+                <div  class="relative">
+
+                    <!-- Loading Skeleton -->
+                    <template x-if="isLoading">
+                        <div class="space-y-3 p-4">
+                            <template x-for="i in 6">
+                                <div class="flex gap-3 p-3 bg-slate-900 border border-slate-800 rounded-2xl animate-pulse">
+                                    <div class="w-20 h-20 rounded-2xl bg-slate-800"></div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-3 w-32 bg-slate-800 rounded"></div>
+                                        <div class="h-2 w-40 bg-slate-800 rounded"></div>
+                                        <div class="h-3 w-20 bg-slate-800 rounded"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+
+                    <!-- Empty State -->
+                    <template x-if="!isLoading && items.length === 0">
+                        <div class="text-center text-slate-400 text-sm pt-12">
+                            محصولی برای این دسته ثبت نشده است.
+                        </div>
+                    </template>
+
+
+                    <!-- Products -->
+                    <template x-if="!isLoading && items.length">
+                        <div class="space-y-3 px-4 pb-24">
+
+                            <template x-for="item in items" :key="item.id">
+                                
+                                <div 
+                                    @click="openModal(item)"
+                                    class="group flex gap-3 p-3 bg-slate-900 border border-slate-800 rounded-2xl hover:border-orange-400/40 active:scale-[0.98] transition cursor-pointer">
+
+                                    <!-- Image -->
+                                    <div class="w-20 h-20 rounded-2xl overflow-hidden bg-slate-800 flex items-center justify-center">
+                                        <img x-show="item.image"
+                                            :src="item.image"
+                                            class="w-full h-full object-cover group-hover:scale-105 transition"
+                                            loading="lazy">
+
+                                        <div x-show="!item.image" class="text-slate-500">
+                                            <svg width="22" height="22" fill="none" stroke="currentColor">
+                                                <rect x="3" y="3" width="18" height="18" rx="4"/>
+                                                <path d="M8 12h8"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="flex-1 flex flex-col justify-between">
+
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-50"
+                                                x-text="item.title"></h3>
+
+                                            <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-2"
+                                            x-text="item.description"></p>
+                                        </div>
+
+                                        <div class="flex items-center justify-between mt-2">
+
+                                            <span class="text-[12px] font-extrabold text-orange-400"
+                                                x-text="item.price + ' تومان'"></span>
+
+                                            <button
+                                                class="px-2.5 py-1.5 rounded-xl bg-orange-500 text-[11px] font-bold text-slate-950 hover:bg-orange-400 transition">
+                                                مشاهده
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+                    </template>
+
+                </div>
+                    <script>
+const ITEMS_API_URL_TEMPLATE = "/api/items/__CAT_SLUG__/";
+const SEARCH_API_URL = "/api/search/";
+const CATEGORIES_API_URL = "/api/categories/";
+
+document.addEventListener('alpine:init', () => {
+
+    Alpine.data('menuApp', () => ({
+
+        /* ==============================
+           STATE
+        ============================== */
+
+        categories: [],
+        activeCategory: null,
+        items: [],
+        searchResults: [],
+        searchQuery: '',
+        isSearching: false,
+        isLoading: true,
+        selectedItem: null,
+
+
+        /* ==============================
+           INIT
+        ============================== */
+
+        async init() {
+            await this.fetchCategories();
+
+            if (this.categories.length > 0) {
+                this.activeCategory = this.categories[0].slug;
+                await this.fetchItems(this.activeCategory);
+            }
+        },
+
+
+        /* ==============================
+           FETCH CATEGORIES
+        ============================== */
+
+        async fetchCategories() {
+            try {
+                const res = await fetch(CATEGORIES_API_URL);
+                if (!res.ok) throw new Error("Failed to fetch categories");
+
+                this.categories = await res.json();
+            } catch (err) {
+                console.error("Category error:", err);
+                this.categories = [];
+            }
+        },
+
+
+        /* ==============================
+           FETCH ITEMS BY CATEGORY
+        ============================== */
+
+        async fetchItems(slug) {
+            if (!slug) return;
+
+            this.isLoading = true;
+            this.isSearching = false;
+            this.items = [];
+
+            const url = ITEMS_API_URL_TEMPLATE.replace("__CAT_SLUG__", slug);
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Failed to fetch items");
+
+                this.items = await res.json();
+
+            } catch (err) {
+                console.error("Items error:", err);
+                this.items = [];
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+
+        /* ==============================
+           SELECT CATEGORY
+        ============================== */
+
+        async selectCategory(slug) {
+            if (this.activeCategory === slug) return;
+
+            this.activeCategory = slug;
+            await this.fetchItems(slug);
+        },
+
+
+        /* ==============================
+           SEARCH
+        ============================== */
+
+        async handleSearch() {
+            const query = this.searchQuery.trim();
+
+            if (!query) {
+                this.isSearching = false;
+                await this.fetchItems(this.activeCategory);
+                return;
+            }
+
+            this.isSearching = true;
+            this.isLoading = true;
+            this.searchResults = [];
+
+            try {
+                const res = await fetch(`${SEARCH_API_URL}?q=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error("Search failed");
+
+                this.searchResults = await res.json();
+
+            } catch (err) {
+                console.error("Search error:", err);
+                this.searchResults = [];
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+
+        /* ==============================
+           CLEAR SEARCH
+        ============================== */
+
+        clearSearch() {
+            this.searchQuery = '';
+            this.handleSearch();
+        },
+
+
+        /* ==============================
+           MODAL
+        ============================== */
+
+        openModal(item) {
+            this.selectedItem = item;
+            this.$dispatch('open-bottom-sheet-item');
+        },
+
+        closeModal() {
+            this.$dispatch('close-bottom-sheet-item');
+            setTimeout(() => {
+                this.selectedItem = null;
+            }, 300);
+        },
+
+
+        /* ==============================
+           COMPUTED
+        ============================== */
+
+        get displayedItems() {
+            if (!this.isSearching) return this.items;
+
+            // flatten search results
+            return this.searchResults.flatMap(cat => cat.items || []);
+        }
+
+    }));
+
+});
+</script>
+
+
+            </div>
+        </section>
+    </main>
+
+  
+</div>
+
+</body>
+</html>

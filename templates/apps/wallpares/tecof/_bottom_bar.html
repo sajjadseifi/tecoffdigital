@@ -1,0 +1,256 @@
+{% load static %}
+<footer x-data="bottomNavigation('{{ current_page }}')" 
+        class="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-sm pb-8 sm:pb-10 px-4 z-45 flex-none"
+        x-cloak>
+    {% include "./_ai_tecof_search.html" %}
+    <div class="relative z-20 box-border bg-white/95 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.18)] rounded-3xl h-16 px-2 overflow-hidden">
+        <nav x-ref="navContainer" class="box-border flex items-center justify-around h-16">        
+            <!-- ================= افکت کلیک ملایم و نرم (Ripple) ================= -->
+            <div class="absolute pointer-events-none z-0"
+                x-show="isRippling"
+                :style="`left: ${rippleX}px; top: ${rippleY}px; transform: translate(-50%, -50%);`">
+                <div class="w-6 h-6 rounded-full blur-[4px]"
+                    :class="isRippling ? 'animate-soft-ripple' : ''"></div>
+            </div>
+    
+            <!-- ================= نشانگر متحرک ================= -->
+            <div class="absolute top-0 left-0 w-10 h-1.5 rounded-b-full bg-gradient-to-r from-orange-400 to-orange-600 z-30 shadow-[0_2px_8px_rgba(234,88,12,0.6)]"
+                x-show="isAnimating"
+                :style="`transform: translateX(${movingX}px); transition: ${enableTransition ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'};`"
+                style="display: none;">
+            </div>
+    
+            <!-- ================= 1. وبسایت (نمایش برای همه) ================= -->
+            <a id="tab-website"
+            href="{{ base_url }}website/" 
+            @pointerdown="handlePress($event, 'website')"
+            @click.prevent="handleTabClick('website', '{{ base_url }}website/')"
+            class="relative flex-1 flex flex-col justify-center items-center h-full group outline-none -webkit-tap-highlight-color-transparent z-10">
+            
+            <!-- نشانگر ثابت این تب -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-b-full bg-gradient-to-r from-orange-400 to-orange-600 shadow-[0_2px_8px_rgba(234,88,12,0.6)]"
+                x-show="activeTab === 'website' && !isAnimating"></div>
+    
+            <div class="transition-colors duration-300 mb-1"
+                :class="activeTab === 'website' ? 'text-orange-500 drop-shadow-[0_2px_4px_rgba(234,88,12,0.4)]' : 'text-slate-400 group-hover:text-slate-500'">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path opacity="0.4" d="M3.75 5.25A2.25 2.25 0 016 3h12a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0118 21H6a2.25 2.25 0 01-2.25-2.25V5.25z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6 3h12a2.25 2.25 0 012.25 2.25V9H3.75V5.25A2.25 2.25 0 016 3zM7.5 6a1 1 0 100 2 1 1 0 000-2zm3 1a1 1 0 11-2 0 1 1 0 012 0zm3-1a1 1 0 100 2 1 1 0 000-2z" />
+                </svg>
+            </div>
+            <span class="font-bold tracking-wide transition-colors duration-300 whitespace-nowrap text-[10px]"
+                    :class="activeTab === 'website' ? 'text-orange-500' : 'text-slate-400'">وبسایت</span>
+            </a>
+    
+            <!-- ================= 2. منو دیجیتال (نمایش برای همه) ================= -->
+            <a id="tab-menu"
+            href="{{ base_url }}menu/" 
+            @pointerdown="handlePress($event, 'menu')"
+            @click.prevent="handleTabClick('menu', '{{ base_url }}menu/')"
+            class="relative flex-1 flex flex-col justify-center items-center h-full group outline-none -webkit-tap-highlight-color-transparent z-10">
+            
+            <!-- نشانگر ثابت این تب -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-b-full bg-gradient-to-r from-orange-400 to-orange-600 shadow-[0_2px_8px_rgba(234,88,12,0.6)]"
+                x-show="activeTab === 'menu' && !isAnimating"></div>
+    
+            <div class="transition-colors duration-300 mb-1"
+                :class="activeTab === 'menu' ? 'text-orange-500 drop-shadow-[0_2px_4px_rgba(234,88,12,0.4)]' : 'text-slate-400 group-hover:text-slate-500'">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M4.5 4.5a3 3 0 013-3h9a3 3 0 013 3v15a3 3 0 01-3 3h-9a3 3 0 01-3-3v-15zm4.25 4.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 4.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" />
+                <path d="M7 6a1 1 0 11-2 0 1 1 0 012 0zm0 5a1 1 0 11-2 0 1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M10 16.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z" />
+                </svg>
+            </div>
+            <span class="font-bold tracking-wide transition-colors duration-300 whitespace-nowrap text-[10px]"
+                    :class="activeTab === 'menu' ? 'text-orange-500' : 'text-slate-400'">منو</span>
+            </a>
+    
+            <!-- نمایش بخش مدیریت فقط برای کاربران لاگین شده -->
+            {% if request.user.is_authenticated and request.user == catalog.owner %}
+                
+                <!-- ================= 3. کاتالوگ ================= -->
+                <a id="tab-catalog"
+                @click.prevent="$store.sheet.open('catalog')"
+                class="relative flex-1 flex flex-col justify-center items-center h-full group outline-none -webkit-tap-highlight-color-transparent z-10">
+                
+                <!-- نشانگر ثابت این تب -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-b-full bg-gradient-to-r from-orange-400 to-orange-600 shadow-[0_2px_8px_rgba(234,88,12,0.6)]"
+                    x-show="activeTab === 'catalog' && !isAnimating"></div>
+    
+                <div class="transition-colors duration-300 mb-1"
+                    :class="activeTab === 'catalog' ? 'text-orange-500 drop-shadow-[0_2px_4px_rgba(234,88,12,0.4)]' : 'text-slate-400 group-hover:text-slate-500'">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path opacity="0.4" d="M9.5 3h9A2.5 2.5 0 0121 5.5v13A2.5 2.5 0 0118.5 21h-9V3z" />
+                    <path d="M7 3a2.5 2.5 0 00-2.5 2.5v13A2.5 2.5 0 007 21V3zm2.5 3a1 1 0 11-2 0 1 1 0 012 0zm0 4a1 1 0 11-2 0 1 1 0 012 0zm-2 5a1 1 0 100-2 1 1 0 000 2z" />
+                    </svg>
+                </div>
+                <span class="font-bold tracking-wide transition-colors duration-300 whitespace-nowrap text-[10px]"
+                        :class="activeTab === 'catalog' ? 'text-orange-500' : 'text-slate-400'">کاتالوگ</span>
+                </a>
+    
+                <!-- ================= 4. تنظیمات ================= -->
+                <a 
+                    id="tab-settings"
+                    @click.prevent="$store.sheet.open('setting')"
+                    class="relative flex-1 flex flex-col justify-center items-center h-full group outline-none -webkit-tap-highlight-color-transparent z-10">
+                
+                <!-- نشانگر ثابت این تب -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-b-full bg-gradient-to-r from-orange-400 to-orange-600 shadow-[0_2px_8px_rgba(234,88,12,0.6)]"
+                    x-show="activeTab === 'settings' && !isAnimating"></div>
+    
+                <div class="transition-colors duration-300 mb-1"
+                    :class="activeTab === 'settings' ? 'text-orange-500 drop-shadow-[0_2px_4px_rgba(234,88,12,0.4)]' : 'text-slate-400 group-hover:text-slate-500'">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M4 8a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1zm0 8a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1z" />
+                    <path d="M10 8a3 3 0 11-6 0 3 3 0 016 0zM16 16a3 3 0 100-6 3 3 0 000 6z" />
+                    </svg>
+                </div>
+                <span class="font-bold tracking-wide transition-colors duration-300 whitespace-nowrap text-[10px]"
+                        :class="activeTab === 'settings' ? 'text-orange-500' : 'text-slate-400'">تنظیمات</span>
+                </a>
+    
+            {% endif %}
+        </nav>
+    </div>
+<div 
+    x-data="{ show: false }"
+    x-init="setTimeout(() => show = true, 50)"
+    class="absolute z-[25] pointer-events-auto"
+    style="top: 50%; left: 50%; transform: translate(-50%, -100%);"
+>
+    <a href="/"
+       x-show="show"
+       x-transition.scale.duration.600ms
+       class="w-7 h-7 flex bg-white rounded-full items-center justify-center
+              animate-[spin_6s_linear_infinite,logoPulse_4s_ease-in-out_infinite]">
+
+        <img src="{% static 'icons/tecof_logo.png' %}" 
+             alt="logo" class="w-5 h-5 object-contain" />
+    </a>
+</div>
+
+
+</footer>
+<style>
+[x-cloak] { display: none !important; }
+<div 
+    x-data="{ show: false }"
+    x-init="setTimeout(() => show = true, 50)"
+    class="absolute z-[25] pointer-events-auto"
+    style="top: 50%; left: 50%; transform: translate(-50%, -100%);"
+>
+    <a href="/"
+       x-show="show"
+       x-transition.scale.duration.600ms
+       class="w-7 h-7 flex bg-white rounded-full items-center justify-center
+              animate-[spin_6s_linear_infinite,logoPulse_4s_ease-in-out_infinite]">
+
+        <img src="{% static 'icons/tecof_logo.png' %}" 
+             alt="logo" class="w-5 h-5 object-contain" />
+    </a>
+</div>
+
+@keyframes soft-ripple {
+    0% {
+        transform: scale(0.5);
+        opacity: 0.25;
+        background-color: #fb923c;
+    }
+    50% {
+        opacity: 0.1;
+        background-color: #fed7aa;
+    }
+    100% {
+        transform: scale(25);
+        opacity: 0;
+    }
+}
+
+.animate-soft-ripple {
+    animation: soft-ripple 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+</style>
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('bottomNavigation', (initialTab) => ({
+        activeTab: initialTab || 'website',
+        
+        // متغیرهای مربوط به نشانگر متحرک
+        isAnimating: false,
+        movingX: 0,
+        enableTransition: false,
+        
+        // متغیرهای ریپل (افکت تاچ)
+        isRippling: false,
+        rippleX: 0,
+        rippleY: 0,
+
+        handlePress(e, tabName) {
+            const navEl = this.$refs.navContainer;
+            const navRect = navEl.getBoundingClientRect();
+
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            if (clientX && clientY) {
+                this.rippleX = clientX - navRect.left;
+                this.rippleY = clientY - navRect.top;
+            } else {
+                const tabRect = document.getElementById('tab-' + tabName).getBoundingClientRect();
+                this.rippleX = (tabRect.left - navRect.left) + (tabRect.width / 2);
+                this.rippleY = tabRect.height / 2;
+            }
+
+            this.isRippling = false;
+            this.$nextTick(() => {
+                this.isRippling = true;
+            });
+        },
+
+        handleTabClick(tabName, url) {
+            if (this.activeTab === tabName || this.isAnimating) return;
+
+            const navRect = this.$refs.navContainer.getBoundingClientRect();
+            const currentTabEl = document.getElementById('tab-' + this.activeTab);
+            const targetTabEl = document.getElementById('tab-' + tabName);
+
+            const startX = (currentTabEl.getBoundingClientRect().left - navRect.left) + (currentTabEl.offsetWidth / 2) - 20;
+            const endX = (targetTabEl.getBoundingClientRect().left - navRect.left) + (targetTabEl.offsetWidth / 2) - 20;
+
+            // --- فعال کردن انیمیشن و جابجایی ---
+            this.movingX = startX;
+            this.enableTransition = false;
+            this.isAnimating = true;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    this.enableTransition = true;
+                    this.movingX = endX;
+
+                    this.activeTab = tabName;
+                    this.isNavigating = true;
+
+                    setTimeout(() => {
+                        
+                        if (typeof goTo === 'function') {
+                            goTo(tabName, url);
+                        } else {
+                            window.location.href = url;
+                        }
+                    }, 350);
+                });
+            });
+        },
+
+
+    }));
+});
+</script>
+
+

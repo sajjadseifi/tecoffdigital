@@ -1,0 +1,65 @@
+<!-- Main Modal -->
+<div id="qrcode-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-full max-h-full backdrop-blur-sm bg-surface-900/40 transition-all duration-300">
+    <div class="relative p-4 w-full max-w-xl max-h-full mx-auto">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-3xl shadow-soft border border-surface-200 overflow-hidden">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-5 md:p-6 border-b border-surface-200 bg-surface-50">
+                <h3 id="modal-qrcode-title" class="text-xl font-bold text-brand-900">
+                    ایجاد کیوآر کد جدید
+                </h3>
+                <button type="button" onclick="toggleQrcodeModal('close')" class="text-brand-400 bg-transparent hover:bg-surface-200 hover:text-brand-900 rounded-xl text-sm w-8 h-8 ms-auto inline-flex justify-center items-center transition-colors">
+                    <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">بستن پنجره</span>
+                </button>
+            </div>
+            
+            <!-- Modal body -->
+            <form id="qrcode-main-form" method="POST" action="" class="p-6 md:p-8 space-y-6">
+                {% csrf_token %}
+                
+                <!-- اطلاعات راهنما -->
+                <div class="bg-blue-50 text-blue-700 p-4 rounded-xl text-sm flex gap-3 items-start border border-blue-100">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p class="leading-relaxed">تصویر کیوآر کد به صورت کاملاً خودکار پس از ذخیره فرم، بر اساس لینک مقصدی که وارد می‌کنید ساخته خواهد شد.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- عنوان -->
+                    <div>
+                        <label for="input-qr-title" class="block mb-2 text-sm font-bold text-brand-900">عنوان (اختیاری)</label>
+                        <input type="text" name="title" id="input-qr-title" class="bg-surface-50 border border-surface-200 text-brand-900 text-sm rounded-xl focus:ring-accent-500 focus:border-accent-500 block w-full p-3 outline-none transition-all placeholder-brand-300" placeholder="مثلاً: لینک پیج اینستاگرام">
+                    </div>
+
+                    <!-- لینک مقصد -->
+                    <div>
+                        <label for="input-qr-target-url" class="block mb-2 text-sm font-bold text-brand-900">لینک مقصد (URL) <span class="text-rose-500">*</span></label>
+                        <input type="url" name="target_url" id="input-qr-target-url" dir="ltr" required class="bg-surface-50 border border-surface-200 text-brand-900 text-sm rounded-xl focus:ring-accent-500 focus:border-accent-500 block w-full p-3 outline-none transition-all placeholder-brand-300 text-left font-mono" placeholder="https://example.com/...">
+                        <p class="mt-1 text-xs text-brand-400">هنگامی که کاربران این QR را اسکن کنند، به این آدرس هدایت می‌شوند.</p>
+                    </div>
+
+                    <!-- وضعیت -->
+                    <div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_active" id="input-qr-active" value="true" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-surface-200 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            <span class="ms-3 text-sm font-bold text-brand-900">کیوآر کد فعال باشد</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-200">
+                    <button type="button" onclick="toggleQrcodeModal('close')" class="px-5 py-2.5 text-sm font-bold text-brand-600 bg-surface-100 hover:bg-surface-200 rounded-xl transition-colors">
+                        انصراف
+                    </button>
+                    <button type="submit" id="modal-qrcode-submit-btn" class="px-6 py-2.5 text-sm font-bold text-white bg-accent-500 hover:bg-accent-600 rounded-xl transition-all shadow-lg shadow-accent-500/30">
+                        ایجاد کیوآر کد
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

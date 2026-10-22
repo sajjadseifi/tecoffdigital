@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="transparent" />
+    <title>{% block title %}{{ catalog.title|default:"منوی دیجیتال" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ catalog.description|default:'کاتالوگ دیجیتال و منوی آنلاین با بهترین طراحی و رابط کاربری' }}{% endblock %}" />
+    <meta name="keywords" content="منوی دیجیتال, کاتالوگ آنلاین, سفارش آنلاین, {{ catalog.title }}, رستوران" />
+    <link rel="icon" type="image/svg+xml" href="{% if catalog and catalog.favicon %}{{ catalog.favicon.url }}{% else %}{% static 'icons/tecof_logo.png' %}{% endif %}" />
+    <!-- OpenGraph -->
+    <meta property="og:title" content="{{ catalog.title|default:'منوی دیجیتال' }}" />
+    <meta property="og:description" content="{{ catalog.description|default:'کاتالوگ دیجیتال و منوی آنلاین' }}" />
+    {% if catalog.cover %}
+        <meta property="og:image" content="{{ catalog.cover.url }}" />
+    {% endif %}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ request.build_absolute_uri }}" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ catalog.title }}" />
+    <meta name="twitter:description" content="{{ catalog.description }}" />
+    {% if catalog.cover %}
+        <meta name="twitter:image" content="{{ catalog.cover.url }}" />
+    {% endif %}
+
+    <!-- JSON-LD Schema.org -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Restaurant",
+            "name": "{{ catalog.title }}",
+            "image": "{% if catalog and catalog.logo %}{{ catalog.logo.url }}{% else %}""{% endif %}",
+            "url": "{{ request.build_absolute_uri }}",
+            "telephone": "{{ catalog.phone|default:'' }}",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "{{ catalog.address|default:'' }}"
+            },
+            "description": "{{ catalog.description|default:'' }}"
+        }
+    </script>
+
+    <!-- Fonts preload / Styles -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    
+    <!-- Scripts -->
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'Vazirmatn', 'YekanBakh', system-ui, sans-serif;
+        }
+        @layer base {
+            body { 
+                margin: 0;
+                padding: 0;
+                font-family: var(--font-sans); 
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            .touch-pan-x { touch-action: pan-x; }
+            .touch-pan-y { touch-action: pan-y; }
+        }
+        @layer utilities {
+            .pb-safe { padding-bottom:env(safe-area-inset-bottom); }
+            .pt-safe { padding-top:env(safe-area-inset-top); }
+            .h-screen-dvh { height: 100dvh; }
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body x-data="{% block page_x_data %}{% endblock %}" class="bg-slate-900 text-slate-100 min-h-screen-dvh overflow-x-hidden selection:bg-slate-700">
+
+    <!-- Header Block -->
+    {% block header %}{% endblock %}
+
+    <!-- Main Content Block -->
+    <main class="relative w-full h-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer Block -->
+    {% block footer %}{% endblock %}
+
+    <!-- Global Bottom Sheet (Modal) Component -->
+    <div x-data x-cloak>
+        <!-- Overlay -->
+        <div x-show="$store.sheet.isOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="$store.sheet.close()"
+             class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"></div>
+
+        <!-- Sheet Content (Chalkboard Style) -->
+        <div x-show="$store.sheet.isOpen"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="translate-y-full"
+             x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="translate-y-0"
+             x-transition:leave-end="translate-y-full"
+             class="fixed bottom-0 left-0 right-0 z-50 w-full max-w-md mx-auto bg-[#2a2a2a] text-current rounded-t-3xl border-t-2 border-dashed shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pb-safe"
+             style="border-color: currentColor;"
+             @touchstart="startTouch"
+             @touchmove="moveTouch"
+             @touchend="endTouch">
+            
+            <div class="px-6 pb-8 pt-3 max-h-[85vh] overflow-y-auto scrollbar-hide">
+                <!-- Drag Handle -->
+                <div class="w-12 h-1.5 rounded-full mx-auto mb-6 opacity-30 bg-current" @click="$store.sheet.close()"></div>
+                
+                <template x-if="$store.sheet.data">
+                    <div class="flex flex-col items-center">
+                        
+                        <!-- دکمه بستن -->
+                        <button @click="$store.sheet.close()" class="absolute top-4 right-4 p-2 hover:scale-110 transition-transform opacity-70 hover:opacity-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                                <path d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+
+                        <!-- تصویر با نشان ویژه و ناموجود -->
+                        <div class="relative w-full aspect-video rounded-2xl border-2 border-dashed flex items-center justify-center mb-6 overflow-hidden"
+                             style="border-color: currentColor;">
+                            
+                            <template x-if="$store.sheet.data.image">
+                                <img :src="$store.sheet.data.image" :alt="$store.sheet.data.title" class="w-full h-full object-cover opacity-90">
+                            </template>
+                            <template x-if="!$store.sheet.data.image">
+                                <svg class="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </template>
+
+                            <!-- لیبل پیشنهاد ویژه -->
+                            <template x-if="$store.sheet.data.is_featured">
+                                <div class="absolute top-3 left-3 bg-current text-[#2a2a2a] px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg" style="font-family: 'YekanBakh', sans-serif;">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                    ویژه
+                                </div>
+                            </template>
+
+                            <!-- لیبل ناموجود -->
+                            <template x-if="$store.sheet.data.is_available === false">
+                                <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                                    <div class="text-red-400 border-2 border-red-400 border-dashed px-4 py-2 rounded-xl text-xl transform -rotate-12 font-bold" style="font-family: 'YekanBakh', sans-serif;">
+                                        ناموجود شد
+                                    </div>
+                                </div>
+                            </template>
+
+                        </div>
+
+                        <!-- عنوان و SKU -->
+                        <div class="w-full text-right mb-4">
+                            <h3 class="text-3xl font-bold mb-1" style="font-family: 'YekanBakh', sans-serif;" x-text="$store.sheet.data.title"></h3>
+                            <template x-if="$store.sheet.data.sku">
+                                <p class="text-sm opacity-60 font-mono mt-1" x-text="'کد محصول: ' + $store.sheet.data.sku"></p>
+                            </template>
+                        </div>
+
+                        <!-- قیمت گذاری و بازدید -->
+                        <div class="w-full text-left mb-6 py-4 border-y border-dashed border-current/30 flex items-center justify-between">
+                            <!-- بازدید -->
+                            <div class="flex items-center gap-1 opacity-60 text-sm" title="دفعات بازدید">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span x-text="$store.sheet.data.views || 0"></span>
+                            </div>
+
+                            <!-- بخش قیمت -->
+                            <div class="flex flex-col items-end">
+                                <!-- اگر تخفیف دارد -->
+                                <template x-if="$store.sheet.data.has_discount">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="bg-red-500/20 text-red-300 border border-red-400/50 border-dashed px-2 py-0.5 rounded text-sm font-bold" x-text="$store.sheet.data.discount_percent + '٪ تخفیف'"></span>
+                                        <span class="text-sm opacity-50 line-through decoration-current decoration-2" x-text="$store.sheet.data.price"></span>
+                                    </div>
+                                </template>
+                                
+                                <!-- قیمت نهایی -->
+                                <div class="text-2xl font-bold flex items-center gap-2" style="font-family: 'YekanBakh', sans-serif;">
+                                    <span x-text="$store.sheet.data.final_price || $store.sheet.data.price"></span>
+                                    <span class="text-base opacity-70 font-normal">تومان</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- توضیحات -->
+                        <div class="w-full text-right mb-6">
+                            <p class="leading-relaxed opacity-90 text-sm" style="font-family: 'YekanBakh', sans-serif;" x-text="$store.sheet.data.description || 'توضیحاتی ثبت نشده است.'"></p>
+                        </div>
+
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Store & Logic for Bottom Sheet -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('sheet', {
+                isOpen: false,
+                type: null,
+                data: null,
+                open(type, data) {
+                    this.type = type;
+                    this.data = data;
+                    this.isOpen = true;
+                    document.body.style.overflow = 'hidden'; // جلوگیری از اسکرول صفحه زیرین
+                },
+                close() {
+                    this.isOpen = false;
+                    document.body.style.overflow = '';
+                    setTimeout(() => {
+                        this.type = null;
+                        this.data = null;
+                    }, 300); // تاخیر برای اجرای انیمیشن بسته‌شدن
+                }
+            });
+        });
+
+        // Swipe down to close logic for Bottom Sheet
+        let startY;
+        function startTouch(e) { startY = e.touches[0].clientY; }
+        function moveTouch(e) {}
+        function endTouch(e) {
+            let endY = e.changedTouches[0].clientY;
+            if (endY > startY + 50) { // اگر بیشتر از 50 پیکسل به پایین کشیده شد
+                Alpine.store('sheet').close();
+            }
+        }
+    </script>
+
+    <!-- Extra JS Block -->
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

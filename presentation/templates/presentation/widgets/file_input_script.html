@@ -1,0 +1,163 @@
+<!-- presentation/widgets/file_input_script.html -->
+<script>
+    if (typeof window.handleWidgetFileSelection !== 'function') {
+        
+        window.formatBytes = function(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        };
+
+        window.cropperInstances = {};
+
+        window.handleWidgetFileSelection = function(inputElement) {
+            const wrapper = inputElement.closest('.django-file-widget');
+            if (!wrapper) return;
+            const widgetId = wrapper.id;
+
+            const dropzone = wrapper.querySelector('.dropzone-area');
+            const cropperArea = wrapper.querySelector('.cropper-area');
+            const previewArea = wrapper.querySelector('.preview-area');
+            const cropperImg = wrapper.querySelector('.cropper-image');
+            const file = inputElement.files[0];
+
+            if (!file) return;
+
+            wrapper.dataset.originalFileName = file.name;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    cropperImg.src = e.target.result;
+                    
+                    dropzone.classList.add('hidden');
+                    previewArea.classList.add('hidden');
+                    cropperArea.classList.remove('hidden');
+                    cropperArea.classList.add('flex');
+
+                    if (window.cropperInstances[widgetId]) {
+                        window.cropperInstances[widgetId].destroy();
+                    }
+
+                    window.cropperInstances[widgetId] = new Cropper(cropperImg, {
+                        aspectRatio: NaN, 
+                        viewMode: 1,
+                        background: false,
+                        autoCropArea: 0.9,
+                    });
+                };
+                reader.readAsDataURL(file);
+            } else {
+                window.showPreview(wrapper, file, false);
+            }
+        };
+
+        window.applyCrop = function(btnElement) {
+            const wrapper = btnElement.closest('.django-file-widget');
+            const widgetId = wrapper.id;
+            const cropper = window.cropperInstances[widgetId];
+            const inputElement = wrapper.querySelector('.real-file-input');
+            const originalName = wrapper.dataset.originalFileName || 'cropped_image.jpg';
+
+            if (cropper) {
+                cropper.getCroppedCanvas({
+                    maxWidth: 1920,
+                    maxHeight: 1920
+                }).toBlob((blob) => {
+                    const croppedFile = new File([blob], originalName, {
+                        type: "image/jpeg", 
+                        lastModified: new Date().getTime()
+                    });
+
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    inputElement.files = dataTransfer.files;
+
+                    window.showPreview(wrapper, croppedFile, true, cropper.getCroppedCanvas().toDataURL('image/jpeg'));
+                    
+                }, 'image/jpeg', 0.9);
+            }
+        };
+
+        window.cancelCrop = function(btnElement) {
+            window.clearWidgetFile(btnElement);
+        };
+
+        window.showPreview = function(wrapper, file, isImage, dataUrl = null) {
+            const dropzone = wrapper.querySelector('.dropzone-area');
+            const cropperArea = wrapper.querySelector('.cropper-area');
+            const previewArea = wrapper.querySelector('.preview-area');
+            
+            const imgContainer = wrapper.querySelector('.image-preview-container');
+            const imgPreview = wrapper.querySelector('.preview-image');
+            const fileIcon = wrapper.querySelector('.file-icon-container');
+            
+            wrapper.querySelector('.file-name-text').textContent = file.name;
+            wrapper.querySelector('.file-size-text').textContent = window.formatBytes(file.size);
+
+            cropperArea.classList.add('hidden');
+            cropperArea.classList.remove('flex');
+            dropzone.classList.add('hidden');
+            previewArea.classList.remove('hidden');
+
+            if (isImage) {
+                imgPreview.src = dataUrl;
+                imgContainer.classList.remove('hidden');
+                fileIcon.classList.add('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+                fileIcon.classList.remove('hidden');
+            }
+        };
+
+        window.clearWidgetFile = function(element) {
+            const wrapper = element.closest('.django-file-widget');
+            if (!wrapper) return;
+            const widgetId = wrapper.id;
+            const input = wrapper.querySelector('.real-file-input');
+
+            if (window.cropperInstances[widgetId]) {
+                window.cropperInstances[widgetId].destroy();
+                delete window.cropperInstances[widgetId];
+            }
+
+            if (input) input.value = '';
+            
+            wrapper.querySelector('.cropper-area').classList.add('hidden');
+            wrapper.querySelector('.cropper-area').classList.remove('flex');
+            wrapper.querySelector('.preview-area').classList.add('hidden');
+            wrapper.querySelector('.dropzone-area').classList.remove('hidden');
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('dragover', (e) => e.preventDefault(), false);
+            document.addEventListener('drop', (e) => e.preventDefault(), false);
+
+            document.querySelectorAll('.dropzone-area').forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('border-accent-300', 'bg-accent-50/50');
+                });
+                zone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('border-accent-300', 'bg-accent-50/50');
+                });
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('border-accent-300', 'bg-accent-50/50');
+                    
+                    const wrapper = zone.closest('.django-file-widget');
+                    const input = wrapper.querySelector('.real-file-input');
+                    
+                    if (input && e.dataTransfer.files.length > 0) {
+                        input.files = e.dataTransfer.files;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+        });
+    }
+</script>

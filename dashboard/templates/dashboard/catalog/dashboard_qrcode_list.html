@@ -1,0 +1,289 @@
+{% extends 'layouts/dashboard_base.html' %}
+
+{% block title %}فهرست کیوآر کدها | تکوف دیجیتال{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8 pb-12">
+    
+    <!-- هدر صفحه -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-brand-900 mb-1">مدیریت کیوآر کدها (QR Codes)</h1>
+            <p class="text-sm text-brand-500 font-medium">ساخت و مدیریت کدهای QR برای لینک‌های مختلف کاتالوگ شما</p>
+        </div>
+    </div>
+    <!-- بخش جستجو و فیلتر پیشرفته -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-8">
+        <!-- هدر کوچک برای فیلتر -->
+        <div class="flex items-center gap-2 mb-4 text-gray-700">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            <span class="text-sm font-bold">فیلتر و جستجو</span>
+        </div>
+
+        <form method="GET" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+            
+            <!-- جستجو (فضای بیشتری می‌گیرد) -->
+            <div class="lg:col-span-5 relative">
+                <label class="block text-xs font-semibold text-gray-500 mb-1.5">کلمه کلیدی</label>
+                <div class="absolute bottom-0 right-0 flex items-center pr-3 pb-2.5 pointer-events-none text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" name="q" value="{{ search_query|default:'' }}" class="w-full bg-gray-50 hover:bg-white border border-gray-200 text-gray-900 text-sm rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 block pl-4 pr-10 py-2.5 outline-none transition-all placeholder-gray-400" placeholder="جستجو در عنوان یا لینک...">
+            </div>
+
+            <!-- فیلتر وضعیت -->
+            <div class="lg:col-span-3">
+                <label class="block text-xs font-semibold text-gray-500 mb-1.5">وضعیت</label>
+                <select name="status" class="w-full bg-gray-50 hover:bg-white border border-gray-200 text-gray-800 text-sm rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 block px-4 py-2.5 outline-none transition-all cursor-pointer appearance-none">
+                    <option value="all" {% if status_filter == 'all' or not status_filter %}selected{% endif %}>همه وضعیت‌ها</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>فقط فعال‌ها</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>غیرفعال‌ها</option>
+                </select>
+            </div>
+
+            <!-- مرتب‌سازی -->
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-semibold text-gray-500 mb-1.5">مرتب‌سازی بر اساس</label>
+                <select name="sort" class="w-full bg-gray-50 hover:bg-white border border-gray-200 text-gray-800 text-sm rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 block px-4 py-2.5 outline-none transition-all cursor-pointer appearance-none">
+                    <option value="-created_at" {% if sort_by == '-created_at' or not sort_by %}selected{% endif %}>جدیدترین‌ها</option>
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>قدیمی‌ترین‌ها</option>
+                    <option value="-scans_count" {% if sort_by == '-scans_count' %}selected{% endif %}>بیشترین اسکن</option>
+                </select>
+            </div>
+
+            <!-- دکمه‌ها -->
+            <div class="lg:col-span-2 flex items-center gap-2 h-[42px]">
+                <button type="submit" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900/20">
+                    اعمال فیلتر
+                </button>
+                
+                {% if search_query or status_filter != 'all' or sort_by != '-created_at' %}
+                    <a href="?" class="flex items-center justify-center px-3 py-2.5 text-rose-500 hover:bg-rose-50 hover:text-rose-600 font-semibold rounded-xl transition-colors text-sm border border-transparent hover:border-rose-100" title="پاک کردن فیلترها">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+<!-- شبکه‌ی کارت‌ها (Grid) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
+    
+    <!-- کارت اول: دکمه افزودن کیوآر کد جدید -->
+    <button type="button" 
+            id="btn-open-create" 
+            data-create-url="{% url 'catalog:qrcode_create' %}" 
+            class="group relative flex flex-col items-center justify-center min-h-[360px] bg-gradient-to-b from-gray-50 to-white border-2 border-dashed border-gray-300 rounded-3xl hover:border-blue-500 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer">
+        <!-- پس‌زمینه تزئینی هنگام هاور -->
+        <div class="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        
+        <div class="relative z-10 flex flex-col items-center">
+            <div class="w-16 h-16 mb-4 rounded-full bg-white flex items-center justify-center border border-gray-200 text-gray-400 group-hover:text-blue-600 group-hover:border-blue-200 group-hover:scale-110 group-hover:shadow-md transition-all duration-300">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </div>
+            <span class="font-bold text-gray-700 group-hover:text-blue-700 text-lg transition-colors">ایجاد کیوآر کد جدید</span>
+            <span class="text-sm text-gray-500 mt-2 font-medium">برای ثبت لینک جدید کلیک کنید</span>
+        </div>
+    </button>
+
+    <!-- لوپ نمایش کارت‌های کیوآر کد -->
+    {% for qrcode in data %}
+        <div class="bg-white rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative">
+            
+            <!-- بخش بالایی کارت (نمایش تصویر QR) -->
+            <div class="relative pt-8 pb-6 px-6 bg-gradient-to-br from-gray-50 to-gray-100/50 flex flex-col items-center justify-center border-b border-gray-100">
+                <!-- وضعیت فعال/غیرفعال بودن -->
+                <div class="absolute top-4 right-4">
+                    {% if qrcode.is_active %}
+                        <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> فعال
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold border border-red-200 shadow-sm">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> غیرفعال
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- کانتینر تصویر با سایه و قاب زیبا -->
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-200 group-hover:shadow-md transition-shadow duration-300">
+                    {% if qrcode.qr_image %}
+                        <img src="{{ qrcode.qr_image.url }}" alt="{{ qrcode.title }}" class="w-36 h-36 object-contain rounded-xl">
+                    {% else %}
+                        <div class="w-36 h-36 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- بخش اطلاعات کارت -->
+            <div class="p-5 flex-1 flex flex-col bg-white">
+                <h3 class="font-extrabold text-gray-800 text-lg mb-3 truncate text-center" title="{{ qrcode.title|default:'بدون عنوان' }}">
+                    {{ qrcode.title|default:"بدون عنوان" }}
+                </h3>
+                
+                <!-- نمایش لینک به صورت باکس -->
+                <a href="{{ qrcode.target_url }}" target="_blank" class="flex items-center gap-2 bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200 text-gray-600 hover:text-blue-600 p-2.5 rounded-xl transition-colors mb-4 group/link" title="{{ qrcode.target_url }}">
+                <div class="bg-white p-1.5 rounded-lg shadow-sm group-hover/link:text-blue-600 text-gray-400 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    </div>
+                    <span class="text-xs font-mono truncate" dir="ltr">{{ qrcode.target_url }}</span>
+                </a>
+
+                <!-- آمار و دکمه دانلود -->
+                <div class="mt-auto flex items-center justify-between text-sm font-medium">
+                    <div class="flex items-center gap-1.5 text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        <span>{{ qrcode.scans_count }} اسکن</span>
+                    </div>
+                    
+                    {% if qrcode.qr_image %}
+                    <a href="{{ qrcode.qr_image.url }}" download class="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
+                        <span>دانلود</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- بخش دکمه‌های عملیات (فوتر کارت) -->
+            <div class="grid grid-cols-2 border-t border-gray-100 bg-gray-50 divide-x divide-x-reverse divide-gray-200">
+                <button type="button" 
+                        data-url="{% url 'catalog:qrcode_edit' qrcode.id %}" 
+                        data-title="{{ qrcode.title }}"
+                        data-target-url="{{ qrcode.target_url }}"
+                        data-is-active="{{ qrcode.is_active|yesno:'true,false' }}"
+                        class="btn-edit-qrcode py-3.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50/50 font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    ویرایش
+                </button>
+                
+                <button type="button" 
+                        data-url="{% url 'catalog:qrcode_delete' qrcode.id %}"
+                        data-title="{{ qrcode.title }}"
+                        class="btn-delete-qrcode py-3.5 text-gray-600 hover:text-red-600 hover:bg-red-50/50 font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    حذف
+                </button>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+
+    <!-- Pagination -->
+    {% include 'components/data/pagination.html' with data=data %}
+</div>
+
+<!-- فراخوانی مودال‌ها (نیاز است این دو فایل را بسازید) -->
+{% include 'components/qrcode_form.html' %}
+{% include 'components/qrcode_delete_form.html' with modal_id='modal-delete-qrcode' %}
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // تابع باز و بسته کردن فرم اصلی کیوآر کد
+        window.toggleQrcodeModal = function(action) {
+            const $modal = $('#qrcode-modal'); 
+            const $form = $('#qrcode-main-form'); 
+
+            if (action === 'open') {
+                $modal.removeClass('hidden');
+            } else {
+                $modal.addClass('hidden');
+                setTimeout(() => {
+                    if ($form.length) {
+                        $form[0].reset();
+                        // پس از بسته شدن و ریست فرم، آدرس پیش‌فرض را برمی‌گردانیم
+                        $('#input-qr-target-url').val('{{ default_target_url }}');
+                    }
+                }, 300);
+            }
+        };
+
+        $(document).ready(function() {
+            
+            // 1. باز کردن مودال افزودن (کلیک روی کارت اول)
+            $('#btn-open-create').on('click', function(e) {
+                e.preventDefault();
+                const $form = $('#qrcode-main-form');
+                const createUrl = $(this).data('create-url');
+                
+                // ریست کردن فرم
+                if ($form.length) $form[0].reset();
+
+                // پر کردن مجدد فیلد لینک با آدرس پیش‌فرض کاتالوگ
+                $('#input-qr-target-url').val('{{ default_target_url }}');
+                // اطمینان از اینکه چک‌باکس فعال بودن تیک خورده است
+                $('#input-qr-active').prop('checked', true);
+
+                $('#modal-qrcode-title').text("ایجاد کیوآر کد جدید");
+                $('#modal-qrcode-submit-btn').text("ساخت کیوآر کد");
+                $form.attr('action', createUrl);
+
+                toggleQrcodeModal('open');
+            });
+
+            // 2. باز کردن مودال ویرایش (دکمه‌های روی کارت‌ها)
+            $(document).on('click', '.btn-edit-qrcode', function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const $form = $('#qrcode-main-form');
+                
+                // ابتدا فرم ریست می‌شود تا مقادیر قبلی پاک شوند
+                if ($form.length) $form[0].reset();
+
+                // جایگذاری داده‌های مربوط به همین کیوآر کد در فیلدهای فرم
+                $form.attr('action', $btn.data('url'));
+                $('#input-qr-title').val($btn.data('title'));
+                $('#input-qr-target-url').val($btn.data('target-url'));
+                
+                // تنظیم وضعیت (فعال/غیرفعال)
+                if ($('#input-qr-active').length) {
+                    const isActive = $btn.data('is-active') === true || $btn.data('is-active') === 'True' || $btn.data('is-active') === 'true';
+                    $('#input-qr-active').prop('checked', isActive);
+                }
+
+                $('#modal-qrcode-title').text("ویرایش کیوآر کد");
+                $('#modal-qrcode-submit-btn').text("بروزرسانی");
+
+                toggleQrcodeModal('open');
+            });
+
+            // 3. باز کردن مودال حذف
+            $(document).on('click', '.btn-delete-qrcode', function(e) {
+                e.preventDefault();
+                const url = $(this).data('url');
+                const title = $(this).data('title');
+                
+                $('#delete-form-action').attr('action', url);
+                $('#delete-qrcode-name').text(title || 'بدون عنوان');
+                
+                $('#modal-delete-qrcode').removeClass('hidden');
+            });
+
+            // 4. بستن مودال‌های دیگر (مانند مودال حذف)
+            $(document).on('click', '.btn-close-modal', function(e) {
+                e.preventDefault();
+                $(this).closest('.fixed[role="dialog"], .fixed.z-50').addClass('hidden');
+            });
+            
+            // بستن مودال حذف با کلیک روی پس‌زمینه تاریک
+            $(document).on('click', '#modal-delete-qrcode', function(e) {
+                if (e.target === this) {
+                    $(this).addClass('hidden');
+                }
+            });
+            
+            // بستن مودال اصلی کیوآر کد با کلیک روی پس‌زمینه تاریک
+            $(document).on('click', '#qrcode-modal', function(e) {
+                if (e.target === this) {
+                    toggleQrcodeModal('close');
+                }
+            });
+        });
+    </script>
+{% endblock %}

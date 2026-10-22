@@ -1,0 +1,94 @@
+<!-- System Health & To-Do List Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    
+    <!-- System Health -->
+    <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm border border-surface-100 dark:border-surface-700">
+        <h3 class="text-lg font-bold text-surface-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-server text-brand-500"></i> وضعیت سلامت سیستم
+        </h3>
+        
+        <div class="space-y-5">
+            <!-- Storage -->
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-surface-600 dark:text-surface-300">فضای ذخیره‌سازی سرور</span>
+                    <span class="font-bold text-surface-800 dark:text-surface-100">65%</span>
+                </div>
+                <div class="w-full bg-surface-200 dark:bg-surface-700 rounded-full h-2.5">
+                    <div class="bg-brand-500 h-2.5 rounded-full" style="width: 65%"></div>
+                </div>
+            </div>
+
+            <!-- Database -->
+            <div class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-green-100 text-green-500 flex items-center justify-center">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-surface-800 dark:text-surface-100">دیتابیس PostgreSQL</p>
+                        <p class="text-xs text-surface-500">پاسخ‌دهی: 12ms</p>
+                    </div>
+                </div>
+                <span class="text-xs font-bold px-2 py-1 bg-green-100 text-green-600 rounded-md">آنلاین</span>
+            </div>
+
+            <!-- SMS Service -->
+            <div class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center">
+                        <i class="fas fa-sms"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-surface-800 dark:text-surface-100">سرویس پیامک (OTP)</p>
+                        <p class="text-xs text-surface-500">اعتبار: ۳۴,۵۰۰ پیامک</p>
+                    </div>
+                </div>
+                <span class="text-xs font-bold px-2 py-1 bg-green-100 text-green-600 rounded-md">متصل</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- To-Do List (Alpine.js powered) -->
+    <div x-data="{ 
+            newTask: '', 
+            tasks: [
+                { id: 1, title: 'بررسی کاتالوگ‌های گزارش شده', done: false },
+                { id: 2, title: 'آپلود پکیج آیکون‌های جدید', done: true }
+            ],
+            addTask() {
+                if(this.newTask.trim() !== '') {
+                    this.tasks.push({ id: Date.now(), title: this.newTask, done: false });
+                    this.newTask = '';
+                }
+            }
+        }" class="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-sm border border-surface-100 dark:border-surface-700 flex flex-col">
+        
+        <h3 class="text-lg font-bold text-surface-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-check-square text-accent-500"></i> یادداشت‌ها و وظایف سریع
+        </h3>
+
+        <!-- Add Task Input -->
+        <form @submit.prevent="addTask" class="flex gap-2 mb-4">
+            <input type="text" x-model="newTask" placeholder="وظیفه جدید..." class="flex-1 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-surface-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+            <button type="submit" class="bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 hover:bg-brand-500 hover:text-white px-4 py-2 rounded-xl transition-colors text-sm">
+                <i class="fas fa-plus"></i>
+            </button>
+        </form>
+
+        <!-- Tasks List -->
+        <div class="flex-1 overflow-y-auto space-y-2 max-h-48">
+            <template x-for="task in tasks" :key="task.id">
+                <label class="flex items-center gap-3 p-3 bg-surface-50 dark:bg-surface-700/30 rounded-xl cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+                    <input type="checkbox" x-model="task.done" class="w-4 h-4 text-brand-500 rounded border-surface-300 focus:ring-brand-500 focus:ring-2">
+                    <span x-text="task.title" :class="{'line-through text-surface-400 dark:text-surface-500': task.done, 'text-surface-700 dark:text-surface-200 text-sm font-medium': !task.done}"></span>
+                </label>
+            </template>
+            <!-- Empty State -->
+            <div x-show="tasks.length === 0" class="text-center py-4 text-surface-500 text-sm">
+                هیچ وظیفه‌ای ثبت نشده است.
+            </div>
+        </div>
+    </div>
+    
+</div>

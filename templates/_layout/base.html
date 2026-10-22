@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#fafaf9" /> <!-- هماهنگ با رنگ surface-50 -->
+    <link rel="icon" href="{% static 'icons/tecof_faveicon.png' %}" type="image/svg+xml" />
+
+    <!-- ================= SEO & Meta Tags ================= -->
+    <title>{% block title %}Tecof | پلتفرم ساخت کاتالوگ آنلاین{% endblock %}</title>
+    <meta name="description" content="{% block description %}با Tecof در کمتر از ۲ دقیقه کاتالوگ آنلاین و منوی دیجیتال خود را بسازید. ترکیب هنر و تکنولوژی.{% endblock %}" />
+    <meta name="keywords" content="{% block keywords %}کاتالوگ آنلاین, منوی دیجیتال, ساخت کاتالوگ, Tecof, تکوف{% endblock %}" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tecof | پلتفرم ساخت کاتالوگ آنلاین" />
+    <meta property="og:description" content="با Tecof در کمتر از ۲ دقیقه کاتالوگ آنلاین و منوی دیجیتال خود را بسازید." />
+    <meta property="og:site_name" content="Tecof" />
+    
+    <!-- ================= Performance & Preloads ================= -->
+    <!-- Preload Fonts to prevent FOUT (Flash of Unstyled Text) -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    
+    <!-- ================= Core Scripts (Dev Speed) ================= -->
+    <script src="{% static 'js/alpinejs.js' %}"></script>
+    <!-- Tailwind CSS v4 Browser Script -->
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script src="{% static 'js/swiper-bundle.min.js' %}"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+    <!-- ================= Tailwind v4 Config ================= -->
+    <style type="text/tailwindcss">
+      @theme {
+        /* Typography */
+        --font-sans: 'YekanBakh', system-ui, sans-serif;
+
+        /* Palette: Surface (Warm Grays) */
+        --color-surface-50: #fafaf9;
+        --color-surface-100: #f5f5f4;
+        --color-surface-200: #e7e5e4;
+        --color-surface-300: #d6d3d1;
+
+        /* Palette: Brand (Dark Brown/Gray) */
+        --color-brand-400: #a8a29e;
+        --color-brand-500: #78716c;
+        --color-brand-600: #57534e;
+        --color-brand-800: #292524;
+        --color-brand-900: #1c1917;
+        --color-brand-950: #0c0a09;
+
+        /* Palette: Accent (Energetic Orange) */
+        --color-accent-50: #fff7ed;
+        --color-accent-100: #ffedd5;
+        --color-accent-500: #f97316;
+        --color-accent-600: #ea580c;
+
+        /* Custom Shadows */
+        --shadow-soft: 0 10px 40px -10px rgba(28, 25, 23, 0.08);
+        --shadow-glow: 0 0 20px -5px rgba(249, 115, 22, 0.4);
+      }
+
+      @layer base {
+        body {
+          color: var(--color-brand-800);
+          font-family: var(--font-sans);
+        }
+      }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+  </head>
+
+  <body class="min-h-screen flex flex-col text-brand-800 selection:bg-accent-100 selection:text-accent-600 font-[YekanBakh] antialiased">
+    
+    <!-- Accessibility: Skip to main content -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:right-4 bg-brand-900 text-white px-4 py-2 rounded-lg z-[100]">
+      پرش به محتوای اصلی
+    </a>
+
+    {% include "./base_header.html" %}
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content" class="flex-1 w-full flex flex-col focus:outline-none" tabindex="-1">
+      {% block content %}
+      {% endblock %}
+    </main>
+    <footer class="text-center text-sm text-brand-500 py-6 border-t border-surface-200">
+      حق مالکیت این نرم‌افزار پلتفرم ساخت کاتالوگ آنلاین و منوی دیجیتال متعلق به تک‌آف دیجیتال
+      (TECOFF.DIGITAL) است.
+    </footer>
+
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

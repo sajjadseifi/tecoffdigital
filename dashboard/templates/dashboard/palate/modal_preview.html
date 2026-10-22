@@ -1,0 +1,88 @@
+    <!-- ========================================== -->
+    <!-- مودال ۱: پیش‌نمایش و دانلود -->
+    <!-- ========================================== -->
+    <div x-show="isPreviewOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div x-show="isPreviewOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closePreviewModal()"></div>
+        <div x-show="isPreviewOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="bg-white rounded-3xl w-full max-w-4xl relative shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 max-h-[90vh]">
+            
+            <button @click="closePreviewModal()" class="absolute top-4 left-4 bg-slate-100 hover:bg-red-100 hover:text-red-500 p-2 rounded-full z-20 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+
+            <!-- بخش راست: پیش‌نمایش بصری -->
+            <div class="w-full md:w-1/2 bg-checkerboard flex flex-col items-center justify-center p-10 border-l border-slate-200 relative min-h-[300px]">
+                <div class="w-48 h-48 md:w-64 md:h-64 text-slate-800 flex items-center justify-center transition-all hover:scale-110 duration-500">
+                    <template x-if="currentIcon.is_svg">
+                        <div x-html="currentIcon.content" class="w-full h-full [&>svg]:w-full [&>svg]:h-full drop-shadow-md"></div>
+                    </template>
+                    <template x-if="!currentIcon.is_svg">
+                        <img :src="currentIcon.url" class="max-w-full max-h-full object-contain drop-shadow-md">
+                    </template>
+                </div>
+            </div>
+
+            <!-- بخش چپ: تنظیمات -->
+            <div class="w-full md:w-1/2 p-6 md:p-10 bg-white flex flex-col overflow-y-auto">
+                <div class="mb-8 border-b pb-4">
+                    <h3 class="text-2xl font-bold font-mono text-slate-800" dir="ltr" x-text="currentIcon.name"></h3>
+                    <p class="text-sm text-slate-500 mt-2 flex items-center gap-2">
+                        <span x-text="currentIcon.display_name"></span>
+                        <span x-show="currentIcon.category" class="bg-slate-100 px-2 py-0.5 rounded text-[10px]" x-text="currentIcon.category"></span>
+                    </p>
+                </div>
+
+                <div x-show="currentIcon.is_svg" class="space-y-6">
+                    <!-- تب‌های فرمت خروجی -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-3 text-slate-700">فرمت خروجی</label>
+                        <div class="flex flex-wrap gap-2" dir="ltr">
+                            <button type="button" @click="exportFormat = 'svg'" 
+                                    :class="exportFormat === 'svg' ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                    class="flex-1 min-w-[80px] px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all text-center">
+                                SVG <span class="block text-[10px] opacity-80 mt-0.5 font-normal">برداری</span>
+                            </button>
+                            <button type="button" @click="exportFormat = 'png'" 
+                                    :class="exportFormat === 'png' ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                    class="flex-1 min-w-[80px] px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all text-center">
+                                PNG <span class="block text-[10px] opacity-80 mt-0.5 font-normal">بدون پس‌زمینه</span>
+                            </button>
+                            <button type="button" @click="exportFormat = 'jpeg'" 
+                                    :class="exportFormat === 'jpeg' ? 'bg-blue-600 text-white shadow-md border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                    class="flex-1 min-w-[80px] px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-all text-center">
+                                JPG <span class="block text-[10px] opacity-80 mt-0.5 font-normal">پس‌زمینه سفید</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- تب‌های ابعاد (در حالت SVG غیرفعال می‌شوند) -->
+                    <div :class="exportFormat === 'svg' ? 'opacity-50 pointer-events-none grayscale' : 'transition-all duration-300'">
+                        <label class="block text-sm font-semibold mb-3 text-slate-700">ابعاد (پیکسل)</label>
+                        <div class="flex flex-wrap gap-2" dir="ltr">
+                            <template x-for="size in ['64', '128', '256', '512', '1024']" :key="size">
+                                <button type="button" 
+                                        @click="exportSize = size" 
+                                        :class="exportSize === size ? 'bg-slate-800 text-white shadow-md border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" 
+                                        class="flex-1 min-w-[50px] px-2 py-2 rounded-xl border-2 text-sm font-mono font-medium transition-all text-center"
+                                        x-text="size">
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                
+                <div x-show="!currentIcon.is_svg" class="mb-8 p-4 bg-yellow-50 text-yellow-700 rounded-xl text-sm border border-yellow-200 leading-relaxed">
+                    این فایل وکتور (SVG) نیست. تغییر فرمت و سایز روی مرورگر پشتیبانی نمی‌شود. شما می‌توانید فایل اصلی را مستقیماً دانلود کنید.
+                </div>
+
+                <div class="mt-auto flex gap-3 pt-6">
+                    <button @click="processDownload()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span class="font-medium">دانلود فایل</span>
+                    </button>
+                    <button x-show="currentIcon.is_svg" @click="copySvgCode()" class="bg-white border-2 border-slate-200 text-slate-600 py-3.5 px-5 rounded-xl hover:bg-slate-50 hover:border-blue-400 transition-all font-medium" title="کپی کد">کپی کد</button>
+                </div>
+            </div>
+        </div>
+    </div>

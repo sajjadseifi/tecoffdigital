@@ -1,0 +1,28 @@
+<!-- توجه: top-[76px] را بر اساس ارتفاع دقیق هدر (appbar) خود تنظیم کنید -->
+<div class="px-4 py-3 sticky top-[76px] z-30 bg-surface-50/80 backdrop-blur-xl border-b border-brand-100/40">
+    <div class="relative w-full group">
+        <!-- آیکون ذره‌بین -->
+        <div class="absolute inset-y-0 right-0 pl-3 pr-4 flex items-center pointer-events-none">
+            <!-- هنگام فوکوس روی اینپوت، رنگ آیکون به رنگ اصلی برند (accent) تغییر می‌کند -->
+            <svg class="w-[1.15rem] h-[1.15rem] text-brand-400 group-focus-within:text-accent-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+        
+        <!-- فیلد ورودی -->
+        <input
+            type="text"
+            id="search-input"
+            class="block w-full py-3 pr-[2.75rem] pl-4 text-[0.875rem] font-medium border-0 rounded-2xl bg-surface-100 text-brand-900 placeholder:text-brand-400 focus:bg-white focus:ring-1 focus:ring-brand-200 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] transition-all outline-none"
+            placeholder="جستجو در رستوران‌ها، کافه‌ها..."
+            autocomplete="off"
+        />
+        
+        <!-- دکمه پاک کردن (ضربدر) - اختیاری برای UX بهتر -->
+        <button type="button" 
+                class="absolute inset-y-0 left-0 pl-4 pr-3 flex items-center hidden hover:opacity-80" 
+                onclick="document.getElementById('search-input').value=''; this.classList.add('hidden');">
+            <svg class="w-4 h-4 text-brand-400 bg-brand-200/50 rounded-full p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+</div>

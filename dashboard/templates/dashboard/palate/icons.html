@@ -1,0 +1,188 @@
+{% extends "layouts/dashboard_base.html" %}
+
+{% block title %}گالری آیکون | داشبورد {{ user_display_name }}{% endblock %}
+
+{% block content %}
+<!--================ ICON LIBRARY =================-->
+<div class="py-6 space-y-6" x-data="iconManager()" x-init="initPage()">
+
+    <!-- سرچ -->
+    <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8">
+
+        <h2 class="text-lg font-extrabold text-brand-900">
+            آیکون‌ها
+        </h2>
+
+        <div class="relative w-64">
+            <input
+                type="text"
+                x-model="search"
+                @input.debounce.300ms="searchIcons"
+                placeholder="جستجو آیکون..."
+                class="w-full text-xs border border-surface-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent-500"
+            >
+
+            <svg class="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
+                <path stroke-width="2" d="M21 21l-4.3-4.3"></path>
+            </svg>
+        </div>
+
+    </div>
+
+
+<!-- لیست آیکون‌ها -->
+<div class="flex flex-wrap gap-4 px-4 sm:px-6 lg:px-8">
+
+    <template x-for="ic in icons" :key="ic.id">
+
+        <button
+            @click="openPreview(ic)"
+            class="flex flex-col items-center gap-2 w-[72px] group"
+        >
+
+            <!-- باکس آیکون -->
+            <div class="w-16 h-16 rounded-[1.2rem]">
+                <div class="w-full h-full rounded-[1.1rem] overflow-hidden flex items-center justify-center transition">
+
+                    <!-- تصویر -->
+                    <img
+                        x-show="!ic.imgError"
+                        :src="ic.url"
+                        class="w-12 h-12 object-contain"
+                        @error="ic.imgError = true"
+                    >
+
+                    <!-- fallback -->
+                    <template x-if="!ic.url || ic.imgError">
+                        <svg class="w-10 h-10 text-brand-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="1.5"/>
+                            <path d="M8 12h8" stroke-width="1.5"/>
+                        </svg>
+                    </template>
+
+                </div>
+            </div>
+
+            <!-- اسم -->
+            <span
+                class="text-[11px] font-bold text-brand-700 text-center leading-tight truncate w-full group-hover:text-accent-500 transition"
+                x-text="ic.display_name"
+            ></span>
+
+        </button>
+
+    </template>
+
+</div>
+
+
+    <!-- حالت خالی -->
+    <template x-if="icons.length === 0">
+        <div class="text-center text-xs text-brand-400 py-10">
+            آیکونی پیدا نشد
+        </div>
+    </template>
+
+
+    <!-- مودال -->
+    {% include "./modal_preview.html" %}
+
+</div>
+
+
+
+
+<script>
+function iconManager() {
+    return {
+        search: "",
+        icons: [],
+        currentIcon: null,
+        isPreviewOpen: false,
+        exportFormat: "svg",
+        exportSize: "256",
+
+        initPage() {
+            this.fetchIcons();
+        },
+
+        fetchIcons() {
+            fetch(window.location.href, {
+                headers: { "x-requested-with": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => this.icons = data.results);
+        },
+
+        searchIcons() {
+            const url = new URL(window.location.href);
+            url.searchParams.set("q", this.search);
+
+            fetch(url, {
+                headers: { "x-requested-with": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => this.icons = data.results);
+        },
+
+        openPreview(icon) {
+            this.currentIcon = icon;
+            this.isPreviewOpen = true;
+
+            if (icon.is_svg) {
+                fetch(icon.url)
+                    .then(res => res.text())
+                    .then(svg => this.currentIcon.content = svg);
+            }
+        },
+
+        closePreviewModal() {
+            this.isPreviewOpen = false;
+        },
+
+        copySvgCode() {
+            navigator.clipboard.writeText(this.currentIcon.content);
+            alert("کد SVG کپی شد");
+        },
+
+        async processDownload() {
+            if (!this.currentIcon.is_svg || this.exportFormat === "svg") {
+                const link = document.createElement("a");
+                link.href = this.currentIcon.url;
+                link.download = `${this.currentIcon.name}.${this.exportFormat}`;
+                link.click();
+                return;
+            }
+
+            // تبدیل SVG → PNG/JPEG
+            const svgBlob = new Blob([this.currentIcon.content], { type: "image/svg+xml" });
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = this.exportSize;
+                canvas.height = this.exportSize;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const dataURL = canvas.toDataURL(`image/${this.exportFormat}`);
+
+                const a = document.createElement("a");
+                a.href = dataURL;
+                a.download = `${this.currentIcon.name}.${this.exportFormat}`;
+                a.click();
+
+                URL.revokeObjectURL(url);
+            };
+
+            img.src = url;
+        },
+    }
+}
+</script>
+
+
+{% endblock content %}

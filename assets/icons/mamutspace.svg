@@ -1,0 +1,155 @@
+<svg width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+
+    <!-- پس‌زمینه -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+
+    <!-- گرادیانت بدنه -->
+    <linearGradient id="mamutBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="50%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <!-- گرادیانت نور -->
+    <linearGradient id="neonStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#93C5FD"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+
+    <!-- درخشش -->
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- سایه -->
+    <filter id="shadow" x="-100%" y="-100%" width="300%" height="300%">
+      <feDropShadow dx="0" dy="15" stdDeviation="20" flood-color="#000814" flood-opacity="0.8"/>
+    </filter>
+
+  </defs>
+
+  <!-- هاله -->
+  <circle cx="210" cy="210" r="170"
+    fill="url(#bgGlow)"
+    opacity="0.9"/>
+
+  <!-- حلقه انرژی -->
+  <circle
+    cx="210"
+    cy="210"
+    r="150"
+    stroke="url(#neonStroke)"
+    stroke-width="4"
+    opacity="0.35"
+    stroke-dasharray="12 10"
+    filter="url(#glow)"
+  />
+
+  <!-- بدنه لوگو -->
+  <g filter="url(#shadow)">
+
+    <!-- فرم اصلی -->
+    <path
+      d="
+      M120 310
+      L120 135
+      Q120 90 160 90
+      Q195 90 210 130
+      Q225 90 260 90
+      Q300 90 300 135
+      L300 310
+      Q300 325 286 325
+      L255 325
+      Q240 325 240 310
+      L240 180
+      Q240 155 210 155
+      Q180 155 180 180
+      L180 310
+      Q180 325 165 325
+      L134 325
+      Q120 325 120 310
+      Z
+      "
+      fill="url(#mamutBody)"
+      stroke="url(#neonStroke)"
+      stroke-width="6"
+      filter="url(#glow)"
+    />
+
+    <!-- هایلایت -->
+    <path
+      d="
+      M145 120
+      Q175 95 205 120
+      "
+      stroke="#DBEAFE"
+      stroke-width="8"
+      stroke-linecap="round"
+      opacity="0.7"
+    />
+
+    <!-- شاخ ماموت -->
+    <path
+      d="
+      M110 210
+      Q70 240 100 285
+      "
+      stroke="#7DD3FC"
+      stroke-width="10"
+      stroke-linecap="round"
+      filter="url(#glow)"
+    />
+
+    <path
+      d="
+      M310 210
+      Q350 240 320 285
+      "
+      stroke="#7DD3FC"
+      stroke-width="10"
+      stroke-linecap="round"
+      filter="url(#glow)"
+    />
+
+  </g>
+
+  <!-- نور مرکزی -->
+  <circle
+    cx="210"
+    cy="175"
+    r="12"
+    fill="#E0F2FE"
+    filter="url(#glow)"
+  />
+
+  <!-- خطوط تکنولوژی -->
+  <g opacity="0.45">
+
+    <line x1="40" y1="120" x2="95" y2="120"
+      stroke="#38BDF8"
+      stroke-width="3"/>
+
+    <line x1="325" y1="120" x2="380" y2="120"
+      stroke="#38BDF8"
+      stroke-width="3"/>
+
+    <line x1="60" y1="300" x2="100" y2="300"
+      stroke="#38BDF8"
+      stroke-width="3"/>
+
+    <line x1="320" y1="300" x2="360" y2="300"
+      stroke="#38BDF8"
+      stroke-width="3"/>
+
+  </g>
+
+</svg>

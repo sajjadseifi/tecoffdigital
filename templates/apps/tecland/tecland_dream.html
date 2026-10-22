@@ -1,0 +1,415 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رویای تک‌لند | تجلی احساس و هنر</title>
+    <link rel="icon" href="{% static 'icons/mamut.space_faveicon.svg' %}" type="image/png" />
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}">
+    
+    <script src="{% static 'js/alpinejs.js' %}" defer></script>
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script src="{% static 'js/swiper-bundle.min.js' %}" defer></script>
+    
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: 'YekanBakh', tahoma, sans-serif;
+        }
+
+        body {
+            @apply font-sans text-white overflow-x-hidden;
+            background: linear-gradient(180deg, #020617 0%, #06122e 40%, #081638 80%, #020617 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(15, 23, 42, 0.4));
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-6px);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(15, 23, 42, 0.6));
+        }
+
+        .stars {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .rain-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+            mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+        }
+
+        .rain-drop {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 10px;
+            font-family: monospace;
+            animation: rain 5s linear infinite;
+        }
+
+        @keyframes rain {
+            0% { transform: translateY(-20px); opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(500px); opacity: 0; }
+        }
+
+        /* مخفی کردن اسکرول‌بار برای تمیزی بیشتر */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+
+<body class="relative antialiased selection:bg-sky-500/30 flex flex-col">
+
+    <!-- افکت‌های پس‌زمینه -->
+    <div class="stars"></div>
+    <div class="rain-container" id="rain-container"></div>
+
+    <!-- هدر شیشه‌ای -->
+    <header class="fixed top-0 w-full z-50 glass border-b border-white/5 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="{% url 'landing' %}" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 group">
+                    <svg class="w-5 h-5 text-sky-400 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+                <span class="font-bold text-lg text-white/90 tracking-wide">تک‌لند</span>
+            </div>
+            <!-- می‌توانید منوی کاربری را اینجا اضافه کنید -->
+        </div>
+    </header>
+
+    <main class="relative z-10 flex-grow pt-32 pb-24 px-4 overflow-hidden">
+        
+        <!-- بخش هیرو -->
+        <section class="max-w-4xl mx-auto text-center mb-24 relative">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-sky-500/20 blur-[100px] rounded-full z-0 pointer-events-none"></div>
+            
+            <div class="relative z-10 inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-sky-500/20 to-indigo-500/10 border border-sky-500/20 mb-8 shadow-lg shadow-sky-500/10 backdrop-blur-sm">
+                <svg class="w-10 h-10 text-sky-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" fill-opacity="1.0"/>
+                    <path d="M3 7V13L12 18L21 13V7L12 12L3 7Z" fill="currentColor" fill-opacity="0.4"/>
+                    <path d="M12 12V22L21 17V7L12 12Z" fill="currentColor" fill-opacity="0.7"/>
+                    <path d="M12 12V22L3 17V7L12 12Z" fill="currentColor" fill-opacity="0.2"/>
+                </svg>
+            </div>
+            <h1 class="relative z-10 text-4xl md:text-6xl font-black mb-6 text-white leading-tight">
+                تجلی <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400">رویاهای تک‌لند</span>
+            </h1>
+            <p class="relative z-10 text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
+                در این کرانه، لطافت هنر با نبوغ هوش مصنوعی پیوند می‌خورد. جایی که الهام‌بخش‌ترین ایده‌ها جان می‌گیرند.
+            </p>
+        </section>
+
+        <!-- بخش اول: سرزمین‌های رویایی (Map شده) -->
+        <section class="max-w-7xl mx-auto w-full mb-24">
+            <div class="flex justify-between items-end mb-8 px-2">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <span class="w-2 h-8 bg-sky-500 rounded-full inline-block"></span>
+                        سرزمین‌های رویایی
+                    </h2>
+                    <p class="text-slate-500 text-sm">اکوسیستم اصلی ابزارهای هوش مصنوعی</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="dream-prev w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-sky-400 disabled:opacity-30 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button class="dream-next w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-sky-400 disabled:opacity-30 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="swiper dreamSwiper pb-8 px-2 overflow-visible">
+                <div class="swiper-wrapper">
+                    {% for item in dream_lands %}
+                    <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-3xl p-6 h-full flex flex-col group hover:border-sky-500/40 hover:shadow-[0_8px_30px_rgba(56,189,248,0.1)]">
+                            <div class="w-14 h-14 bg-sky-500/10 group-hover:bg-sky-500/20 rounded-2xl flex items-center justify-center text-sky-400 mb-6 transition-all duration-300 group-hover:scale-110 [&>svg]:w-7 [&>svg]:h-7">
+                                {{ item.icon|safe }}
+                            </div>
+                            <h3 class="font-bold text-xl mb-3 text-white">{{ item.title }}</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed mb-8 flex-grow">
+                                همگام با زمزمه‌های {{ item.title }}، زیبایی‌های نهفته و الهامات بدیع را کشف کنید.
+                            </p>
+                            <a href="{% url item.url_name %}" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/5 hover:bg-sky-500 hover:text-white transition-all text-sm font-bold border border-white/5 group/btn">
+                                آغاز این رویا
+                                <svg class="w-4 h-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- بخش دوم: ابزارها (تم بنفش/ایندیگو) -->
+        <section class="max-w-7xl mx-auto w-full mb-24">
+            <div class="flex justify-between items-end mb-8 px-2">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <span class="w-2 h-8 bg-indigo-500 rounded-full inline-block"></span>
+                        ابزارهای آفرینش
+                    </h2>
+                    <p class="text-slate-500 text-sm">تجهیزات تخصصی برای خلق ایده</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="tools-prev w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-indigo-400 disabled:opacity-30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button class="tools-next w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-indigo-400 disabled:opacity-30">
+                        <svg class="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="swiper toolsSwiper pb-8 px-2 overflow-visible">
+                <div class="swiper-wrapper">
+                    <!-- آیتم نمونه -->
+                    <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-3xl p-6 h-full flex flex-col group hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgba(99,102,241,0.1)]">
+                            <div class="w-12 h-12 bg-indigo-500/10 group-hover:bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 mb-5 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2 text-white">قلموی هوشمند</h3>
+                            <p class="text-slate-400 text-sm mb-6 flex-grow">ویرایش و خلق تصاویر با ابزارهای دقیق و هوشمند.</p>
+                            <a href="#" class="w-full text-center py-2.5 rounded-xl bg-white/5 hover:bg-indigo-500 hover:text-white transition-colors text-sm font-bold border border-white/5">استفاده از ابزار</a>
+                        </div>
+                    </div>
+                    
+                    <!-- تکرار برای پر شدن اسلایدر (نمونه) -->
+                    <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-3xl p-6 h-full flex flex-col group hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgba(99,102,241,0.1)]">
+                            <div class="w-12 h-12 bg-indigo-500/10 group-hover:bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 mb-5 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2 text-white">تحلیلگر آوا</h3>
+                            <p class="text-slate-400 text-sm mb-6 flex-grow">تبدیل گفتار به متن با دقت بالا و پردازش لحن.</p>
+                            <a href="#" class="w-full text-center py-2.5 rounded-xl bg-white/5 hover:bg-indigo-500 hover:text-white transition-colors text-sm font-bold border border-white/5">استفاده از ابزار</a>
+                        </div>
+                    </div>
+                     <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-3xl p-6 h-full flex flex-col group hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgba(99,102,241,0.1)]">
+                            <div class="w-12 h-12 bg-indigo-500/10 group-hover:bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 mb-5 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2 text-white">کدنویسار</h3>
+                            <p class="text-slate-400 text-sm mb-6 flex-grow">دستیار هوشمند برای تولید و دیباگ قطعه کدهای پیچیده.</p>
+                            <a href="#" class="w-full text-center py-2.5 rounded-xl bg-white/5 hover:bg-indigo-500 hover:text-white transition-colors text-sm font-bold border border-white/5">استفاده از ابزار</a>
+                        </div>
+                    </div>
+                    <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-3xl p-6 h-full flex flex-col group hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgba(99,102,241,0.1)]">
+                            <div class="w-12 h-12 bg-indigo-500/10 group-hover:bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 mb-5 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2 text-white">پردازش داده</h3>
+                            <p class="text-slate-400 text-sm mb-6 flex-grow">تحلیل و بصری‌سازی داده‌های خام به صورت آنی.</p>
+                            <a href="#" class="w-full text-center py-2.5 rounded-xl bg-white/5 hover:bg-indigo-500 hover:text-white transition-colors text-sm font-bold border border-white/5">استفاده از ابزار</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- بخش سوم: کتابخانه‌ها (تم سبز/Teal) -->
+        <section class="max-w-7xl mx-auto w-full mb-24">
+            <div class="flex justify-between items-end mb-8 px-2">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <span class="w-2 h-8 bg-teal-500 rounded-full inline-block"></span>
+                        گنجینه کتابخانه‌ها
+                    </h2>
+                    <p class="text-slate-500 text-sm">مستندات، آموزش‌ها و منابع ارزشمند</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="lib-prev w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-teal-400 disabled:opacity-30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button class="lib-next w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-teal-400 disabled:opacity-30">
+                        <svg class="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="swiper libSwiper pb-8 px-2 overflow-visible">
+                <div class="swiper-wrapper">
+                    <!-- آیتم‌های نمونه کتابخانه -->
+                    {% for i in "1234" %}
+                    <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-2xl p-5 h-full flex items-start gap-4 group hover:border-teal-500/40">
+                            <div class="w-12 h-12 rounded-xl bg-teal-500/10 flex-shrink-0 flex items-center justify-center text-teal-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white mb-1 group-hover:text-teal-400 transition-colors">دانشنامه پرامپت‌ها</h3>
+                                <p class="text-slate-400 text-xs mb-3">آرشیو کامل دستورات بهینه برای مدل‌های زبانی.</p>
+                                <a href="#" class="text-teal-400 text-xs font-bold hover:underline">مطالعه <span class="mr-1">←</span></a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- بخش چهارم: بازی‌ها (تم صورتی/Rose) -->
+        <section class="max-w-7xl mx-auto w-full mb-12">
+            <div class="flex justify-between items-end mb-8 px-2">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <span class="w-2 h-8 bg-rose-500 rounded-full inline-block"></span>
+                        سرگرمی‌های خیال‌انگیز
+                    </h2>
+                    <p class="text-slate-500 text-sm">بازی‌های مبتنی بر هوش مصنوعی</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="games-prev w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-rose-400 disabled:opacity-30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button class="games-next w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition text-rose-400 disabled:opacity-30">
+                        <svg class="w-5 h-5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="swiper gamesSwiper pb-8 px-2 overflow-visible">
+                <div class="swiper-wrapper">
+                    <!-- آیتم‌های نمونه بازی -->
+                    {% for i in "1234" %}
+                    <div class="swiper-slide h-auto">
+                        <div class="glass-card rounded-3xl overflow-hidden h-full group hover:border-rose-500/40">
+                            <!-- تصویر کاور بازی (placeholder) -->
+                            <div class="h-32 bg-gradient-to-r from-rose-900/40 to-slate-900 flex items-center justify-center relative overflow-hidden">
+                                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
+                                <svg class="w-12 h-12 text-rose-400/50 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-lg mb-2 text-white">معمای کهکشان</h3>
+                                <p class="text-slate-400 text-sm mb-4">ماجراجویی متنی و تعاملی تولید شده توسط AI.</p>
+                                <button class="w-full py-2 rounded-lg bg-rose-500/10 text-rose-400 font-bold text-sm hover:bg-rose-500 hover:text-white transition-colors">شروع بازی</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- فوتر -->
+    <footer class="text-center py-8 text-slate-500 border-t border-white/5 mt-auto relative z-20 glass">
+        <p>© 2026 Mamut AI Dream Land. شکوفایی در هر رویا.</p>
+    </footer>
+
+    <!-- اسکریپت‌ها -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // تنظیمات پایه برای اکثر اسلایدرها
+            const baseConfig = {
+                slidesPerView: 1.2, // مقداری از کارت بعدی مشخص باشد (UX بهتر برای موبایل)
+                spaceBetween: 16,
+                breakpoints: {
+                    640: { slidesPerView: 2.2, spaceBetween: 20 },
+                    1024: { slidesPerView: 3, spaceBetween: 24 },
+                    1280: { slidesPerView: 4, spaceBetween: 24 },
+                },
+            };
+
+            // 1. اسلایدر سرزمین‌ها
+            new Swiper(".dreamSwiper", {
+                ...baseConfig,
+                navigation: { nextEl: '.dream-next', prevEl: '.dream-prev' },
+            });
+
+            // 2. اسلایدر ابزارها
+            new Swiper(".toolsSwiper", {
+                ...baseConfig,
+                navigation: { nextEl: '.tools-next', prevEl: '.tools-prev' },
+            });
+
+            // 3. اسلایدر کتابخانه‌ها (نمایش کارت‌های بیشتر چون کوچکترند)
+            new Swiper(".libSwiper", {
+                slidesPerView: 1.2,
+                spaceBetween: 16,
+                breakpoints: {
+                    640: { slidesPerView: 2.2, spaceBetween: 16 },
+                    1024: { slidesPerView: 3.5, spaceBetween: 20 },
+                    1280: { slidesPerView: 4.5, spaceBetween: 24 },
+                },
+                navigation: { nextEl: '.lib-next', prevEl: '.lib-prev' },
+            });
+
+            // 4. اسلایدر بازی‌ها
+            new Swiper(".gamesSwiper", {
+                ...baseConfig,
+                navigation: { nextEl: '.games-next', prevEl: '.games-prev' },
+            });
+
+
+            // افکت بارش لطیف (Rain)
+            const container = document.getElementById('rain-container');
+            const characters = '✨*+·'; // تغییر کاراکترها به ستاره و نقطه برای حس جادویی‌تر
+            
+            function createDrop() {
+                const drop = document.createElement('div');
+                drop.classList.add('rain-drop');
+                drop.innerText = characters.charAt(Math.floor(Math.random() * characters.length));
+                
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.animationDuration = Math.random() * 3 + 3 + 's'; // آرام‌تر
+                drop.style.opacity = Math.random() * 0.5 + 0.1;
+                drop.style.fontSize = Math.random() * 10 + 8 + 'px';
+                
+                container.appendChild(drop);
+                setTimeout(() => { drop.remove(); }, 6000);
+            }
+            setInterval(createDrop, 150); // کاهش تراکم بارش برای خلوت‌تر شدن هدر
+
+            // افکت هدر هنگام اسکرول
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 20) {
+                    navbar.classList.add('bg-slate-950/80', 'shadow-lg', 'shadow-black/20');
+                    navbar.classList.remove('glass');
+                } else {
+                    navbar.classList.remove('bg-slate-950/80', 'shadow-lg', 'shadow-black/20');
+                    navbar.classList.add('glass');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

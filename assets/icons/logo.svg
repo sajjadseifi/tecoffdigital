@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+
+  <!-- background -->
+  <rect x="0" y="0" width="48" height="48" rx="12" fill="#cf5100"/>
+
+  <!-- logo -->
+  <g fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- U shape -->
+    <path d="M12 14 v12 a12 12 0 0 0 24 0 v-12"/>
+
+   
+  </g>
+
+</svg>

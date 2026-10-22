@@ -1,0 +1,310 @@
+{% extends "_layout/base.html" %}
+{% block title %}کاتالوگ‌ها{% endblock %}
+
+{% block content %}
+
+<!--================ SEARCH BAR =================-->
+<div class="px-4 sm:px-6 lg:px-8 py-6">
+    <div class="relative max-w-3xl mx-auto flex items-center gap-3">
+        <input
+        type="text"
+        id="search-input"
+        class="block w-full p-3 px-12 text-sm border border-surface-200 rounded-xl bg-white focus:ring-accent-500 focus:border-accent-500 shadow-soft placeholder:text-brand-400"
+        placeholder="جستجو در کاتالوگ‌ها (نام، نوع کسب‌وکار، توضیحات)..."
+        autocomplete="off"
+        />
+
+        <button
+            id="search-button"
+            class="left-2 top-[50%] cursor-pointer -translay-y-[50%] bg-accent-500 flex items-center gap-2px hover:bg-accent-600 text-white font-medium rounded-lg text-sm px-6 py-3 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent-100"
+        >
+            جستجو
+            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </button>
+    </div>
+    <div id="search-results-container" class="mt-6 hidden">
+        <h3 class="text-lg font-bold text-brand-900 mb-4">نتایج جستجو:</h3>
+        <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <!-- Search results will be loaded here -->
+        </div>
+        <div id="search-pagination" class="mt-8 flex justify-center gap-4 items-center hidden">
+            <button id="prev-page-btn" class="px-4 py-2 rounded-xl bg-surface-100 border border-surface-200 text-brand-600 hover:bg-surface-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">قبلی</button>
+            <span id="page-indicator" class="text-sm font-bold text-brand-700"></span>
+            <button id="next-page-btn" class="px-4 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">بعدی</button>
+        </div>
+        <div id="no-results" class="text-center py-10 text-sm text-brand-400 hidden">
+            موردی یافت نشد.
+        </div>
+    </div>
+</div>
+
+<!--================ SECTIONS CONTENT (Original Content) =================-->
+<div id="sections-container" class="space-y-10 py-6">
+    {% for section in sections %}
+    <section class="catalog-section">
+        <div class="px-4 sm:px-6 lg:px-8 mb-4 flex justify-between items-center">
+            <h2 class="text-lg font-extrabold text-brand-900">
+                {{ section.type }}
+            </h2>
+            <a href="/explore/?type={{ section.type }}" class="text-xs font-bold text-brand-500 hover:text-accent-500 transition flex items-center gap-1">
+                همه
+                <svg class="w-3 h-3 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        <div class="flex overflow-x-auto gap-4 px-4 sm:px-6 lg:px-8 pb-2 snap-x scrollbar-hide">
+            {% for catalog in section.catalogs %}
+            <a href="{{ catalog.get_menu_absolute_url }}" class="flex flex-col items-center gap-2 min-w-[72px] snap-center group">
+                <div class="w-24 h-24 p-2">
+                    <div class="w-full h-full  overflow-hidden flex items-center justify-center  transition">
+                        {% if catalog.logo and catalog.logo_or_default  %}
+                            <img src="{{ catalog.logo_or_default }}" loading="lazy" class="w-full h-full object-cover"/>
+                        {% else %}
+                        <svg class="w-full w-full text-orange-400 bg-transparent" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path opacity="0.3" d="M21 7V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V7C3 4 4.5 2 8 2H16C19.5 2 21 4 21 7Z" />
+                            <path d="M14.5 9C14.5 10.1046 13.6046 11 12.5 11C11.3954 11 10.5 10.1046 10.5 9C10.5 7.89543 11.3954 7 12.5 7C13.6046 7 14.5 7.89543 14.5 9Z" />
+                            <path d="M20.6598 15.6599L17.7898 12.3399C17.0698 11.5099 15.8298 11.4599 15.0298 12.2199L12.5598 14.5499C12.1598 14.9299 11.4898 14.9599 11.0598 14.6099L10.3898 14.0599C9.6298 13.4399 8.4698 13.4899 7.7698 14.1699L3.4398 18.3399C3.6998 19.8699 4.8898 21.0599 6.4198 21.3199L20.6598 15.6599Z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="text-[11px] font-bold text-brand-700 text-center leading-tight truncate w-full group-hover:text-accent-500 transition">{{ catalog.title }}</span>
+            </a>
+            {% empty %}
+            <div class="w-full text-center py-6 text-xs text-brand-400">
+                موردی یافت نشد.
+            </div>
+            {% endfor %}
+        </div>
+        
+    </section>
+    {% endfor %}
+</div>
+
+<div id="loading-more" class="text-center py-10 text-sm text-brand-400 hidden">
+    در حال بارگذاری...
+</div>
+
+<script>
+    // --- Existing Infinite Scroll Logic ---
+    const sectionsContainer = document.getElementById("sections-container");
+    const loadingMoreIndicator = document.getElementById("loading-more");
+    let currentOffset = 10;
+    let isLoading = false;
+    let isFinished = false;
+
+    function debounce(fn, delay = 200) {
+        let t;
+        return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), delay);
+        };
+    }
+
+    async function loadMoreSections() {
+        if (isLoading || isFinished) return;
+
+        isLoading = true;
+        loadingMoreIndicator.classList.remove("hidden");
+
+        try {
+            const res = await fetch(`/api/catalogs/load-more/?offset=${currentOffset}`);
+            const data = await res.json();
+
+            if (data.length === 0) {
+                isFinished = true;
+                loadingMoreIndicator.innerText = "پایان لیست";
+                return;
+            }
+
+            renderSections(data);
+            currentOffset += data.length;
+
+        } catch (e) {
+            console.error("Error loading more sections:", e);
+            loadingMoreIndicator.innerText = "خطا در بارگذاری";
+        } finally {
+            loadingMoreIndicator.classList.add("hidden");
+            isLoading = false;
+        }
+    }
+
+    function renderSections(sections) {
+        let html = "";
+        sections.forEach(section => {
+            html += `
+            <section class="catalog-section mt-10">
+                <div class="px-4 sm:px-6 lg:px-8 mb-4 flex justify-between items-center">
+                    <h2 class="text-lg font-extrabold text-brand-900">${section.type}</h2>
+                    <a href="/explore/?type=${encodeURIComponent(section.type)}" class="text-xs font-bold text-brand-500 hover:text-accent-500 transition flex items-center gap-1">
+                        همه
+                        <svg class="w-3 h-3 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="flex overflow-x-auto gap-4 px-4 sm:px-6 lg:px-8 pb-2 snap-x scrollbar-hide">
+            `;
+            section.catalogs.forEach(c => {
+                html += `
+                <a href="${c.url}" class="flex flex-col items-center gap-2 min-w-[72px] snap-center group">
+                    <div class="w-16 h-16 rounded-[1.2rem] p-0.5">
+                        <div class="w-full h-full rounded-[1.1rem] overflow-hidden flex items-center justify-center bg-white border border-surface-200 shadow-soft group-hover:shadow-md transition">
+                            <img src="${c.logo}" loading="lazy" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-brand-700 text-center leading-tight truncate w-full group-hover:text-accent-500 transition">${c.title}</span>
+                </a>
+                `;
+            });
+            html += `</div></section>`;
+        });
+        sectionsContainer.insertAdjacentHTML("beforeend", html);
+    }
+
+    window.addEventListener("scroll", debounce(() => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
+            loadMoreSections();
+        }
+    }, 150));
+
+    // --- Search Logic ---
+    const searchInput = document.getElementById("search-input");
+    const searchButton = document.getElementById("search-button");
+    const searchResultsContainer = document.getElementById("search-results-container");
+    const searchResultsDiv = document.getElementById("search-results");
+    const noResultsMessage = document.getElementById("no-results");
+    const paginationControls = document.getElementById("search-pagination");
+    const pageIndicator = document.getElementById("page-indicator");
+    const prevPageBtn = document.getElementById("prev-page-btn");
+    const nextPageBtn = document.getElementById("next-page-btn");
+    const initialSectionsContainer = document.getElementById("sections-container"); // Keep reference to original sections
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentQuery = "";
+    const resultsPerPage = 20; // Match your backend's limit per page
+
+    function displaySearchResults(results, page) {
+        searchResultsDiv.innerHTML = ""; // Clear previous results
+        noResultsMessage.classList.add("hidden");
+        paginationControls.classList.add("hidden");
+
+        if (results.length === 0) {
+            noResultsMessage.classList.remove("hidden");
+            return;
+        }
+
+        results.forEach(item => {
+            const resultCard = `
+            <a href="${item.url}" class="flex flex-col group bg-white border border-surface-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition p-2">
+                <div class="w-full h-32 object-cover rounded-xl overflow-hidden">
+                    <img src="${item.logo}" alt="${item.title}" loading="lazy" class="w-full h-full object-cover"/>
+                </div>
+                <div class="p-2">
+                    <h3 class="text-xs font-bold truncate group-hover:text-accent-500">${item.title}</h3>
+                    <p class="text-[11px] text-brand-400 truncate">${item.business_type || ''}</p>
+                </div>
+            </a>
+            `;
+            searchResultsDiv.innerHTML += resultCard;
+        });
+
+        // Update pagination
+        pageIndicator.textContent = `صفحه ${page} از ${totalPages}`;
+        paginationControls.classList.remove("hidden");
+        prevPageBtn.disabled = page === 1;
+        nextPageBtn.disabled = page === totalPages;
+
+        searchResultsContainer.classList.remove("hidden");
+        initialSectionsContainer.classList.add("hidden"); // Hide original sections when search results are shown
+    }
+
+    async function performSearch(query, page = 1) {
+        if (!query.trim()) {
+            // If query is empty, show original content and hide search results
+            searchResultsContainer.classList.add("hidden");
+            initialSectionsContainer.classList.remove("hidden");
+            currentPage = 1;
+            totalPages = 1;
+            return;
+        }
+
+        currentQuery = query; // Store the current query
+        const offset = (page - 1) * resultsPerPage;
+
+        try {
+            const response = await fetch(`/api/catalogs/search/?q=${encodeURIComponent(query)}&offset=${offset}&limit=${resultsPerPage}`);
+            const data = await response.json();
+
+            if (data.results) {
+                // Calculate total pages based on total results and results per page
+                // Note: Your backend needs to return total count or adjust this logic
+                // Assuming backend returns data.count or similar for total items.
+                // If not, we might need a separate endpoint for total count or estimate.
+                // For now, let's assume results array length indicates if there are more pages.
+                const totalItems = data.count || data.results.length; // Adjust based on your API response
+                totalPages = Math.ceil(totalItems / resultsPerPage);
+
+                displaySearchResults(data.results, page);
+            } else {
+                console.error("Unexpected data format from search API:", data);
+                noResultsMessage.classList.remove("hidden");
+                noResultsMessage.innerText = "خطا در دریافت نتایج.";
+            }
+        } catch (error) {
+            console.error("Error performing search:", error);
+            noResultsMessage.classList.remove("hidden");
+            noResultsMessage.innerText = "خطا در اتصال به سرور.";
+            searchResultsContainer.classList.remove("hidden");
+        }
+    }
+
+    searchButton.addEventListener("click", () => {
+        const query = searchInput.value;
+        currentPage = 1; // Reset to first page on new search
+        performSearch(query, currentPage);
+    });
+
+    searchInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Prevent form submission if it were a form
+            const query = searchInput.value;
+            currentPage = 1;
+            performSearch(query, currentPage);
+        }
+    });
+
+    prevPageBtn.addEventListener("click", () => {
+        if (currentPage > 1) {
+            currentPage--;
+            performSearch(currentQuery, currentPage);
+        }
+    });
+
+    nextPageBtn.addEventListener("click", () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            performSearch(currentQuery, currentPage);
+        }
+    });
+
+    // Hide search results and show original content when input is cleared
+    searchInput.addEventListener("input", () => {
+        if (searchInput.value.trim() === "") {
+            searchResultsContainer.classList.add("hidden");
+            initialSectionsContainer.classList.remove("hidden");
+            noResultsMessage.classList.add("hidden");
+            paginationControls.classList.add("hidden");
+            currentPage = 1;
+            totalPages = 1;
+        }
+    });
+
+    // Initial load of original sections
+    // The template already renders initial sections, so no need for extra JS here unless dynamically loading them.
+
+</script>
+
+{% endblock %}

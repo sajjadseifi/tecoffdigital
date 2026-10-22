@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#050814" />
+    <link rel="icon" href="{% static 'icons/tqrs_faveicon.png' %}" type="image/svg+xml" />
+
+    <title>{% block title %}TQRS | موتور کیوآر تکوف{% endblock %}</title>
+    
+    <!-- ================= Performance & Preloads ================= -->
+    <!-- Preload Fonts to prevent FOUT (Flash of Unstyled Text) -->
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Regular.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{% static 'fonts/YekanBakh-Bold.woff2' %}" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{% static 'fonts/font-face.css' %}" />
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}" />
+    <script  src="{% static 'js/alpinejs.js' %}"></script>
+    <!-- ================= Core Scripts (Dev Speed) ================= -->
+    <script src="{% static 'js/tailwindcss.js' %}"></script>
+    <script  src="{% static 'js/swiper-bundle.min.js' %}"></script>
+    <script  src="{% static 'js/qrcode.min.js' %}"></script>
+    <script  src="{% static 'js/html2canvas.js' %}"></script>
+    <!-- Tailwind Config & Custom CSS -->
+    <style type="text/tailwindcss">
+      @theme {
+        --font-sans: 'YekanBakh', system-ui, sans-serif;
+        --color-soul-bg: #050b14;
+        --color-soul-card: #0d1627;
+        --color-soul-cyan: #22d3ee;
+        --color-soul-blue: #1e3a8a;
+      }
+
+      @layer base {
+        body {
+          font-family: var(--font-sans);
+          background-color: var(--color-soul-bg);
+          color: #f8fafc;
+        }
+      }
+
+      @layer utilities {
+        .bg-glow {
+          background-image: radial-gradient(circle at center, rgba(34, 211, 238, 0.08) 0%, transparent 80%);
+        }
+        .text-glow {
+          text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+        }
+        .glass-panel {
+          @apply bg-[#0d1627]/80 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+        }
+      }
+      
+      /* Hide scrollbar for clean UI */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: var(--color-soul-bg); }
+      ::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+      
+      [x-cloak] { display: none !important; }
+    </style>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <!-- بلاک برای استایل‌های اختصاصی هر صفحه -->
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+    
+    <!-- افکت هاله نوری پس‌زمینه (دلخواه) -->
+    <div class="fixed inset-0 pointer-events-none bg-glow z-0"></div>
+
+    <!-- هدر (در صورت نیاز در صفحات دیگر Overwrite می‌شود) -->
+    <header class="relative z-10 w-full">
+        {% block header %}
+          {% include './tqrs_layout_header.html' %}
+        {% endblock %}
+    </header>
+
+    <!-- محتوای اصلی -->
+    <main class="flex-grow flex flex-col items-center pt-0 md:pt-2 p-2 lg:p-4 w-full max-w-7xl mx-auto z-10" x-data="{ mainTab: 'scan' }">
+      {% block content %}
+        <!-- محتوای صفحات اینجا قرار میگیرد -->
+        {% endblock %}
+    </main>
+
+    <!-- فوتر -->
+    <footer class="relative z-10 w-full">
+        {% block footer %}
+          {% include './tqrs_layout_footer.html' %}
+        {% endblock %}
+    </footer>
+
+    <!-- بلاک برای اسکریپت‌های اختصاصی هر صفحه -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

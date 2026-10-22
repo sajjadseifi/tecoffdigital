@@ -1,0 +1,254 @@
+{% extends "./layouts/tqrs_layout.html" %}
+{% load static %}
+{% block extra_head %}
+<script>
+function qrAppGen() {
+
+    return {
+        selectedTemplate: 'default',
+        mainTab: 'scan',
+        mainTab: 'scan',
+
+        qrInput: '',
+        qrValue: '',
+
+        qrGenerated: false,
+
+        selectedTemplate: 'default',
+
+        customTitle: 'TECOFF DIGITAL',
+        customDesc: 'برای مشاهده اطلاعات اسکن کنید',
+
+        brandText: 'TECOFF DIGITAL',
+        brandDesc: 'پلتفرم دیجیتال کسب و کار',
+
+        logoBase64: null,
+
+        qrDarkColor: '#e6481b',
+        qrLightColor: '#ffffff',
+
+        cardBg: '#ffffff',
+        cardText: '#111827',
+
+        templates: [
+
+            {
+                id: 'default',
+                name: 'تکوف',
+                colorDark: '#e6481b',
+                colorLight: '#ffffff'
+            },
+
+            {
+                id: 'black',
+                name: 'ساده',
+                colorDark: '#000000',
+                colorLight: '#ffffff'
+            },
+
+            {
+                id: 'blue',
+                name: 'آبی',
+                colorDark: '#2563eb',
+                colorLight: '#eff6ff'
+            },
+
+            {
+                id: 'green',
+                name: 'سبز',
+                colorDark: '#16a34a',
+                colorLight: '#f0fdf4'
+            },
+
+            {
+                id: 'purple',
+                name: 'بنفش',
+                colorDark: '#7c3aed',
+                colorLight: '#faf5ff'
+            },
+
+            {
+                id: 'gold',
+                name: 'طلایی',
+                colorDark: '#ca8a04',
+                colorLight: '#fefce8'
+            }
+
+        ],
+
+        generateQR() {
+
+            if (!this.qrInput) return;
+
+            this.qrValue = this.qrInput;
+
+            this.qrGenerated = true;
+
+            this.drawQR();
+        },
+
+        applyTemplate(templateId) {
+
+            this.selectedTemplate = templateId;
+
+            const template = this.templates.find(
+                t => t.id === templateId
+            );
+
+            if (!template) return;
+
+            this.qrDarkColor = template.colorDark;
+            this.qrLightColor = template.colorLight;
+
+            this.drawQR();
+        },
+
+        updateQrStyle() {
+
+            if (!this.qrValue) return;
+
+            this.drawQR();
+        },
+
+        drawQR() {
+
+            const container = document.getElementById('qrcode-canvas');
+
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            new QRCode(container, {
+
+                text: this.qrValue,
+
+                width: 220,
+                height: 220,
+
+                colorDark: this.qrDarkColor,
+                colorLight: this.qrLightColor,
+
+                correctLevel: QRCode.CorrectLevel.H
+
+            });
+
+        },
+
+        handleLogoUpload(event) {
+
+            const file = event.target.files[0];
+
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                this.logoBase64 = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        },
+
+        async downloadQR() {
+
+            const card = document.getElementById('export-card');
+
+            if (!card) return;
+
+            try {
+
+                // حذف موقت blur و gradient
+                const oldStyle = card.style.cssText;
+
+                card.style.backdropFilter = 'none';
+                card.style.filter = 'none';
+
+                const canvas = await html2canvas(card, {
+
+                    scale: 3,
+
+                    useCORS: true,
+
+                    allowTaint: true,
+
+                    backgroundColor: '#ffffff',
+
+                    logging: false,
+
+                    foreignObjectRendering: false
+
+                });
+
+                // برگرداندن استایل
+                card.style.cssText = oldStyle;
+
+                const image = canvas.toDataURL(
+                    'image/png',
+                    1.0
+                );
+
+                const link = document.createElement('a');
+
+                link.href = image;
+
+                link.download =
+                    `QR-${Date.now()}.png`;
+
+                document.body.appendChild(link);
+
+                link.click();
+
+                document.body.removeChild(link);
+
+            } catch (err) {
+
+                console.error(err);
+
+                alert('خطا در ساخت تصویر');
+
+            }
+
+        }
+
+    }
+
+}
+</script>
+{% endblock extra_head %}
+{% block content %}
+    <!-- x-data را به این دایو والد منتقل کردیم -->
+    <div x-data="qrAppGen()" class="w-full relative">
+        
+        <!-- حالا نوار تب‌ها داخل محدوده Alpine.js است و می‌تواند mainTab را تغییر دهد -->
+        {% include "engine/tqrs/includes/index/tabs_switcher_index.html" %}
+        
+        <div class="w-full relative px-4 mt-6">
+            <!-- TAB 1: SCAN -->
+            <!-- نکته: style="display: none;" را از تب پیش‌فرض (scan) برداشتم تا در لود اولیه مخفی نماند -->
+            <div x-show="mainTab === 'scan'" x-transition>
+                {% include "engine/tqrs/includes/index/tab_scan_index.html" %}
+            </div>
+            
+            <!-- TAB 2: DESIGN -->
+            <div x-show="mainTab === 'design'" x-model="selectedTemplate" x-cloak x-transition style="display: none;">
+                {% include "engine/tqrs/includes/index/tab_design_index.html" %}
+            </div>
+
+            <!-- TAB 3: TEMPLATE -->
+            <div x-show="mainTab === 'template'" x-cloak x-transition style="display: none;">
+                {% include "engine/tqrs/includes/index/tab_template_index.html" %}
+            </div>
+            
+            <!-- TAB 4: ANALYTICS -->
+            <div x-show="mainTab === 'analytics'" x-cloak x-transition style="display: none;">
+                {% include "engine/tqrs/includes/index/tab_analytics_index.html" %}
+            </div>
+            
+            <!-- TAB 5: MANAGE -->
+            <div x-show="mainTab === 'manage'" x-cloak x-transition style="display: none;">
+                {% include "engine/tqrs/includes/index/tab_manage_index.html" %}
+            </div>
+        </div>
+        
+    </div>
+{% endblock %}

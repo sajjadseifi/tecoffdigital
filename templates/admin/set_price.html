@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<div class="max-w-xl mx-auto mt-10 bg-white rounded-2xl shadow-sm border border-surface-200 p-6">
+
+    <h2 class="text-lg font-bold text-brand-900 mb-6">
+        تنظیم قیمت گروهی
+    </h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form }}
+
+    {% for obj in items %}
+        <input type="hidden" name="_selected_action" value="{{ obj.pk }}">
+    {% endfor %}
+
+    <input type="hidden" name="action" value="set_price">
+
+    <button type="submit" name="apply">اعمال</button>
+</form>
+</div>
+
+{% endblock %}

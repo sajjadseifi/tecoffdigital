@@ -1,0 +1,50 @@
+<div class="bg-surface-50 dark:bg-surface-800 rounded-xl shadow-md border border-surface-200 dark:border-surface-700 p-6 max-w-3xl mx-auto">
+
+  <table class="w-full text-sm text-range-700 dark:text-range-400 text-right border-separate border-spacing-y-3">
+
+    <thead>
+      <tr class="text-surface-500 dark:text-surface-400 border-b border-surface-300 dark:border-surface-700">
+        <th class="py-3 font-semibold">نقش</th>
+        <th class="py-3 font-semibold">مدیریت اعضا</th>
+        <th class="py-3 font-semibold">مدیریت محصولات</th>
+        <th class="py-3 font-semibold">تنظیمات</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
+
+      {% for role, perms in roles_permissions.items %}
+      <tr>
+        <td class="py-2 font-semibold">{{ role }}</td>
+
+        <td class="py-2">
+          {% if perms.can_manage_members %}
+            {% include 'depthless_neo_svg.html' with icon='check' %}
+          {% else %}
+            {% include 'depthless_neo_svg.html' with icon='cross' %}
+          {% endif %}
+        </td>
+
+        <td class="py-2">
+          {% if perms.can_manage_products %}
+            {% include 'depthless_neo_svg.html' with icon='check' %}
+          {% else %}
+            {% include 'depthless_neo_svg.html' with icon='cross' %}
+          {% endif %}
+        </td>
+
+        <td class="py-2">
+          {% if perms.can_manage_settings %}
+            {% include 'depthless_neo_svg.html' with icon='check' %}
+          {% else %}
+            {% include 'depthless_neo_svg.html' with icon='cross' %}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+
+    </tbody>
+
+  </table>
+  
+</div>
